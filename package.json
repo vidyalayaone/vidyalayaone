@@ -5,11 +5,18 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter \"./apps/*\" run build",
-    "test": "pnpm --filter \"./apps/*\" run test"
+    "test": "pnpm --filter \"./apps/*\" run test",
+    "build": "pnpm -r run build",
+    "start": "pnpm --filter \"./apps/*\" run start",
+    "dev:app": "pnpm --filter @onlyexams/$APP dev",
+    "build:app": "pnpm --filter @onlyexams/$APP build",
+    "start:app": "pnpm --filter @onlyexams/$APP start"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.12.1",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }

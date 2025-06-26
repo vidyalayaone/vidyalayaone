@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only --watch src src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +16,9 @@
   "dependencies": {
     "@onlyexams/logger": "workspace:*",
     "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.4",
+    "ts-node-dev": "^2.0.0"
   }
 }

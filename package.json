@@ -1,0 +1,15 @@
+{
+  "name": "onlyexams",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter \"./apps/*\" run build",
+    "test": "pnpm --filter \"./apps/*\" run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1"
+}

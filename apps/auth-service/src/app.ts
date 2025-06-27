@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import config from './config/config';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
+import authRoutes from './routes/authRoutes';
 
 // Import routes (we'll create these in later steps)
 // import authRoutes from './routes/authRoutes';
@@ -44,6 +45,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes
 // app.use(`${config.server.apiPrefix}/auth`, authRoutes);
+app.use(`${config.server.apiPrefix}/auth`, authRoutes);
 
 // 404 handler
 app.use(notFound);

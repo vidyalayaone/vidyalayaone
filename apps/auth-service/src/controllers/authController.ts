@@ -157,28 +157,32 @@ export async function refreshToken(req: Request, res: Response) {
 export async function getMe(req: Request, res: Response) {
   try {
     // Get user info from gateway-provided header
-    const userInfo = req.headers['x-user-data'];
+    // const userInfo = req.headers['x-user-data'];
+    const userId = req.user?.id;
+
+    console.log(req.user);
     
-    if (!userInfo) {
+    
+    if (!userId) {
       res.status(401).json({
         success: false,
-        error: { message: 'User information not provided by gateway' },
+        error: { message: 'Unauthenticated' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    const user = JSON.parse(userInfo as string);
+    // const user = JSON.parse(userInfo as string);
     
     // Optionally fetch fresh user data from database
-    const freshUser = await prisma.user.findUnique({
-      where: { id: user.userId },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
       select: { id: true, email: true, isVerified: true, createdAt: true }
     });
 
     res.status(200).json({
       success: true,
-      data: freshUser,
+      user,
       timestamp: new Date().toISOString()
     });
     return;

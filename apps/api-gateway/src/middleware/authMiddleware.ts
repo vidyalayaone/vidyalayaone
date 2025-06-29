@@ -10,7 +10,7 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
   try {
     const authHeader = req.headers.authorization;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
       res.status(401).json({
         success: false,
         error: { message: 'No token provided' },

@@ -34,8 +34,8 @@ router.post('/login', strictLimiter, authController.login);
 router.post('/refresh-token', authLimiter, authController.refreshToken);
 
 // Protected routes
-router.get('/me', authLimiter, authController.getMe);
-router.post('/logout', authLimiter, authController.logout);
+router.get('/me', authLimiter, authenticate, authController.getMe);
+router.post('/logout', authLimiter, authenticate, authController.logout);
 
 // Add this route for testing (remove in production)
 if (config.server.nodeEnv === 'development') {

@@ -1,14 +1,11 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import { errorHandler } from './middleware/errorHandler';
 import { notFound } from './middleware/notFound';
-import authRoutes from './routes/authRoutes';
-
-// Import routes (we'll create these in later steps)
-// import authRoutes from './routes/authRoutes';
+import tenantRoutes from './routes/tenantRoutes';
 
 const app: Application = express();
 
@@ -33,32 +30,18 @@ if (config.server.nodeEnv === 'development') {
 // app.use(express.json({ limit: '10mb' }));
 // app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// CONDITIONAL body parsing - only for POST/PUT/PATCH requests
-app.use((req, res, next) => {
-  console.log(`🔍 [AUTH SERVICE] ${req.method} ${req.url}`);
-  
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    console.log(`🔍 [AUTH SERVICE] Applying body parsing for ${req.method} request`);
-    express.json({ limit: '10mb' })(req, res, next);
-  } else {
-    console.log(`🔍 [AUTH SERVICE] Skipping body parsing for ${req.method} request`);
-    next();
-  }
-});
-
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    service: 'auth-service',
+    service: 'tenant-service',
     version: '1.0.0',
   });
 });
 
 // API routes
-// app.use(`${config.server.apiPrefix}/auth`, authRoutes);
-app.use(`${config.server.apiPrefix}/auth`, authRoutes);
+app.use(config.server.apiPrefix, tenantRoutes);
 
 // 404 handler
 app.use(notFound);

@@ -10,6 +10,7 @@ import { authenticate } from './middleware/authMiddleware';
 import HealthCheckService from './services/healthCheck';
 import ServiceRegistry from './services/serviceRegistry';
 import { createServiceProxy } from './utils/proxyUtils';
+import { resolveTenant } from "./middleware/tenantMiddleware";
 
 const app: Application = express();
 
@@ -73,6 +74,9 @@ app.get('/health/services', async (req: Request, res: Response) => {
     });
   }
 });
+
+// IMPORTANT: Add tenant resolution middleware BEFORE service routing
+app.use(resolveTenant);
 
 // Dynamic service registration
 const services = ServiceRegistry.getAllServices();

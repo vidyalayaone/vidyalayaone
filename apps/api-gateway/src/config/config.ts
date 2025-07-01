@@ -5,19 +5,24 @@ dotenv.config({
   path: path.resolve(__dirname, '../../.env')
 });
 
+interface ServiceConfig {
+  url: string;
+  timeout: number;
+}
+
+interface ServicesConfig {
+  auth: ServiceConfig;
+  tenant: ServiceConfig;  // Add tenant service type
+  // add more services
+}
+
 interface Config {
   server: {
     port: number;
     nodeEnv: string;
     apiPrefix: string;
   };
-  services: {
-    auth: {
-      url: string;
-      timeout: number;
-    };
-    // Future services can be added here
-  };
+  services: ServicesConfig;
   jwt: {
     accessSecret: string;
   };
@@ -44,6 +49,10 @@ const config: Config = {
     auth: {
       url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
+    },
+    tenant: {
+      url: process.env.TENANT_SERVICE_URL || 'http://localhost:3002',
+      timeout: parseInt(process.env.TENANT_SERVICE_URL || '30000', 10),
     },
   },
   jwt: {

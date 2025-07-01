@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
 import { generateOTP } from '../utils/otp';
 import EmailService from './emailService';
 import config from '../config/config';
+import DatabaseService from '../services/database';
 
-const prisma = new PrismaClient();
+const { prisma } = DatabaseService;
 
 export async function createAndSendOTP(email: string): Promise<void> {
   try {

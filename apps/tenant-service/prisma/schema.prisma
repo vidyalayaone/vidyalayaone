@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"  // Generate in service-specific folder
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  domain    String   @unique
+  status    TenantStatus @default(TRIAL)
+  plan      TenantPlan   @default(FREE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Tenant configuration
+  configs   TenantConfig[]
+  
+  @@map("tenants")
+  @@index([domain])
+  @@index([slug])
+}
+
+model TenantConfig {
+  id       String @id @default(cuid())
+  tenantId String @map("tenant_id")
+  key      String
+  value    Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@map("tenant_configs")
+}
+
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum TenantPlan {
+  FREE
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}

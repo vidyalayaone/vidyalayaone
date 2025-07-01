@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
+import DatabaseService from '../services/database'; // Import database service
 import { createAndSendOTP, verifyOTP } from '../services/otpService';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import config from '../config/config';
 import EmailService from "../services/emailService";
 
-const prisma = new PrismaClient();
+const { prisma } = DatabaseService;
 
 export async function register(req: Request, res: Response) {
   const { email, password } = req.body;
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     res.status(409).json({ message: 'Email already registered' });

@@ -27,6 +27,16 @@ class ServiceRegistry {
       timeout: config.services.auth.timeout,
     });
 
+    // Tenant service - internal routes only
+    this.services.set('tenant', {
+      name: 'tenant-service',
+      url: config.services.tenant.url,
+      path: '/api/v1/tenant',
+      isProtected: false, // Internal service
+      healthPath: '/health',
+      timeout: config.services.tenant.timeout,
+    });
+
     // Future services - fully protected at gateway
     // this.services.set('users', {
     //   name: 'user-service',

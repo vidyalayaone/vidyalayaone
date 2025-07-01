@@ -22,9 +22,9 @@ class DatabaseService {
   public async connect(): Promise<void> {
     try {
       await this.prisma.$connect();
-      console.log('✅ Auth Database connected successfully');
+      console.log('✅ Tenant Database connected successfully');
     } catch (error) {
-      console.error('❌ Auth Database connection failed:', error);
+      console.error('❌ Tenant Database connection failed:', error);
       throw error;
     }
   }
@@ -32,9 +32,9 @@ class DatabaseService {
   public async disconnect(): Promise<void> {
     try {
       await this.prisma.$disconnect();
-      console.log('✅ Auth Database disconnected successfully');
+      console.log('✅ Tenant Database disconnected successfully');
     } catch (error) {
-      console.error('❌ Auth Database disconnection failed:', error);
+      console.error('❌ Tenant Database disconnection failed:', error);
       throw error;
     }
   }
@@ -44,7 +44,7 @@ class DatabaseService {
       await this.prisma.$queryRaw`SELECT 1`;
       return true;
     } catch (error) {
-      console.error('❌ Auth Database health check failed:', error);
+      console.error('❌ Tenant Database health check failed:', error);
       return false;
     }
   }

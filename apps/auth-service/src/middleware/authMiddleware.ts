@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/jwt';
-import { PrismaClient } from '@prisma/client';
+import DatabaseService from "../services/database";
 
-const prisma = new PrismaClient();
+const { prisma } = DatabaseService;
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {

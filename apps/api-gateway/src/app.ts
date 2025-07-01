@@ -4,13 +4,13 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import config from './config/config';
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
 import { authenticate } from './middleware/authMiddleware';
 import HealthCheckService from './services/healthCheck';
 import ServiceRegistry from './services/serviceRegistry';
 import { createServiceProxy } from './utils/proxyUtils';
 import { resolveTenant } from "./middleware/tenantMiddleware";
+import { errorHandler, notFound } from '@onlyexams/common-middleware';
+import type { ErrorRequestHandler } from 'express';
 
 const app: Application = express();
 
@@ -100,6 +100,6 @@ console.log('🔧 Service registration complete\n');
 app.use(notFound);
 
 // Global error handler
-app.use(errorHandler);
+app.use(errorHandler as ErrorRequestHandler);
 
 export default app;

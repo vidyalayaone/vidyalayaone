@@ -10,7 +10,8 @@
     "start": "pnpm --filter \"./apps/*\" run start",
     "dev:app": "pnpm --filter @onlyexams/$APP dev",
     "build:app": "pnpm --filter @onlyexams/$APP build",
-    "start:app": "pnpm --filter @onlyexams/$APP start"
+    "start:app": "pnpm --filter @onlyexams/$APP start",
+    "build:packages": "pnpm run --recursive --filter \"./packages/**\" build"
   },
   "keywords": [],
   "author": "",

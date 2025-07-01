@@ -23,6 +23,7 @@
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@onlyexams/logger": "workspace:*",
+    "@onlyexams/common-middleware": "workspace:*",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

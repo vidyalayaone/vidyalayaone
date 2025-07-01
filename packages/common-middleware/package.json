@@ -1,0 +1,17 @@
+{
+  "name": "@onlyexams/common-middleware",
+  "version": "1.0.0",
+  "description": "Shared utilities for OnlyExams services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3"
+  },
+  "peerDependencies": {
+    "express": "^5.1.0"
+  }
+}

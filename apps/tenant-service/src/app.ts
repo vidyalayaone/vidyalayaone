@@ -3,9 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
 import tenantRoutes from './routes/tenantRoutes';
+import { errorHandler, notFound } from '@onlyexams/common-middleware';
+import type { ErrorRequestHandler } from 'express';
 
 const app: Application = express();
 
@@ -47,6 +47,6 @@ app.use(config.server.apiPrefix, tenantRoutes);
 app.use(notFound);
 
 // Global error handler
-app.use(errorHandler);
+app.use(errorHandler as ErrorRequestHandler);
 
 export default app;

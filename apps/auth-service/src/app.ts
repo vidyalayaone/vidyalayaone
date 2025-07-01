@@ -3,9 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
 import authRoutes from './routes/authRoutes';
+import { errorHandler, notFound } from '@onlyexams/common-middleware';
+import type { ErrorRequestHandler } from 'express';
+
 
 // Import routes (we'll create these in later steps)
 // import authRoutes from './routes/authRoutes';
@@ -64,6 +65,6 @@ app.use(`${config.server.apiPrefix}/auth`, authRoutes);
 app.use(notFound);
 
 // Global error handler
-app.use(errorHandler);
+app.use(errorHandler as ErrorRequestHandler);
 
 export default app;

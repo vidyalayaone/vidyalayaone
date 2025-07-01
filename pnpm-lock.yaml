@@ -14,6 +14,9 @@ importers:
 
   apps/api-gateway:
     dependencies:
+      '@onlyexams/common-middleware':
+        specifier: workspace:*
+        version: link:../../packages/common-middleware
       '@onlyexams/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -84,6 +87,9 @@ importers:
 
   apps/auth-service:
     dependencies:
+      '@onlyexams/common-middleware':
+        specifier: workspace:*
+        version: link:../../packages/common-middleware
       '@onlyexams/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -99,9 +105,6 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
-      express:
-        specifier: ^5.1.0
-        version: 5.1.0
       express-rate-limit:
         specifier: ^7.5.1
         version: 7.5.1(express@5.1.0)
@@ -166,6 +169,9 @@ importers:
 
   apps/tenant-service:
     dependencies:
+      '@onlyexams/common-middleware':
+        specifier: workspace:*
+        version: link:../../packages/common-middleware
       '@prisma/client':
         specifier: ^6.10.1
         version: 6.10.1(prisma@6.10.1(typescript@5.8.3))(typescript@5.8.3)
@@ -224,6 +230,16 @@ importers:
       tsconfig-paths:
         specifier: ^4.2.0
         version: 4.2.0
+
+  packages/common-middleware:
+    dependencies:
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
 
   packages/logger: {}
 

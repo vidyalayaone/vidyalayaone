@@ -1,12 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import config from '../config/config';
+import { ErrorRequestHandler } from 'express';
+import { AppError } from './types'; // We'll create this next
 
-export interface AppError extends Error {
-  statusCode?: number;
-  isOperational?: boolean;
-}
-
-export const errorHandler = (
+export const errorHandler: ErrorRequestHandler = (
   err: AppError,
   req: Request,
   res: Response,
@@ -15,9 +11,11 @@ export const errorHandler = (
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
-  // Log error in development
-  if (config.server.nodeEnv === 'development') {
-    console.error('Error:', {
+  // Use environment variable directly
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  
+  if (nodeEnv === 'development') {
+    console.error('Service Error:', {
       message: err.message,
       stack: err.stack,
       url: req.url,
@@ -29,7 +27,7 @@ export const errorHandler = (
     success: false,
     error: {
       message,
-      ...(config.server.nodeEnv === 'development' && { stack: err.stack }),
+      ...(nodeEnv === 'development' && { stack: err.stack }),
     },
     timestamp: new Date().toISOString(),
   });

@@ -27,9 +27,16 @@ const strictLimiter = rateLimit({
   }
 });
 
+
 // Public routes
-router.post('/register', strictLimiter, authController.register);
-router.post('/verify-otp', strictLimiter, authController.verifyOtp);
+router.post('/platform/register', strictLimiter, authController.registerOnPlatform);
+router.post('/platform/verify-otp', strictLimiter, authController.verifyOtpOnPlatform);
+
+router.post('/school/register', strictLimiter, authController.registerOnSchool);
+router.post('/school/verify-otp', strictLimiter, authController.verifyOtpOnSchool);
+
+// router.post('/register', strictLimiter, authController.register);
+// router.post('/verify-otp', strictLimiter, authController.verifyOtp);
 router.post('/login', strictLimiter, authController.login);
 router.post('/refresh-token', authLimiter, authController.refreshToken);
 

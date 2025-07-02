@@ -1,44 +1,333 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import DatabaseService from '../services/database'; // Import database service
-import { createAndSendOTP, verifyOTP } from '../services/otpService';
+import DatabaseService from '../services/database';
+import { createAndSendOTP, verifyOTP, verifyOTPWithTenant } from '../services/otpService';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import config from '../config/config';
 import EmailService from "../services/emailService";
+import { getTenantContext } from "../utils/tenantContext";
 
 const { prisma } = DatabaseService;
 
-export async function register(req: Request, res: Response) {
-  const { email, password } = req.body;
+export async function registerOnPlatform(req: Request, res: Response) {
+  try {
+    const { email, username, password, role } = req.body;
+    const { context } = getTenantContext(req);
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    res.status(409).json({ message: 'Email already registered' });
+    if (context !== 'platform') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (role !== 'ADMIN') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Only ADMIN can register on platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const existingEmail = await prisma.user.findFirst({ where: { email, tenant_id: null } });
+    if (existingEmail) {
+      res.status(409).json({
+        success: false,
+        error: { message: 'Email already exists' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const existingUsername = await prisma.user.findFirst({ where: { username, tenant_id: null} });
+    if (existingUsername) {
+      res.status(409).json({
+        success: false,
+        error: { message: 'Username already exists' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, config.security.bcryptSaltRounds);
+
+    await prisma.user.create({
+      data: { email, username, password: hashedPassword, role, tenant_id: null },
+    });
+
+    await createAndSendOTP(email);
+
+    res.status(201).json({
+      success: true,
+      data: { message: 'Admin registration successful. Please verify your email.' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('Registration failed:', error);
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error',
+        details: error?.message || 'Unexpected error occurred'
+      },
+      timestamp: new Date().toISOString()
+    });
     return;
   }
-
-  const hashedPassword = await bcrypt.hash(password, config.security.bcryptSaltRounds);
-  await prisma.user.create({
-    data: { email, password: hashedPassword, isVerified: false },
-  });
-
-  await createAndSendOTP(email);
-  res.status(201).json({ message: 'Registration successful. Please verify your email.' });
-  return;
 }
 
-export async function verifyOtp(req: Request, res: Response) {
-  const { email, otp } = req.body;
-  const valid = await verifyOTP(email, otp);
-  if (!valid) {
-    res.status(400).json({ message: 'Invalid or expired OTP' });
+export async function registerOnSchool(req: Request, res: Response) {
+  try {
+    const { email, username, password, role } = req.body;
+    const { context, tenantId } = getTenantContext(req);
+
+    if (context !== 'school') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    if (!tenantId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required' },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (role === 'ADMIN') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Admin must register on platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+        // Use compound unique constraint for tenant-scoped uniqueness
+    const existingEmail = await prisma.user.findUnique({ 
+      where: { 
+        tenant_id_email: {
+          tenant_id: tenantId!,
+          email: email
+        }
+      } 
+    });
+    if (existingEmail) {
+      res.status(409).json({
+        success: false,
+        error: { message: 'Email already exists in this school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const existingUsername = await prisma.user.findUnique({ 
+      where: { 
+        tenant_id_username: {
+          tenant_id: tenantId!,
+          username: username
+        }
+      } 
+    });
+    if (existingUsername) {
+      res.status(409).json({
+        success: false,
+        error: { message: 'Username already exists in this school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // const existingEmail = await prisma.user.findUnique({ where: { email, tenant_id: tenantId } });
+    // if (existingEmail) {
+    //   res.status(409).json({
+    //     success: false,
+    //     error: { message: 'Email already exists' },
+    //     timestamp: new Date().toISOString()
+    //   });
+    //   return;
+    // }
+    //
+    // const existingUsername = await prisma.user.findUnique({ where: { username, tenant_id: tenantId } });
+    // if (existingUsername) {
+    //   res.status(409).json({
+    //     success: false,
+    //     error: { message: 'Username already exists' },
+    //     timestamp: new Date().toISOString()
+    //   });
+    //   return;
+    // }
+
+    const hashedPassword = await bcrypt.hash(password, config.security.bcryptSaltRounds);
+
+    await prisma.user.create({
+      data: { email, username, password: hashedPassword, role, tenant_id: tenantId },
+    });
+
+    await createAndSendOTP(email, tenantId);
+
+    res.status(201).json({
+      success: true,
+      data: { message: 'Registration successful. Please verify your email.' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('Registration failed:', error);
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error',
+        details: error?.message || 'Unexpected error occurred'
+      },
+      timestamp: new Date().toISOString()
+    });
     return;
   }
-
-  await prisma.user.update({ where: { email }, data: { isVerified: true } });
-  res.json({ message: 'Email verified successfully.' });
-  return;
 }
+
+export async function verifyOtpOnPlatform(req: Request, res: Response) {
+  try {
+    const { email, otp } = req.body;
+    const { context } = getTenantContext(req);
+
+    if (context !== 'platform') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const valid = await verifyOTP(email, otp);
+    if (!valid) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Invalid or expired OTP' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    await prisma.user.updateMany({ 
+      where: { 
+        email,
+        tenant_id: null // Platform users only
+      }, 
+      data: { isVerified: true } 
+    });
+
+    // // Update user verification status (admin without tenant_id)
+    // await prisma.user.update({ 
+    //   where: { email }, 
+    //   data: { isVerified: true } 
+    // });
+
+    res.status(200).json({
+      success: true,
+      data: { message: 'Email verified successfully.' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('OTP verification failed:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'OTP verification failed',
+        details: error?.message || 'Unexpected error occurred'
+      },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+}
+
+export async function verifyOtpOnSchool(req: Request, res: Response) {
+  try {
+    const { email, otp } = req.body;
+    const { context, tenantId } = getTenantContext(req);
+
+    if (context !== 'school') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!tenantId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const valid = await verifyOTPWithTenant(email, otp, tenantId);
+    if (!valid) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Invalid or expired OTP' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Update user verification status (school user with tenant_id)
+    await prisma.user.updateMany({ 
+      where: { 
+        email, 
+        tenant_id: tenantId 
+      }, 
+      data: { isVerified: true } 
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { message: 'Email verified successfully.' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('OTP verification failed:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'OTP verification failed',
+        details: error?.message || 'Unexpected error occurred'
+      },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+}
+
+// export async function verifyOtp(req: Request, res: Response) {
+//   const { email, otp } = req.body;
+//   const valid = await verifyOTP(email, otp);
+//   if (!valid) {
+//     res.status(400).json({ message: 'Invalid or expired OTP' });
+//     return;
+//   }
+//
+//   await prisma.user.update({ where: { email }, data: { isVerified: true } });
+//   res.json({ message: 'Email verified successfully.' });
+//   return;
+// }
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;

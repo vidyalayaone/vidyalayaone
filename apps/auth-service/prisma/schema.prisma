@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"  // Generate in service-specific folder
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -15,29 +9,42 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  isVerified Boolean @default(false)
-  loginAttempts Int   @default(0)
-  lockoutUntil DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  tenant_id  String?  // Nullable for platform admins
+  email      String
+  username   String?
+  password   String
+  role       UserRole @default(STUDENT)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
   otps          OTP[]
   refreshTokens RefreshToken[]
 
+  // Constraints
+  @@unique([tenant_id, email]) // Tenant-scoped uniqueness
+  @@unique([tenant_id, username]) // Tenant-scoped uniqueness
   @@map("users")
 }
 
+enum UserRole {
+  STUDENT
+  TEACHER
+  FINANCE
+  PRINCIPAL
+  ADMIN
+}
+
 model OTP {
-  id        String   @id @default(cuid())
-  email     String
-  otp       String
-  expiresAt DateTime
-  isUsed    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  tenant_id  String?  // Nullable for platform
+  email      String
+  otp        String
+  expiresAt  DateTime
+  isUsed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   // Relations
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -47,10 +54,11 @@ model OTP {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  tenant_id  String?  // Nullable for platform
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 
   // Relations
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -58,3 +66,4 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+

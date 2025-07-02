@@ -5,27 +5,32 @@ import DatabaseService from '../services/database';
 
 const { prisma } = DatabaseService;
 
-export async function createAndSendOTP(email: string): Promise<void> {
+// Update createAndSendOTP to handle tenant context
+export async function createAndSendOTP(email: string, tenantId?: string): Promise<void> {
   try {
-    // Generate OTP
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + config.security.otpExpiresIn * 60 * 1000);
 
-    // Save to database
+    // Save to database with optional tenant_id
     await prisma.oTP.create({
-      data: { email, otp, expiresAt, isUsed: false },
+      data: { 
+        email, 
+        otp, 
+        expiresAt, 
+        isUsed: false,
+        tenant_id: tenantId || null
+      },
     });
 
-    // Send email
     await EmailService.sendOTPEmail(email, otp);
-    
-    console.log(`✅ OTP sent to ${email}`);
+    console.log(`✅ OTP sent to ${email}${tenantId ? ` for tenant ${tenantId}` : ' (platform)'}`);
   } catch (error) {
     console.error('❌ Failed to create and send OTP:', error);
     throw new Error('Failed to send verification email');
   }
 }
 
+// Keep existing verifyOTP for platform (no tenant)
 export async function verifyOTP(email: string, otp: string): Promise<boolean> {
   try {
     const record = await prisma.oTP.findFirst({
@@ -33,7 +38,8 @@ export async function verifyOTP(email: string, otp: string): Promise<boolean> {
         email, 
         otp, 
         isUsed: false, 
-        expiresAt: { gt: new Date() } 
+        expiresAt: { gt: new Date() },
+        tenant_id: null // Platform OTPs have no tenant_id
       },
     });
 
@@ -41,7 +47,35 @@ export async function verifyOTP(email: string, otp: string): Promise<boolean> {
       return false;
     }
 
-    // Mark OTP as used
+    await prisma.oTP.update({ 
+      where: { id: record.id }, 
+      data: { isUsed: true } 
+    });
+
+    return true;
+  } catch (error) {
+    console.error('❌ OTP verification failed:', error);
+    return false;
+  }
+}
+
+// New function for school OTP verification
+export async function verifyOTPWithTenant(email: string, otp: string, tenantId: string): Promise<boolean> {
+  try {
+    const record = await prisma.oTP.findFirst({
+      where: { 
+        email, 
+        otp, 
+        isUsed: false, 
+        expiresAt: { gt: new Date() },
+        tenant_id: tenantId // School OTPs must match tenant_id
+      },
+    });
+
+    if (!record) {
+      return false;
+    }
+
     await prisma.oTP.update({ 
       where: { id: record.id }, 
       data: { isUsed: true } 

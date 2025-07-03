@@ -329,35 +329,241 @@ export async function verifyOtpOnSchool(req: Request, res: Response) {
 //   return;
 // }
 
-export async function login(req: Request, res: Response) {
-  const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.isVerified) {
-    res.status(401).json({ message: 'Invalid credentials or unverified email' });
+export async function loginOnPlatform(req: Request, res: Response) {
+  try {
+    const { email, username, password } = req.body;
+    const { context } = getTenantContext(req);
+
+    if (context !== 'platform') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!email && !username) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Email or username is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const identifier = email || username;
+
+    // Platform login: only admins, tenant_id is null
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier }
+        ],
+        tenant_id: null,
+        role: 'ADMIN'
+      }
+    });
+
+    if (!user || !user.isVerified) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Invalid credentials or unverified email' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Invalid credentials' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const accessToken = generateAccessToken({ 
+      userId: user.id,
+      role: user.role,
+      tenantId: null
+    });
+    
+    const refreshToken = generateRefreshToken({ 
+      userId: user.id,
+      role: user.role,
+      tenantId: null
+    });
+
+    await prisma.refreshToken.create({
+      data: { 
+        token: refreshToken, 
+        userId: user.id,
+        tenant_id: null,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { accessToken, refreshToken },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('Platform login error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Login failed' },
+      timestamp: new Date().toISOString()
+    });
     return;
   }
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
-    res.status(401).json({ message: 'Invalid credentials' });
-    return;
-  }
-
-  const accessToken = generateAccessToken({ userId: user.id });
-  const refreshToken = generateRefreshToken({ userId: user.id });
-
-  await prisma.refreshToken.create({
-    data: { token: refreshToken, userId: user.id, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
-  });
-
-  res.json({ accessToken, refreshToken });
-  return;
 }
 
-export async function logout(req: Request, res: Response) {
+export async function loginOnSchool(req: Request, res: Response) {
+  try {
+    const { email, username, password } = req.body;
+    const { context, tenantId } = getTenantContext(req);
+
+    if (context !== 'school') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!tenantId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!email && !username) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Email or username is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const identifier = email || username;
+
+    // School login: non-admins only
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier }
+        ],
+        tenant_id: tenantId,
+        role: { not: 'ADMIN' }
+      }
+    });
+
+    if (!user || !user.isVerified) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Invalid credentials or unverified email' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Invalid credentials' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const accessToken = generateAccessToken({ 
+      userId: user.id,
+      role: user.role,
+      tenantId: user.tenant_id
+    });
+    
+    const refreshToken = generateRefreshToken({ 
+      userId: user.id,
+      role: user.role,
+      tenantId: user.tenant_id
+    });
+
+    await prisma.refreshToken.create({
+      data: { 
+        token: refreshToken, 
+        userId: user.id,
+        tenant_id: user.tenant_id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { accessToken, refreshToken },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error: any) {
+    console.error('School login error:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Login failed' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+}
+
+// export async function login(req: Request, res: Response) {
+//   const { email, password } = req.body;
+//   const user = await prisma.user.findUnique({ where: { email } });
+//   if (!user || !user.isVerified) {
+//     res.status(401).json({ message: 'Invalid credentials or unverified email' });
+//     return;
+//   }
+//
+//   const valid = await bcrypt.compare(password, user.password);
+//   if (!valid) {
+//     res.status(401).json({ message: 'Invalid credentials' });
+//     return;
+//   }
+//
+//   const accessToken = generateAccessToken({ userId: user.id });
+//   const refreshToken = generateRefreshToken({ userId: user.id });
+//
+//   await prisma.refreshToken.create({
+//     data: { token: refreshToken, userId: user.id, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
+//   });
+//
+//   res.json({ accessToken, refreshToken });
+//   return;
+// }
+
+export async function logoutOnPlatform(req: Request, res: Response): Promise<void> {
   try {
     const { refreshToken } = req.body;
-    const user = req.user as any;
+    const { context } = getTenantContext(req);
+
+    if (context !== 'platform') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
 
     if (!refreshToken) {
       res.status(400).json({
@@ -368,11 +574,13 @@ export async function logout(req: Request, res: Response) {
       return;
     }
 
-    // Delete the specific refresh token
+    const user = req.user as any;
+
     await prisma.refreshToken.deleteMany({ 
       where: { 
         token: refreshToken,
-        userId: user.id 
+        userId: user.id,
+        tenant_id: null
       } 
     });
 
@@ -392,25 +600,167 @@ export async function logout(req: Request, res: Response) {
   }
 }
 
-export async function refreshToken(req: Request, res: Response) {
+export async function logoutOnSchool(req: Request, res: Response): Promise<void> {
+  try {
+    const { refreshToken } = req.body;
+    const { context, tenantId } = getTenantContext(req);
+
+    if (context !== 'school') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!tenantId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!refreshToken) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Refresh token is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const user = req.user as any;
+
+    await prisma.refreshToken.deleteMany({ 
+      where: { 
+        token: refreshToken,
+        userId: user.id,
+        tenant_id: tenantId
+      } 
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { message: 'Logged out successfully' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: { message: 'Logout failed' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+}
+
+// export async function logout(req: Request, res: Response) {
+//   try {
+//     const { refreshToken } = req.body;
+//     const user = req.user as any;
+//
+//     if (!refreshToken) {
+//       res.status(400).json({
+//         success: false,
+//         error: { message: 'Refresh token is required' },
+//         timestamp: new Date().toISOString()
+//       });
+//       return;
+//     }
+//
+//     // Delete the specific refresh token
+//     await prisma.refreshToken.deleteMany({ 
+//       where: { 
+//         token: refreshToken,
+//         userId: user.id 
+//       } 
+//     });
+//
+//     res.status(200).json({
+//       success: true,
+//       data: { message: 'Logged out successfully' },
+//       timestamp: new Date().toISOString()
+//     });
+//     return;
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       error: { message: 'Logout failed' },
+//       timestamp: new Date().toISOString()
+//     });
+//     return;
+//   }
+// }
+
+// export async function refreshToken(req: Request, res: Response) {
+//   const { refreshToken } = req.body;
+//   try {
+//     const payload = verifyRefreshToken(refreshToken) as any;
+//     const tokenRecord = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
+//     if (!tokenRecord) {
+//       res.status(401).json({ message: 'Invalid refresh token' });
+//       return;
+//     }
+//
+//     const accessToken = generateAccessToken({ userId: payload.userId });
+//     const newRefreshToken = generateRefreshToken({ userId: payload.userId });
+//
+//     await prisma.refreshToken.update({
+//       where: { token: refreshToken },
+//       data: { token: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
+//     });
+//
+//     res.json({ accessToken, refreshToken: newRefreshToken });
+//     return;
+//   } catch {
+//     res.status(401).json({ message: 'Invalid or expired refresh token' });
+//     return;
+//   }
+// }
+
+export async function refreshTokenOnPlatform(req: Request, res: Response) {
   const { refreshToken } = req.body;
+  const { context } = getTenantContext(req);
+
+  if (context !== 'platform') {
+    res.status(400).json({
+      success: false,
+      error: { message: 'Provided context must be platform' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+
   try {
     const payload = verifyRefreshToken(refreshToken) as any;
-    const tokenRecord = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
-    if (!tokenRecord) {
+
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken }
+    });
+
+    if (!tokenRecord || tokenRecord.tenant_id !== null) {
       res.status(401).json({ message: 'Invalid refresh token' });
       return;
     }
 
-    const accessToken = generateAccessToken({ userId: payload.userId });
-    const newRefreshToken = generateRefreshToken({ userId: payload.userId });
+    const accessToken = generateAccessToken({ userId: payload.userId, role: payload.role, tenantId: null });
+    const newRefreshToken = generateRefreshToken({ userId: payload.userId, role: payload.role, tenantId: null });
 
     await prisma.refreshToken.update({
       where: { token: refreshToken },
       data: { token: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
     });
 
-    res.json({ accessToken, refreshToken: newRefreshToken });
+    // res.json({ accessToken, refreshToken: newRefreshToken });
+    res.status(200).json({
+      success: true,
+      data: { accessToken, refreshToken:newRefreshToken },
+      timestamp: new Date().toISOString()
+    });
     return;
   } catch {
     res.status(401).json({ message: 'Invalid or expired refresh token' });
@@ -418,41 +768,76 @@ export async function refreshToken(req: Request, res: Response) {
   }
 }
 
-// export async function getMe(req: Request, res: Response) {
-//   try {
-//     // req.user is set by the authenticate middleware
-//     const user = req.user as any;
-//
-//     res.status(200).json({
-//       success: true,
-//       data: {
-//         id: user.id,
-//         email: user.email,
-//         isVerified: user.isVerified,
-//         createdAt: user.createdAt
-//       },
-//       timestamp: new Date().toISOString()
-//     });
-//     return;
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       error: { message: 'Failed to get user information' },
-//       timestamp: new Date().toISOString()
-//     });
-//     return;
-//   }
-// }
+export async function refreshTokenOnSchool(req: Request, res: Response) {
+  const { refreshToken } = req.body;
+  const { context, tenantId } = getTenantContext(req);
 
-export async function getMe(req: Request, res: Response) {
+  if (context !== 'school') {
+    res.status(400).json({
+      success: false,
+      error: { message: 'Provided context must be school' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+
+  if (!tenantId) {
+    res.status(400).json({
+      success: false,
+      error: { message: 'Tenant ID is required' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+
   try {
-    // Get user info from gateway-provided header
-    // const userInfo = req.headers['x-user-data'];
+    const payload = verifyRefreshToken(refreshToken) as any;
+
+    const tokenRecord = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken }
+    });
+
+    if (!tokenRecord || tokenRecord.tenant_id !== tenantId) {
+      res.status(401).json({ message: 'Invalid refresh token' });
+      return;
+    }
+
+    const accessToken = generateAccessToken({ userId: payload.userId, role: payload.role, tenantId });
+    const newRefreshToken = generateRefreshToken({ userId: payload.userId, role: payload.role, tenantId });
+
+    await prisma.refreshToken.update({
+      where: { token: refreshToken },
+      data: { token: newRefreshToken, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) }
+    });
+
+    // res.json({ accessToken, refreshToken: newRefreshToken });
+    res.status(200).json({
+      success: true,
+      data: { accessToken, refreshToken:newRefreshToken },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch {
+    res.status(401).json({ message: 'Invalid or expired refresh token' });
+    return;
+  }
+}
+
+export async function getMeOnPlatform(req: Request, res: Response): Promise<void> {
+  try {
+    const { context } = getTenantContext(req);
+
+    if (context !== 'platform') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be platform' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     const userId = req.user?.id;
 
-    console.log(req.user);
-    
-    
     if (!userId) {
       res.status(401).json({
         success: false,
@@ -462,12 +847,9 @@ export async function getMe(req: Request, res: Response) {
       return;
     }
 
-    // const user = JSON.parse(userInfo as string);
-    
-    // Optionally fetch fresh user data from database
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, isVerified: true, createdAt: true }
+      select: { id: true, email: true, username: true, role: true, isVerified: true, createdAt: true }
     });
 
     res.status(200).json({
@@ -485,6 +867,102 @@ export async function getMe(req: Request, res: Response) {
     return;
   }
 }
+
+export async function getMeOnSchool(req: Request, res: Response): Promise<void> {
+  try {
+    const { context, tenantId } = getTenantContext(req);
+
+    if (context !== 'school') {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Provided context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!tenantId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Unauthenticated' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { id: userId, tenant_id: tenantId },
+      select: { id: true, email: true, username: true, role: true, isVerified: true, createdAt: true }
+    });
+
+    res.status(200).json({
+      success: true,
+      user,
+      timestamp: new Date().toISOString()
+    });
+    return;
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to get user information' },
+      timestamp: new Date().toISOString()
+    });
+    return;
+  }
+}
+
+// export async function getMe(req: Request, res: Response) {
+//   try {
+//     // Get user info from gateway-provided header
+//     // const userInfo = req.headers['x-user-data'];
+//     const userId = req.user?.id;
+//
+//     console.log(req.user);
+//
+//
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         error: { message: 'Unauthenticated' },
+//         timestamp: new Date().toISOString()
+//       });
+//       return;
+//     }
+//
+//     // const user = JSON.parse(userInfo as string);
+//
+//     // Optionally fetch fresh user data from database
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { id: true, email: true, isVerified: true, createdAt: true }
+//     });
+//
+//     res.status(200).json({
+//       success: true,
+//       user,
+//       timestamp: new Date().toISOString()
+//     });
+//     return;
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       error: { message: 'Failed to get user information' },
+//       timestamp: new Date().toISOString()
+//     });
+//     return;
+//   }
+// }
 
 export async function testEmail(req: Request, res: Response) {
   try {

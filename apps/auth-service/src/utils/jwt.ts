@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
-// Define payload structure
-interface JwtPayload {
+export interface JwtPayload {
   userId: string;
+  role: string;         // <-- add this line
+  tenantId: string | null; // <-- add this line (or just string if never null)
 }
 
 export function generateAccessToken(payload: JwtPayload): string {

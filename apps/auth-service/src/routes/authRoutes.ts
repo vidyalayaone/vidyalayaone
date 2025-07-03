@@ -9,7 +9,7 @@ const router: Router = Router();
 // Rate limiting
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 requests per windowMs
+  max: 20,
   message: {
     success: false,
     error: { message: 'Too many requests, please try again later.' },
@@ -19,7 +19,7 @@ const authLimiter = rateLimit({
 
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs for sensitive operations
+  max: 5,
   message: {
     success: false,
     error: { message: 'Too many attempts, please try again later.' },
@@ -27,22 +27,25 @@ const strictLimiter = rateLimit({
   }
 });
 
-
 // Public routes
-router.post('/platform/register', strictLimiter, authController.registerOnPlatform);
-router.post('/platform/verify-otp', strictLimiter, authController.verifyOtpOnPlatform);
+router.post('/register/platform', strictLimiter, authController.registerOnPlatform);
+router.post('/register/school', strictLimiter, authController.registerOnSchool);
 
-router.post('/school/register', strictLimiter, authController.registerOnSchool);
-router.post('/school/verify-otp', strictLimiter, authController.verifyOtpOnSchool);
+router.post('/verify-otp/platform', strictLimiter, authController.verifyOtpOnPlatform);
+router.post('/verify-otp/school', strictLimiter, authController.verifyOtpOnSchool);
 
-// router.post('/register', strictLimiter, authController.register);
-// router.post('/verify-otp', strictLimiter, authController.verifyOtp);
-router.post('/login', strictLimiter, authController.login);
-router.post('/refresh-token', authLimiter, authController.refreshToken);
+router.post('/login/platform', strictLimiter, authController.loginOnPlatform);
+router.post('/login/school', strictLimiter, authController.loginOnSchool);
+
+router.post('/refresh-token/platform', authLimiter, authController.refreshTokenOnPlatform);
+router.post('/refresh-token/school', authLimiter, authController.refreshTokenOnSchool);
 
 // Protected routes
-router.get('/me', authLimiter, authenticate, authController.getMe);
-router.post('/logout', authLimiter, authenticate, authController.logout);
+router.get('/me/platform', authLimiter, authenticate, authController.getMeOnPlatform);
+router.get('/me/school', authLimiter, authenticate, authController.getMeOnSchool);
+
+router.post('/logout/platform', authLimiter, authenticate, authController.logoutOnPlatform);
+router.post('/logout/school', authLimiter, authenticate, authController.logoutOnSchool);
 
 // Add this route for testing (remove in production)
 if (config.server.nodeEnv === 'development') {

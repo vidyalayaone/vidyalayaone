@@ -33,3 +33,7 @@ const startServer = async (): Promise<void> => {
 };
 
 startServer();
+
+
+//Hello Abhijeet Singh This is the auth service server file. It initializes the server, connects to the database, and sets up graceful shutdown handling.
+// It listens on the port specified in the configuration and logs relevant information to the console.

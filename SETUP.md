@@ -68,13 +68,6 @@ Each app has a `.env.example` file.
 1. Copy `.env.example` to `.env` in the same directory.
 2. Fill in required values, especially database connection strings.
 
-Example for `auth-service`:
-
-```bash
-cd apps/auth-service
-cp .env.example .env
-```
-
 Repeat this for all apps.
 
 ---
@@ -241,7 +234,5 @@ pnpm build
 ---
 
 ## ✅ You're All Set
-
-You’re ready to develop and deploy OnlyExams. For any issues not listed here, check the GitHub issues or reach out to the maintainers.
 
 Happy building 🚀

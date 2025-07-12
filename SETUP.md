@@ -1,10 +1,14 @@
-# Setup Guide for OnlyExams Monorepo
+# 🛠️ Setup Guide for the OnlyExams Monorepo
+
 ## Prerequisites
 
-- **Node.js** v22.16.0>
-- **pnpm** 10.12.1>
-- **PostgreSQL** (two separate databases for auth-service and tenant-service)
-- **Git**
+Ensure you have the following installed:
+
+* **Node.js** v22.16.0
+* **pnpm** v10.12.1
+* **Git**
+
+---
 
 ## 1. Clone the Repository
 
@@ -13,49 +17,71 @@ git clone git@github.com:only-exams/onlyexams.git
 cd onlyexams
 ```
 
+---
+
 ## 2. Install Dependencies
 
+### Option 1: Install all dependencies at once:
+
 ```bash
 pnpm install
 ```
 
-This will install dependencies for all apps (`api-gateway`, `auth-service`, `tenant-service`) and packages (`common-middleware`, `logger`, etc.)
+This installs dependencies for:
 
-### Alternate way: Install dependencies for individual apps/packages
+* Applications: `api-gateway`, `auth-service`, `tenant-service`
+* Packages: `common-middleware`, `logger`, etc.
 
-Navigate to the specific app or package directory and run `pnpm install`.
+### Option 2: Install dependencies individually
 
-Example(app):
+You can install dependencies for a specific app or package:
 
 ```bash
-cd apps/auth-service
+cd apps/auth-service       # or apps/tenant-service, etc.
 pnpm install
 ```
 
-Example(package):
-
 ```bash
-cd packages/logger
+cd packages/logger         # or any other package
 pnpm install
 ```
 
+---
 
-## 3. Setup Databases
+## 3. Set Up Databases
 
-You need two PostgreSQL databases:
+Create two PostgreSQL databases—one each for:
 
-- For Auth Service
-- For Tenant Service
+* Auth Service
+* Tenant Service
 
-You can use any online database provider or create a local postgres database. you will need to will the database urls in the respective .env files
+These can be local or hosted. You'll need to provide their connection URLs in the respective `.env` files.
+
+---
 
 ## 4. Configure Environment Variables
 
-For each app, there is a .env.example file. you need to create a .env file for each app taking the .env.example file as a template, just fill your own values there. make sure you are filling the correct database urls that you created in the last step.
+Each app has a `.env.example` file.
 
-## 5. Database Migrations and Seeding
+### Steps:
 
-### 5.1 Auth Service
+1. Copy `.env.example` to `.env` in the same directory.
+2. Fill in required values, especially database connection strings.
+
+Example for `auth-service`:
+
+```bash
+cd apps/auth-service
+cp .env.example .env
+```
+
+Repeat this for all apps.
+
+---
+
+## 5. Run Database Migrations and Seed Data
+
+### Auth Service
 
 ```bash
 cd apps/auth-service
@@ -64,7 +90,7 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-### 5.2 Tenant Service
+### Tenant Service
 
 ```bash
 cd apps/tenant-service
@@ -73,156 +99,149 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-## 6. Running the Services
+---
 
-Navigate to each app directory and run:
+## 6. Run the Services (Development Mode)
 
-```bash
-cd apps/api-gateway
-pnpm dev
-```
+In separate terminals, run each service:
 
 ```bash
-cd apps/auth-service
-pnpm dev
+cd apps/api-gateway && pnpm dev
+cd apps/auth-service && pnpm dev
+cd apps/tenant-service && pnpm dev
 ```
 
-```bash
-cd apps/tenant-service
-pnpm dev
-```
+---
 
-## 7. Building the Project
+## 7. Build the Project
 
-### Option 1: Build all apps and packages at once
+### Option 1: Build Everything
 
 ```bash
 pnpm build
 ```
 
-### Option 2: Build packages and then build individual apps one by one
+### Option 2: Build Packages and Apps Separately
 
-**Build packages**
-Run this from the monorepo root:
+#### Build Packages:
+
 ```bash
 pnpm build:packages
 ```
 
-**Build apps**
-
-Navigate to each app directory and run:
+#### Build Apps (individually):
 
 ```bash
-cd apps/api-gateway
-pnpm dev
+cd apps/api-gateway && pnpm build
+cd apps/auth-service && pnpm build
+cd apps/tenant-service && pnpm build
 ```
 
-```bash
-cd apps/auth-service
-pnpm dev
-```
+---
 
-```bash
-cd apps/tenant-service
-pnpm dev
-```
+## 8. Start in Production Mode
 
-## 8. Starting the Project in Production Mode
+### Step 1: Build
 
-**Build everything**
-Run this from the monorepo root:
 ```bash
 pnpm build
 ```
 
-**Start apps**
-
-Navigate to each app directory and run:
+### Step 2: Start Services
 
 ```bash
-cd apps/api-gateway
-pnpm start
+cd apps/api-gateway && pnpm start
+cd apps/auth-service && pnpm start
+cd apps/tenant-service && pnpm start
 ```
 
-```bash
-cd apps/auth-service
-pnpm start
-```
+---
 
-```bash
-cd apps/tenant-service
-pnpm start
-```
+## 9. Service URLs and Ports
 
-## 9. Service Ports and URLs
+| Service        | Port | URL                                            |
+| -------------- | ---- | ---------------------------------------------- |
+| API Gateway    | 3000 | [http://localhost:3000](http://localhost:3000) |
+| Auth Service   | 3001 | [http://localhost:3001](http://localhost:3001) |
+| Tenant Service | 3002 | [http://localhost:3002](http://localhost:3002) |
 
-| Service | Port | URL |
-|---------|------|-----|
-| API Gateway | 3000 | http://localhost:3000 |
-| Auth Service | 3001 | http://localhost:3001 |
-| Tenant Service | 3002 | http://localhost:3002 |
+---
 
-## 10. Testing the Setup
+## 10. Health Check Endpoints
 
-### Health Check Endpoints
+* API Gateway: `GET http://localhost:3000/health`
+* Auth Service: `GET http://localhost:3001/health`
+* Tenant Service: `GET http://localhost:3002/health`
 
-- API Gateway: `GET http://localhost:3000/health`
-- Auth Service: `GET http://localhost:3001/health`
-- Tenant Service: `GET http://localhost:3002/health`
+---
 
-## 11. Additional Notes
+## 11. Configuration Notes
 
-- **Database Setup**: Ensure PostgreSQL is running and accessible on the specified ports
-- **Environment Variables**: Update `.env` files with your own secrets and credentials
-- **Email Configuration**: Configure SendGrid or your preferred SMTP provider for email features
-- **JWT Secrets**: Make sure JWT secrets match between API Gateway and Auth Service
-- **CORS**: Update CORS origins if running on different domains
+* **PostgreSQL**: Ensure the service is running and accessible.
+* **Environment Variables**: Securely store secrets in `.env` files.
+* **Email**: Configure SendGrid or SMTP provider in relevant `.env` files.
+* **JWT**: Auth and API Gateway must use the same JWT secret.
+* **CORS**: Update allowed origins if your frontend runs on a different domain.
+
+---
 
 ## 12. Troubleshooting
 
-### Common Issues
+### Common Problems & Fixes
 
-1. **Prisma Migration Errors**:
-   ```bash
-   cd apps/auth-service
-   pnpm db:reset
-   pnpm db:migrate
-   ```
+#### 🔄 Prisma Migration Errors
 
-2. **Port Already in Use**:
-   - Check if services are already running
-   - Change ports in `.env` files if needed
+```bash
+cd apps/auth-service
+pnpm db:reset
+pnpm db:migrate
+```
 
-3. **Database Connection Issues**:
-   - Verify PostgreSQL is running
-   - Check database URLs in `.env` files
-   - Ensure databases exist
+#### 🚫 Port Already in Use
 
-4. **Dependency Issues**:
-   ```bash
-   rm -rf node_modules
-   rm pnpm-lock.yaml
-   pnpm install
-   ```
+* Ensure no other service is using the port.
+* Modify ports in `.env` files if needed.
 
-5. **Build Errors**:
-   ```bash
-   pnpm build:packages
-   pnpm build
-   ```
+#### 🔌 Database Connection Errors
 
-### Logs and Debugging
+* Verify PostgreSQL is running and accessible.
+* Check credentials and connection URLs in `.env` files.
+* Confirm the databases exist.
 
-- Check terminal outputs for each service
-- Use `pnpm db:studio` to inspect database data
-- Enable debug logs by setting `NODE_ENV=development`
+#### 📦 Dependency Issues
 
-## 13. Development Workflow
+```bash
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+```
 
-1. **Start Development**: Run all services using Option A in section 6
-2. **Make Changes**: Edit code in respective service directories
-3. **Hot Reload**: Services automatically restart on file changes
-4. **Test**: Use health check endpoints and test APIs
-5. **Build**: Run `pnpm build` before production deployment
+#### 🏗️ Build Failures
 
-Happy coding! 🚀
+```bash
+pnpm build:packages
+pnpm build
+```
+
+### Debugging Tips
+
+* Check service logs in terminal
+* Use `pnpm db:studio` for DB inspection
+* Set `NODE_ENV=development` for more verbose logs
+
+---
+
+## 13. Development Workflow Summary
+
+1. Start all services (`pnpm dev`)
+2. Make code changes
+3. Services hot-reload automatically
+4. Use health endpoints or test APIs directly
+5. Run `pnpm build` before production deployment
+
+---
+
+## ✅ You're All Set
+
+You’re ready to develop and deploy OnlyExams. For any issues not listed here, check the GitHub issues or reach out to the maintainers.
+
+Happy building 🚀

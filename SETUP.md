@@ -80,7 +80,6 @@ Repeat this for all apps.
 cd apps/auth-service
 pnpm db:generate
 pnpm db:migrate
-pnpm db:seed
 ```
 
 ### Tenant Service
@@ -89,7 +88,6 @@ pnpm db:seed
 cd apps/tenant-service
 pnpm db:generate
 pnpm db:migrate
-pnpm db:seed
 ```
 
 ---
@@ -98,11 +96,27 @@ pnpm db:seed
 
 In separate terminals, run each service:
 
+**Build Packages:**
 ```bash
 pnpm build:packages
-cd apps/api-gateway && pnpm dev
-cd apps/auth-service && pnpm dev
-cd apps/tenant-service && pnpm dev
+```
+
+**Run Auth Service:**
+```bash
+cd apps/auth-service
+pnpm dev
+```
+
+**Run Tenant Service:**
+```bash
+cd apps/tenant-service
+pnpm dev
+```
+
+**Run API Gateway:**
+```bash
+cd apps/api-gateway
+pnpm dev
 ```
 
 ---

@@ -99,7 +99,7 @@ pnpm db:seed
 In separate terminals, run each service:
 
 ```bash
-pnpm build
+pnpm build:packages
 cd apps/api-gateway && pnpm dev
 cd apps/auth-service && pnpm dev
 cd apps/tenant-service && pnpm dev

@@ -18,7 +18,7 @@ export async function createAndSendOTP(email: string, tenantId?: string): Promis
         otp, 
         expiresAt, 
         isUsed: false,
-        tenant_id: tenantId || null
+        tenantId: tenantId || null
       },
     });
 
@@ -39,7 +39,7 @@ export async function verifyOTP(email: string, otp: string): Promise<boolean> {
         otp, 
         isUsed: false, 
         expiresAt: { gt: new Date() },
-        tenant_id: null // Platform OTPs have no tenant_id
+        tenantId: null // Platform OTPs have no tenant_id
       },
     });
 
@@ -60,7 +60,7 @@ export async function verifyOTP(email: string, otp: string): Promise<boolean> {
 }
 
 // New function for school OTP verification
-export async function verifyOTPWithTenant(email: string, otp: string, tenantId: string): Promise<boolean> {
+export async function verifyOTPWithTenant(email: string, otp: string, tenantId?: string): Promise<boolean> {
   try {
     const record = await prisma.oTP.findFirst({
       where: { 
@@ -68,7 +68,7 @@ export async function verifyOTPWithTenant(email: string, otp: string, tenantId: 
         otp, 
         isUsed: false, 
         expiresAt: { gt: new Date() },
-        tenant_id: tenantId // School OTPs must match tenant_id
+        tenantId: tenantId ?? null
       },
     });
 

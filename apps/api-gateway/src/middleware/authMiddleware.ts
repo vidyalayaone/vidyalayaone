@@ -23,6 +23,9 @@ export function authenticate(req: AuthenticatedRequest, res: Response, next: Nex
     
     const decoded = jwt.verify(token, config.jwt.accessSecret);
     req.user = decoded;
+
+    console.log('decoded', decoded);
+    
     
     next();
     return;

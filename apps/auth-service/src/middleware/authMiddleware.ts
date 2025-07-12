@@ -7,7 +7,7 @@ const { prisma } = DatabaseService;
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({ 
         success: false,
@@ -19,11 +19,11 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     const token = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token) as any;
-    
+
     // Get user from database to ensure they still exist
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, isVerified: true, createdAt: true }
+      select: { id: true, email: true, isVerified: true, createdAt: true, role: true, tenantId: true}
     });
 
     if (!user) {

@@ -3,6 +3,8 @@ declare global {
     interface Request {
       user?: {
         id: string;
+        role: string;
+        tenantId?: string | null;
         email: string;
         isVerified: boolean;
         createdAt: Date;

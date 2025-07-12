@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id         String   @id @default(cuid())
-  tenant_id  String?  // Nullable for platform admins
+  tenantId  String?  // Nullable for platform admins
   email      String
   username   String?
   password   String
@@ -24,8 +24,8 @@ model User {
   refreshTokens RefreshToken[]
 
   // Constraints
-  @@unique([tenant_id, email]) // Tenant-scoped uniqueness
-  @@unique([tenant_id, username]) // Tenant-scoped uniqueness
+  @@unique([tenantId, email]) // Tenant-scoped uniqueness
+  @@unique([tenantId, username]) // Tenant-scoped uniqueness
   @@map("users")
 }
 
@@ -39,7 +39,7 @@ enum UserRole {
 
 model OTP {
   id         String   @id @default(cuid())
-  tenant_id  String?  // Nullable for platform
+  tenantId  String?  // Nullable for platform
   email      String
   otp        String
   expiresAt  DateTime
@@ -55,7 +55,7 @@ model OTP {
 
 model RefreshToken {
   id         String   @id @default(cuid())
-  tenant_id  String?  // Nullable for platform
+  tenantId  String?  // Nullable for platform
   token      String   @unique
   expiresAt  DateTime
   createdAt  DateTime @default(now())

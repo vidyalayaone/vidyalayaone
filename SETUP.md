@@ -21,8 +21,6 @@ cd onlyexams
 
 ## 2. Install Dependencies
 
-### Option 1: Install all dependencies at once:
-
 ```bash
 pnpm install
 ```
@@ -31,20 +29,6 @@ This installs dependencies for:
 
 * Applications: `api-gateway`, `auth-service`, `tenant-service`
 * Packages: `common-middleware`, `logger`, etc.
-
-### Option 2: Install dependencies individually
-
-You can install dependencies for a specific app or package:
-
-```bash
-cd apps/auth-service       # or apps/tenant-service, etc.
-pnpm install
-```
-
-```bash
-cd packages/logger         # or any other package
-pnpm install
-```
 
 ---
 
@@ -121,33 +105,7 @@ pnpm dev
 
 ---
 
-## 7. Build the Project
-
-### Option 1: Build Everything
-
-```bash
-pnpm build
-```
-
-### Option 2: Build Packages and Apps Separately
-
-#### Build Packages:
-
-```bash
-pnpm build:packages
-```
-
-#### Build Apps (individually):
-
-```bash
-cd apps/api-gateway && pnpm build
-cd apps/auth-service && pnpm build
-cd apps/tenant-service && pnpm build
-```
-
----
-
-## 8. Start in Production Mode
+## 7. Start in Production Mode
 
 ### Step 1: Build
 
@@ -157,33 +115,27 @@ pnpm build
 
 ### Step 2: Start Services
 
+**Start Auth Service:**
 ```bash
-cd apps/api-gateway && pnpm start
-cd apps/auth-service && pnpm start
-cd apps/tenant-service && pnpm start
+cd apps/auth-service
+pnpm start
+```
+
+**Start Tenant Service:**
+```bash
+cd apps/tenant-service
+pnpm start
+```
+
+**Start API Gateway:**
+```bash
+cd apps/api-gateway
+pnpm start
 ```
 
 ---
 
-## 9. Service URLs and Ports
-
-| Service        | Port | URL                                            |
-| -------------- | ---- | ---------------------------------------------- |
-| API Gateway    | 3000 | [http://localhost:3000](http://localhost:3000) |
-| Auth Service   | 3001 | [http://localhost:3001](http://localhost:3001) |
-| Tenant Service | 3002 | [http://localhost:3002](http://localhost:3002) |
-
----
-
-## 10. Health Check Endpoints
-
-* API Gateway: `GET http://localhost:3000/health`
-* Auth Service: `GET http://localhost:3001/health`
-* Tenant Service: `GET http://localhost:3002/health`
-
----
-
-## 11. Configuration Notes
+## Configuration Notes
 
 * **PostgreSQL**: Ensure the service is running and accessible.
 * **Environment Variables**: Securely store secrets in `.env` files.
@@ -193,7 +145,7 @@ cd apps/tenant-service && pnpm start
 
 ---
 
-## 12. Troubleshooting
+## Troubleshooting
 
 ### Common Problems & Fixes
 
@@ -234,11 +186,10 @@ pnpm build
 
 * Check service logs in terminal
 * Use `pnpm db:studio` for DB inspection
-* Set `NODE_ENV=development` for more verbose logs
 
 ---
 
-## 13. Development Workflow Summary
+## Development Workflow Summary
 
 1. Start all services (`pnpm dev`)
 2. Make code changes

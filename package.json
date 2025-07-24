@@ -1,5 +1,5 @@
 {
-  "name": "onlyexams",
+  "name": "vidyalayaone",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,9 +8,9 @@
     "test": "pnpm --filter \"./apps/*\" run test",
     "build": "pnpm -r run build",
     "start": "pnpm --filter \"./apps/*\" run start",
-    "dev:app": "pnpm --filter @onlyexams/$APP dev",
-    "build:app": "pnpm --filter @onlyexams/$APP build",
-    "start:app": "pnpm --filter @onlyexams/$APP start",
+    "dev:app": "pnpm --filter @vidyalayaone/$APP dev",
+    "build:app": "pnpm --filter @vidyalayaone/$APP build",
+    "start:app": "pnpm --filter @vidyalayaone/$APP start",
     "build:packages": "pnpm run --recursive --filter \"./packages/**\" build"
   },
   "keywords": [],

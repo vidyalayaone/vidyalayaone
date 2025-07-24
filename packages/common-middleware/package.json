@@ -1,7 +1,7 @@
 {
-  "name": "@onlyexams/common-middleware",
+  "name": "@vidyalayaone/common-middleware",
   "version": "1.0.0",
-  "description": "Shared utilities for OnlyExams services",
+  "description": "Shared utilities for vidyalayaone services",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

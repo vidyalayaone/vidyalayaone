@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import authRoutes from './routes/authRoutes';
-import { errorHandler, notFound } from '@onlyexams/common-middleware';
+import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
 

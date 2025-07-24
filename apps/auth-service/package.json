@@ -1,5 +1,5 @@
 {
-  "name": "@onlyexams/auth-service",
+  "name": "@vidyalayaone/auth-service",
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
@@ -23,8 +23,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "@onlyexams/common-middleware": "workspace:*",
-    "@onlyexams/logger": "workspace:*",
+    "@vidyalayaone/common-middleware": "workspace:*",
+    "@vidyalayaone/logger": "workspace:*",
     "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",

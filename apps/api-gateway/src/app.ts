@@ -9,7 +9,7 @@ import HealthCheckService from './services/healthCheck';
 import ServiceRegistry from './services/serviceRegistry';
 import { createServiceProxy } from './utils/proxyUtils';
 import { resolveTenant } from "./middleware/tenantMiddleware";
-import { errorHandler, notFound } from '@onlyexams/common-middleware';
+import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
 const app: Application = express();

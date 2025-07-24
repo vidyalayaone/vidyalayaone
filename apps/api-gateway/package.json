@@ -1,7 +1,7 @@
 {
-  "name": "@onlyexams/api-gateway",
+  "name": "@vidyalayaone/api-gateway",
   "version": "1.0.0",
-  "description": "API Gateway for OnlyExams microservices",
+  "description": "API Gateway for Vidyalayaone microservices",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --clear --watch src --require tsconfig-paths/register src/server.ts",
@@ -22,8 +22,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "@onlyexams/logger": "workspace:*",
-    "@onlyexams/common-middleware": "workspace:*",
+    "@vidyalayaone/logger": "workspace:*",
+    "@vidyalayaone/common-middleware": "workspace:*",
     "axios": "^1.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

@@ -1,5 +1,5 @@
 {
-  "name": "@onlyexams/tenant-service",
+  "name": "@vidyalayaone/tenant-service",
   "version": "1.0.0",
   "description": "Tenant management service for OnlyExams",
   "main": "dist/server.js",
@@ -23,7 +23,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
-    "@onlyexams/common-middleware": "workspace:*",
+    "@vidyalayaone/common-middleware": "workspace:*",
     "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",

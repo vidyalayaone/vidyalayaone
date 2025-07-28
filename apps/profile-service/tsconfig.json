@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "prisma/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -9,47 +9,48 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  name      String
-  domain    String   @unique
-  status    TenantStatus @default(TRIAL)
-  plan      TenantPlan   @default(FREE)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                     String       @id @default(uuid())
+  tenantName             String       @map("tenant_name") @db.VarChar(255)
+  adminId                String       @unique @db.VarChar(50)
+  subdomain              String       @unique @db.VarChar(50)
+  schoolAddress          String       @map("school_address") @db.Text
+  schoolType             SchoolType   @map("school_type")
+  estimatedStudentCount  Int?         @map("estimated_student_count")
+  isActive               Boolean      @default(true) @map("is_active")
+  createdAt              DateTime     @default(now()) @map("created_at")
+  updatedAt              DateTime     @updatedAt @map("updated_at")
 
-  // Tenant configuration
-  configs   TenantConfig[]
-  
+  // Relations
+  customDomains          CustomDomain[]
+
   @@map("tenants")
-  @@index([domain])
-  @@index([slug])
 }
 
-model TenantConfig {
-  id       String @id @default(cuid())
-  tenantId String @map("tenant_id")
-  key      String
-  value    Json
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model CustomDomain {
+  id         String      @id @default(uuid())
+  tenantId   String      @map("tenant_id")
+  domain     String      @unique @db.VarChar(255)
+  isVerified Boolean     @default(false) @map("is_verified")
+  isPrimary  Boolean     @default(false) @map("is_primary")
+  sslStatus  SslStatus   @map("ssl_status")
+  createdAt  DateTime    @default(now()) @map("created_at")
 
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, key])
-  @@map("tenant_configs")
+  @@map("custom_domains")
 }
 
-enum TenantStatus {
-  TRIAL
-  ACTIVE
-  SUSPENDED
-  CANCELLED
+// Enums
+enum SchoolType {
+  primary
+  secondary
+  higher_secondary
+  mixed
 }
 
-enum TenantPlan {
-  FREE
-  BASIC
-  PREMIUM
-  ENTERPRISE
+enum SslStatus {
+  pending
+  active
+  failed
 }

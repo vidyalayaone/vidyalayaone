@@ -1,17 +1,21 @@
 import { Router } from 'express';
-import * as tenantController from '../controllers/tenantController';
+import { createSchool } from "../controllers/createSchool";
+import { getSchoolById } from "../controllers/getSchoolById";
+import { updateSchool } from "../controllers/updateSchool";
+import { deleteSchool } from "../controllers/deleteSchool";
+// import { validateSubdomain } from "../controllers/validateSubdomain";
+import { getTenantByDomain } from "../controllers/getTenantByDomain";
 
 const router: Router = Router();
 
-// Internal API routes (for API Gateway and other services)
-router.get('/internal/by-domain/:domain', tenantController.getTenantByDomain);
-router.get('/internal/by-slug/:slug', tenantController.getTenantBySlug);
-router.get('/internal/:id', tenantController.getTenantById);
+// Platform management routes
+router.post('/create-school', createSchool);
+router.get('/schools/:tenantId', getSchoolById);
+router.put('/schools/:tenantId', updateSchool);
+router.delete('/schools/:tenantId', deleteSchool);
+// router.get('/validate-subdomain', validateSubdomain);
 
-// Public API routes (for platform management)
-router.get('/tenants', tenantController.getAllTenants);
-router.post('/tenants', tenantController.createTenant);
-router.get('/tenants/:id', tenantController.getTenantById);
+// API Gateway route for tenant resolution
+router.get('/resolve/:domain', getTenantByDomain);
 
 export default router;
-

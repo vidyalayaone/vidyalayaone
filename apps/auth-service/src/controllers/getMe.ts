@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { getTenantContext } from "../utils/tenantContext";
+import { getTenantContext } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 

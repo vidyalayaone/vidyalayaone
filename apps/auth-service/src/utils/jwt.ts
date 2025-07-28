@@ -23,9 +23,9 @@ export function generateRefreshToken(payload: JwtPayload): string {
   );
 }
 
-export function verifyAccessToken(token: string): jwt.JwtPayload | string {
-  return jwt.verify(token, config.jwt.accessSecret);
-}
+// export function verifyAccessToken(token: string): jwt.JwtPayload | string {
+//   return jwt.verify(token, config.jwt.accessSecret);
+// }
 
 export function verifyRefreshToken(token: string): jwt.JwtPayload | string {
   return jwt.verify(token, config.jwt.refreshSecret);

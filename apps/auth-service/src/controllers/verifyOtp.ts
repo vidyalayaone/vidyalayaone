@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { verifyOTPWithTenant } from '../services/otpService';
-import { getTenantContext } from "../utils/tenantContext";
+import { getTenantContext } from '@vidyalayaone/common-utils';
 import { verifyOtpSchema } from '../validations/validationSchemas';
 import { validateInput } from '../validations/validationHelper';
 

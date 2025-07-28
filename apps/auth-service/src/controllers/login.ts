@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { getTenantContext } from "../utils/tenantContext";
+import { getTenantContext } from '@vidyalayaone/common-utils';
 import { loginSchema } from '../validations/validationSchemas';
 import { validateInput } from '../validations/validationHelper';
 

@@ -74,6 +74,14 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
+### Profile Service
+
+```bash
+cd apps/profile-service
+pnpm db:generate
+pnpm db:migrate
+```
+
 ---
 
 ## 6. Run the Services (Development Mode)
@@ -94,6 +102,12 @@ pnpm dev
 **Run Tenant Service:**
 ```bash
 cd apps/tenant-service
+pnpm dev
+```
+
+**Run Profile Service:**
+```bash
+cd apps/profile-service
 pnpm dev
 ```
 

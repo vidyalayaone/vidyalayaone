@@ -62,6 +62,16 @@ class ServiceRegistry {
       timeout: config.services.school.timeout,
     });
 
+    // Profile service - fully protected at gateway
+    this.services.set('profile', {
+      name: 'profile-service',
+      url: config.services.profile.url,
+      path: '/api/v1/profile',
+      isProtected: true, // All routes protected at gateway
+      healthPath: '/health',
+      timeout: config.services.profile.timeout,
+    });
+
     // Future services - fully protected at gateway
     // this.services.set('users', {
     //   name: 'user-service',

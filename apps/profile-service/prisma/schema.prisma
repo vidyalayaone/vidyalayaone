@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  userId          String    @map("user_id") // Reference to auth service user
+  name            String
+  username        String
+  email           String
+  phone           String
+  profilePicture  String?   @map("profile_picture")
+  gender          Gender?
+  dateOfBirth     DateTime? @map("date_of_birth")
+  address         String?
+  subjects        Json      // Array of subject names
+  classes         Json      // Array of class numbers (1-12)
+  joiningDate     DateTime? @map("joining_date")
+  employmentType  EmploymentType? @map("employment_type")
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  lastLogin       DateTime? @map("last_login")
+
+  // Relations
+  documents       UserDocument[]
+
+  // Constraints
+  @@unique([tenantId, username])
+  @@unique([tenantId, email])
+  @@unique([tenantId, phone])
+  @@index([tenantId, status])
+  @@index([tenantId, classes])
+  @@map("teachers")
+}
+
+model Student {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  userId          String    @map("user_id") // Reference to auth service user
+  name            String
+  username        String
+  email           String
+  phone           String
+  profilePicture  String?   @map("profile_picture")
+  gender          Gender?
+  dateOfBirth     DateTime? @map("date_of_birth")
+  address         String?
+  class           Int       // 1-12
+  section         String?
+  rollNumber      String?   @map("roll_number")
+  admissionDate   DateTime? @map("admission_date")
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  lastLogin       DateTime? @map("last_login")
+
+  // Relations
+  documents       UserDocument[]
+
+  // Constraints
+  @@unique([tenantId, username])
+  @@unique([tenantId, email])
+  @@unique([tenantId, phone])
+  @@unique([tenantId, rollNumber, class])
+  @@index([tenantId, class])
+  @@index([tenantId, status])
+  @@map("students")
+}
+
+model UserDocument {
+  id          String      @id @default(cuid())
+  tenantId    String      @map("tenant_id")
+  userId      String      @map("user_id") // teacher_id or student_id
+  userType    UserType    @map("user_type")
+  name        String
+  url         String
+  type        String      // file type/category
+  fileSize    BigInt?     @map("file_size")
+  mimeType    String?     @map("mime_type")
+  uploadedAt  DateTime    @default(now()) @map("uploaded_at")
+
+  // Relations
+  teacher     Teacher?    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "teacher_documents_fkey")
+  student     Student?    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "student_documents_fkey")
+
+  @@index([tenantId, userId, userType])
+  @@map("user_documents")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  ALUMNI
+}
+
+enum UserType {
+  TEACHER
+  STUDENT
+}

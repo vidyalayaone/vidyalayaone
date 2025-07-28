@@ -2,38 +2,39 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
-export interface AuthenticatedRequest extends Request {
-  user?: any;
+interface JwtPayload {
+  userId: string;
+  role: string;
+  tenantId: string | null;
 }
 
-export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+function verifyAccessToken(token: string): jwt.JwtPayload | string {
+  return jwt.verify(token, config.jwt.accessSecret);
+}
+
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
-      res.status(401).json({
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ 
         success: false,
         error: { message: 'No token provided' },
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
       return;
     }
 
     const token = authHeader.split(' ')[1];
-    
-    const decoded = jwt.verify(token, config.jwt.accessSecret);
-    req.user = decoded;
+    const decoded = verifyAccessToken(token) as any;
 
-    console.log('decoded', decoded);
-    
-    
+    req.user = decoded;
     next();
-    return;
   } catch (error) {
-    res.status(401).json({
+    res.status(401).json({ 
       success: false,
       error: { message: 'Invalid or expired token' },
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     });
     return;
   }

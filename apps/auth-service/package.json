@@ -24,6 +24,7 @@
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@vidyalayaone/common-middleware": "workspace:*",
+    "@vidyalayaone/common-utils": "workspace:*",
     "@vidyalayaone/logger": "workspace:*",
     "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",

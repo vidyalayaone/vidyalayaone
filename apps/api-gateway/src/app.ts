@@ -78,23 +78,85 @@ app.get('/health/services', async (req: Request, res: Response) => {
 // IMPORTANT: Add tenant resolution middleware BEFORE service routing
 app.use(resolveTenant);
 
-// Dynamic service registration
+// Dynamic service registration with route-level protection
 const services = ServiceRegistry.getAllServices();
 
 console.log('\n🔧 Registering services:');
+
 services.forEach(service => {
-  console.log(`   📍 ${service.name}: ${service.path} (protected: ${service.isProtected})`);
+  console.log(`   📍 ${service.name}: ${service.path} (default protected: ${service.isProtected})`);
   
-  if (service.isProtected) {
-    // Protected service - apply auth to all routes
-    app.use(service.path, authenticate, createServiceProxy(service));
+  if (service.routes && service.routes.length > 0) {
+    // Handle route-specific authentication
+    service.routes.forEach(route => {
+      const fullPath = `${service.path}${route.path}`;
+      
+      if (route.isProtected) {
+        console.log(`     🔒 ${route.method || 'ALL'} ${fullPath} - PROTECTED`);
+        
+        if (route.method) {
+          // Apply auth to specific HTTP method
+          const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch';
+          app[method](fullPath, authenticate, createServiceProxy(service));
+        } else {
+          // Apply auth to all HTTP methods for this path
+          app.use(fullPath, authenticate, createServiceProxy(service));
+        }
+      } else {
+        console.log(`     🔓 ${route.method || 'ALL'} ${fullPath} - PUBLIC`);
+        
+        if (route.method) {
+          // No auth for specific HTTP method
+          const method = route.method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch';
+          app[method](fullPath, createServiceProxy(service));
+        } else {
+          // No auth for all HTTP methods for this path
+          app.use(fullPath, createServiceProxy(service));
+        }
+      }
+    });
+    
+    // Catch-all for routes not explicitly configured
+    // This handles any routes not defined in the routes array
+    const catchAllMiddleware = service.isProtected 
+      ? [authenticate, createServiceProxy(service)]
+      : [createServiceProxy(service)];
+    
+    app.use(service.path, ...catchAllMiddleware);
+    
+    console.log(`     ⚡ Catch-all for ${service.path} - ${service.isProtected ? 'PROTECTED' : 'PUBLIC'}`);
+    
   } else {
-    // Unprotected service - let service handle auth internally
-    app.use(service.path, createServiceProxy(service));
+    // Fallback to service-level protection (existing behavior)
+    if (service.isProtected) {
+      console.log(`     🔒 All routes - PROTECTED`);
+      app.use(service.path, authenticate, createServiceProxy(service));
+    } else {
+      console.log(`     🔓 All routes - PUBLIC`);
+      app.use(service.path, createServiceProxy(service));
+    }
   }
 });
 
 console.log('🔧 Service registration complete\n');
+
+// // Dynamic service registration
+// const services = ServiceRegistry.getAllServices();
+//
+// console.log('\n🔧 Registering services:');
+// services.forEach(service => {
+//   console.log(`   📍 ${service.name}: ${service.path} (protected: ${service.isProtected})`);
+//
+//   if (service.isProtected) {
+//     // Protected service - apply auth to all routes
+//     app.use(service.path, authenticate, createServiceProxy(service));
+//   } else {
+//     // Unprotected service - let service handle auth internally
+//     app.use(service.path, createServiceProxy(service));
+//   }
+// });
+//
+// console.log('🔧 Service registration complete\n');
 
 // 404 handler
 app.use(notFound);

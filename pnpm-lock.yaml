@@ -93,6 +93,9 @@ importers:
       '@vidyalayaone/common-middleware':
         specifier: workspace:*
         version: link:../../packages/common-middleware
+      '@vidyalayaone/common-utils':
+        specifier: workspace:*
+        version: link:../../packages/common-utils
       '@vidyalayaone/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -181,6 +184,9 @@ importers:
       '@vidyalayaone/common-middleware':
         specifier: workspace:*
         version: link:../../packages/common-middleware
+      '@vidyalayaone/common-utils':
+        specifier: workspace:*
+        version: link:../../packages/common-utils
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -238,6 +244,16 @@ importers:
         version: 4.2.0
 
   packages/common-middleware:
+    dependencies:
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
+
+  packages/common-utils:
     dependencies:
       express:
         specifier: ^5.1.0

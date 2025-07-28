@@ -4,10 +4,7 @@ import config from '../config/config';
 
 interface TenantInfo {
   id: string;
-  slug: string;
-  name: string;
-  status: string;
-  plan: string;
+  isActive: string;
 }
 
 export async function resolveTenant(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -36,14 +33,14 @@ export async function resolveTenant(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    const schoolname = parts[0]; // Extract first part (schoolname)
-    console.log(`🏫 Extracted school name: ${schoolname}`);
+    const domain = host;
+    // console.log(`🏫 Extracted school name: ${domain}`);
 
     // Call tenant service to get tenant info
     try {
       const tenantServiceUrl = config.services.tenant.url;
       const response = await axios.get(
-        `${tenantServiceUrl}/api/v1/internal/by-slug/${schoolname}`,
+        `${tenantServiceUrl}/api/v1/resolve/${domain}`,
         { 
           timeout: config.services.tenant.timeout,
           headers: {
@@ -52,25 +49,25 @@ export async function resolveTenant(req: Request, res: Response, next: NextFunct
         }
       );
 
-      const tenant: TenantInfo = response.data.data;
+      const tenant: TenantInfo = response.data.data.tenant;
 
       if (!tenant) {
-        console.log('❌ Tenant not found for slug:', schoolname);
+        console.log('❌ Tenant not found for domain:', domain);
         res.status(404).json({
           success: false,
-          error: { message: `School '${schoolname}' not found` },
+          error: { message: `Domain '${domain}' not found` },
           timestamp: new Date().toISOString(),
         });
         return;
       }
 
-      if (tenant.status !== 'ACTIVE') {
-        console.log('❌ Tenant not active:', tenant.status);
+      if (!tenant.isActive) {
+        console.log('❌ Tenant not active:', tenant.isActive);
         res.status(403).json({
           success: false,
           error: { 
-            message: `School '${schoolname}' is not active`,
-            status: tenant.status 
+            message: `Domain '${domain}' is not active`,
+            status: tenant.isActive 
           },
           timestamp: new Date().toISOString(),
         });
@@ -80,19 +77,16 @@ export async function resolveTenant(req: Request, res: Response, next: NextFunct
       // Attach tenant context to request headers
       req.headers['x-context'] = 'school';
       req.headers['x-tenant-id'] = tenant.id;
-      req.headers['x-tenant-slug'] = tenant.slug;
-      req.headers['x-tenant-name'] = tenant.name;
-      req.headers['x-tenant-status'] = tenant.status;
-      req.headers['x-tenant-plan'] = tenant.plan;
+      req.headers['x-tenant-isActive'] = tenant.isActive;
 
-      console.log(`✅ Tenant resolved: ${tenant.name} (${tenant.slug}) - Plan: ${tenant.plan}`);
+      console.log(`✅ Tenant resolved: ${domain} - ${tenant.id}`);
       next();
     } catch (error: any) {
       if (error.response?.status === 404) {
-        console.log('❌ Tenant not found for slug:', schoolname);
+        console.log('❌ Tenant not found for domain:', domain);
         res.status(404).json({
           success: false,
-          error: { message: `School '${schoolname}' not found` },
+          error: { message: `Domain '${domain}' not found` },
           timestamp: new Date().toISOString(),
         });
         return;

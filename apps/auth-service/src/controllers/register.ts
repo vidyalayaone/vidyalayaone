@@ -3,7 +3,7 @@ import config from '../config/config';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
 import { createAndSendOTP } from '../services/otpService';
-import { getTenantContext } from "../utils/tenantContext";
+import { getTenantContext } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
 import { validateInput } from '../validations/validationHelper';
 

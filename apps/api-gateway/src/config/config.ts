@@ -12,7 +12,8 @@ interface ServiceConfig {
 
 interface ServicesConfig {
   auth: ServiceConfig;
-  tenant: ServiceConfig;  // Add tenant service type
+  tenant: ServiceConfig;
+  profile: ServiceConfig;
   // add more services
 }
 
@@ -53,6 +54,10 @@ const config: Config = {
     tenant: {
       url: process.env.TENANT_SERVICE_URL || 'http://localhost:3002',
       timeout: parseInt(process.env.TENANT_SERVICE_URL || '30000', 10),
+    },
+    profile: {
+      url: process.env.PROFILE_SERVICE_URL || 'http://localhost:3003',
+      timeout: parseInt(process.env.PROFILE_SERVICE_TIMEOUT || '30000', 10),
     },
   },
   jwt: {

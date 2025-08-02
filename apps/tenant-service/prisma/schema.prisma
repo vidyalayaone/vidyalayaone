@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/client"  // Generate in service-specific folder
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -8,49 +8,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Tenant {
-  id                     String       @id @default(uuid())
-  tenantName             String       @map("tenant_name") @db.VarChar(255)
-  adminId                String       @unique @db.VarChar(50)
-  subdomain              String       @unique @db.VarChar(50)
-  schoolAddress          String       @map("school_address") @db.Text
-  schoolType             SchoolType   @map("school_type")
-  estimatedStudentCount  Int?         @map("estimated_student_count")
-  isActive               Boolean      @default(true) @map("is_active")
-  createdAt              DateTime     @default(now()) @map("created_at")
-  updatedAt              DateTime     @updatedAt @map("updated_at")
+model School {
+  id               String       @id @default(uuid())
+  name             String       @db.VarChar(255)
+  subdomain        String       @unique @db.VarChar(50)
+  address          Json         // JSON field for full address structure
+  level            SchoolLevel  @map("school_level")
+  board            String?      @db.VarChar(255)
+  schoolCode       String?      @unique @map("school_code") @db.VarChar(50)
+  isActive         Boolean      @default(true) @map("is_active")
+  phoneNumbers     String[]     @map("phone_numbers") // Array of phone numbers
+  email            String?      @db.VarChar(255)
+  principalName    String?      @map("principal_name") @db.VarChar(255)
+  establishedYear  Int?         @map("established_year") @db.SmallInt
+  language         String?      @db.VarChar(50)
+  metaData         Json?        @map("meta_data") // JSONB for extensibility
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  customDomains          CustomDomain[]
 
-  @@map("tenants")
-}
-
-model CustomDomain {
-  id         String      @id @default(uuid())
-  tenantId   String      @map("tenant_id")
-  domain     String      @unique @db.VarChar(255)
-  isVerified Boolean     @default(false) @map("is_verified")
-  isPrimary  Boolean     @default(false) @map("is_primary")
-  sslStatus  SslStatus   @map("ssl_status")
-  createdAt  DateTime    @default(now()) @map("created_at")
-
-  // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@map("custom_domains")
+  @@map("schools")
 }
 
 // Enums
-enum SchoolType {
+enum SchoolLevel {
   primary
   secondary
   higher_secondary
   mixed
-}
-
-enum SslStatus {
-  pending
-  active
-  failed
 }

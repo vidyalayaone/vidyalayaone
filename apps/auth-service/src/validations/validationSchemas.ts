@@ -1,14 +1,11 @@
-// validationSchemas.ts
 import { z } from 'zod';
 
 // Register input validation schema
 export const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
+  phone: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
   username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['ADMIN']).refine(val => val === 'ADMIN', {
-    message: 'Role must be ADMIN'
-  })
+  password: z.string().min(6, 'Password must be at least 6 characters')
 });
 
 // Alternative approach using z.literal for single value

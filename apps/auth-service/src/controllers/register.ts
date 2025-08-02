@@ -6,6 +6,7 @@ import { createAndSendOTP } from '../services/otpService';
 import { getTenantContext } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
 import { validateInput } from '../validations/validationHelper';
+import { Role } from '../generated/client';
 
 const { prisma } = DatabaseService;
 
@@ -14,7 +15,7 @@ export async function register(req: Request, res: Response) {
     const validation = validateInput(registerSchema, req.body, res);
     if (!validation.success) return;
     
-    const { email, username, password, role } = validation.data;
+    const { email, phone, username, password } = validation.data;
     const { context, tenantId } = getTenantContext(req);
 
     if (context !== 'platform') {
@@ -24,26 +25,7 @@ export async function register(req: Request, res: Response) {
         timestamp: new Date().toISOString()
       });
       return;
-    }
-
-    if (role !== 'ADMIN') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Only ADMIN can register on platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const existingEmail = await prisma.user.findFirst({ where: { email, tenantId } });
-    if (existingEmail) {
-      res.status(409).json({
-        success: false,
-        error: { message: 'Email already exists' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    } 
 
     const existingUsername = await prisma.user.findFirst({ where: { username, tenantId } });
     if (existingUsername) {
@@ -55,17 +37,18 @@ export async function register(req: Request, res: Response) {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, config.security.bcryptSaltRounds);
+    const passwordHash = await bcrypt.hash(password, config.security.bcryptSaltRounds);
 
-    await prisma.user.create({
-      data: { email, username, password: hashedPassword, role, tenantId },
+    const newUser = await prisma.user.create({
+      data: { email, phone, username, passwordHash, role: 'ADMIN' as Role, tenantId },
     });
 
-    await createAndSendOTP(email);
+    // await createAndSendOTP(email);
+    await createAndSendOTP({ email: null, phone, isTestSms: true, userId: newUser.id, purpose: 'registration' });
 
     res.status(201).json({
       success: true,
-      data: { message: 'Admin registration successful. Please verify your email.' },
+      data: { message: 'Admin registration successful. Please verify your phone number.' },
       timestamp: new Date().toISOString()
     });
     return;

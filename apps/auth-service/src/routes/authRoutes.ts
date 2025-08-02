@@ -4,6 +4,7 @@ import { verifyOtp } from "../controllers/verifyOtp";
 import { login } from "../controllers/login";
 import { refreshToken } from "../controllers/refreshToken";
 import { getMe } from "../controllers/getMe";
+import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
 import { testEmail } from "../controllers/testEmail";
 import { authenticate } from '../middleware/authMiddleware';
 import rateLimit from 'express-rate-limit';
@@ -39,6 +40,9 @@ router.post('/login', strictLimiter, login);
 // Protected routes
 router.get('/me', authLimiter, authenticate, getMe);
 router.post('/refresh-token', authLimiter, authenticate, refreshToken);
+
+//Internal routes
+router.post('/add-tenant-to-admin', addTenantToAdmin)
 
 // Test routes
 if (config.server.nodeEnv === 'development') {

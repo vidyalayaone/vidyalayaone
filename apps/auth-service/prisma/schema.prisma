@@ -11,8 +11,8 @@ datasource db {
 model User {
   id                    String    @id @default(uuid())
   username              String    @db.VarChar(50)
-  email                 String    @db.VarChar(255)
-  phone                 String?   @db.VarChar(20)
+  email                 String?   @db.VarChar(255)
+  phone                 String    @db.VarChar(20)
   passwordHash          String    @map("password_hash") @db.VarChar(255)
   tenantId              String?   @map("tenant_id")
   role                  Role

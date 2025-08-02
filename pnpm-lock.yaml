@@ -187,6 +187,9 @@ importers:
       '@vidyalayaone/common-utils':
         specifier: workspace:*
         version: link:../../packages/common-utils
+      axios:
+        specifier: ^1.10.0
+        version: 1.10.0
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0

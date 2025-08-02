@@ -17,6 +17,8 @@ interface Config {
   database: {
     url: string;
   };
+  authServiceUrl: string;
+  authServiceTimeout: number;
 }
 
 const config: Config = {
@@ -31,6 +33,8 @@ const config: Config = {
   database: {
     url: process.env.DATABASE_URL || '',
   },
+  authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+  authServiceTimeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
 };
 
 // Validate required environment variables

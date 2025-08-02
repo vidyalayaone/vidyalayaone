@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getTenantContext } from '@vidyalayaone/common-utils';
 import { SchoolType } from '../generated/client';
+import config from "../config/config";
+import axios from 'axios';
 
 const { prisma } = DatabaseService;
 
@@ -157,6 +159,42 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
         isActive: true
       }
     });
+
+    try {
+      const authServiceUrl: string = config.authServiceUrl;
+      const authServiceTimeout: number = config.authServiceTimeout;
+      const response = await axios.post(
+        `${authServiceUrl}/api/v1/add-tenant-to-admin`,
+        {
+          adminId,
+          tenantId: tenant.id
+        },
+        { 
+          timeout: authServiceTimeout,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.data.success) {
+        res.status(500).json({
+          success: false,
+          error: { message: 'Failed to add tenant to admin' },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+    }
+    catch (axiosError) {
+      console.error('Auth service communication error:', axiosError);
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to communicate with auth service' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
 
     // TODO: Send welcome email
     // await sendWelcomeEmail(tenant, adminId);

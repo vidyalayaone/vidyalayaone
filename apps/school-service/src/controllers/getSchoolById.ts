@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getTenantContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
-export async function deleteSchool(req: Request, res: Response): Promise<void> {
+export async function getSchoolById(req: Request, res: Response): Promise<void> {
   try {
     const { tenantId } = req.params;
 
     const adminId = req.user?.id;
     const role = req.user?.role;
-    const { context } = getTenantContext(req);
+    const { context } = getSchoolContext(req);
 
     if (context !== 'platform') {
       res.status(400).json({
@@ -24,7 +24,7 @@ export async function deleteSchool(req: Request, res: Response): Promise<void> {
     if (role !== 'ADMIN') {
       res.status(400).json({
         success: false,
-        error: { message: 'Only ADMIN can update school' },
+        error: { message: 'Only ADMIN can get school data' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -39,13 +39,25 @@ export async function deleteSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const existingSchool = await prisma.tenant.findUnique({
+    const school = await prisma.tenant.findUnique({
       where: { 
         id: tenantId,
+      },
+      select: {
+        id: true,
+        tenantName: true,
+        adminId: true,
+        subdomain: true,
+        schoolAddress: true,
+        schoolType: true,
+        estimatedStudentCount: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
 
-    if (!existingSchool) {
+    if (!school) {
       res.status(404).json({
         success: false,
         error: { message: 'School not found' },
@@ -54,7 +66,7 @@ export async function deleteSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (existingSchool.adminId !== adminId) {
+    if (school.adminId !== adminId) {
       res.status(403).json({
         success: false,
         error: { message: 'School does not belong to this admin' },
@@ -63,25 +75,29 @@ export async function deleteSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // TODO: Add confirmation check
-    // TODO: Clean up related data in other services
-    
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { isActive: false }
-    });
-
     res.status(200).json({
       success: true,
-      message: "School deleted successfully.",
+      data: {
+        school: {
+          id: school.id,
+          name: school.tenantName,
+          admin_id: school.adminId,
+          subdomain: school.subdomain,
+          full_url: `https://${school.subdomain}.vidyalayaone.com`,
+          address: school.schoolAddress,
+          type: school.schoolType,
+          estimated_student_count: school.estimatedStudentCount,
+          isActive: school.isActive,
+        }
+      },
       timestamp: new Date().toISOString()
     });
     return;
   } catch (error) {
-    console.error('Delete school error:', error);
+    console.error('Get school by ID error:', error);
     res.status(500).json({
       success: false,
-      error: { message: 'Failed to delete school' },
+      error: { message: 'Failed to fetch school details' },
       timestamp: new Date().toISOString()
     });
     return;

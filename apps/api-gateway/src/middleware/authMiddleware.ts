@@ -5,7 +5,7 @@ import config from '../config/config';
 interface JwtPayload {
   userId: string;
   role: string;
-  tenantId: string | null;
+  schoolId: string | null;
 }
 
 function verifyAccessToken(token: string): jwt.JwtPayload | string {

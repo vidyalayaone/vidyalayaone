@@ -12,7 +12,7 @@ interface ServiceConfig {
 
 interface ServicesConfig {
   auth: ServiceConfig;
-  tenant: ServiceConfig;  // Add tenant service type
+  school: ServiceConfig;  // Add school service type
   // add more services
 }
 
@@ -50,9 +50,9 @@ const config: Config = {
       url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
     },
-    tenant: {
-      url: process.env.TENANT_SERVICE_URL || 'http://localhost:3002',
-      timeout: parseInt(process.env.TENANT_SERVICE_URL || '30000', 10),
+    school: {
+      url: process.env.SCHOOL_SERVICE_URL || 'http://localhost:3002',
+      timeout: parseInt(process.env.SCHOOL_SERVICE_URL || '30000', 10),
     },
   },
   jwt: {

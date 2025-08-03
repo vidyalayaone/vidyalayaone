@@ -8,7 +8,7 @@ import { authenticate } from './middleware/authMiddleware';
 import HealthCheckService from './services/healthCheck';
 import ServiceRegistry from './services/serviceRegistry';
 import { createServiceProxy } from './utils/proxyUtils';
-import { resolveTenant } from "./middleware/tenantMiddleware";
+import { resolveSchool } from "./middleware/resolveSchool";
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
@@ -75,8 +75,8 @@ app.get('/health/services', async (req: Request, res: Response) => {
   }
 });
 
-// IMPORTANT: Add tenant resolution middleware BEFORE service routing
-app.use(resolveTenant);
+// IMPORTANT: Add school resolution middleware BEFORE service routing
+app.use(resolveSchool);
 
 // Dynamic service registration with route-level protection
 const services = ServiceRegistry.getAllServices();

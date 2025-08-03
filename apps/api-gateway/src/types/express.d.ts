@@ -6,8 +6,7 @@ declare global {
       user?: {
         id: string;
         role: string;
-        tenantId?: string | null;
-        email: string;
+        schoolId?: string | null;
         isVerified: boolean;
         createdAt: Date;
       };

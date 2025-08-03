@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getTenantContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext } from '@vidyalayaone/common-utils';
 import { SchoolType } from '../generated/client';
 import config from "../config/config";
 import axios from 'axios';
@@ -13,7 +13,7 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
 
     const adminId = req.user?.id;
     const role = req.user?.role;
-    const { context } = getTenantContext(req);
+    const { context } = getSchoolContext(req);
 
     if (context !== 'platform') {
       res.status(400).json({

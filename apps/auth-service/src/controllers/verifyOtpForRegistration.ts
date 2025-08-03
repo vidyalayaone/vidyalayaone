@@ -34,6 +34,15 @@ export async function verifyOtpForRegistration(req: Request, res: Response) {
       return;
     }
 
+    if (user.isPhoneVerified) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'User is already verified' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     // Verify OTP
     const valid = await verifyOTPByUserId(user.id, otp, OtpPurpose.registration);
     if (!valid) {

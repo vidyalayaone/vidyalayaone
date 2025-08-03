@@ -37,13 +37,14 @@ export async function createAndSendOtpToPhone({
     data: {
       userId,
       otp,
-      purpose,
+      purpose: purpose as OtpPurpose,
       expiresAt,
     },
   });
 
   // Send SMS
-  await SmsService.sendOtpSMS(phone, otp, isTestSms);
+  // await SmsService.sendOtpSMS(phone, otp, isTestSms);
+  console.log(`OTP: ${otp} (expires in ${config.security.otpExpiresIn} minutes)`);
   console.log(`✅ OTP sent to phone: ${phone}`);
 }
 

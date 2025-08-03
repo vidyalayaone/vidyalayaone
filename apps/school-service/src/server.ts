@@ -8,7 +8,7 @@ const startServer = async (): Promise<void> => {
     await DatabaseService.connect();
     
     const server = app.listen(config.server.port, () => {
-      console.log(`🚀 Tenant Service running on port ${config.server.port}`);
+      console.log(`🚀 School Service running on port ${config.server.port}`);
       console.log(`📝 Environment: ${config.server.nodeEnv}`);
       console.log(`🔗 Health check: http://localhost:${config.server.port}/health`);
     });
@@ -18,7 +18,7 @@ const startServer = async (): Promise<void> => {
       console.log(`\n${signal} received. Shutting down gracefully...`);
       server.close(async () => {
         await DatabaseService.disconnect();
-        console.log('✅ Tenant Service closed successfully');
+        console.log('✅ School Service closed successfully');
         process.exit(0);
       });
     };
@@ -27,7 +27,7 @@ const startServer = async (): Promise<void> => {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
   } catch (error) {
-    console.error('❌ Failed to start Tenant Service:', error);
+    console.error('❌ Failed to start School Service:', error);
     process.exit(1);
   }
 };

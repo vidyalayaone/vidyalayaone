@@ -1,1 +1,1 @@
-export * from './tenantContext';
+export * from './schoolContext';

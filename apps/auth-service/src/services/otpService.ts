@@ -1,60 +1,87 @@
 import { generateOTP } from '../utils/otp';
 import EmailService from './emailService';
-import SmsService from './smsService'; // don't forget to import this!
+import SmsService from './smsService';
 import config from '../config/config';
 import DatabaseService from '../services/database';
 import { OtpPurpose } from '../generated/client';
 
 const { prisma } = DatabaseService;
 
-interface CreateAndSendOtpArgs {
-  email?: string;
-  phone?: string;
+interface CreateAndSendOtpToPhoneArgs {
+  phone: string;
   isTestSms?: boolean;
   userId: string;
-  purpose: string;
+  purpose: OtpPurpose;
 }
 
-export async function createAndSendOTP({
-  email,
+interface CreateAndSendOtpToEmailArgs {
+  email: string;
+  userId: string;
+  purpose: OtpPurpose;
+}
+
+/**
+ * Create and send OTP to phone number
+ */
+export async function createAndSendOtpToPhone({
   phone,
   isTestSms = false,
   userId,
   purpose,
-}: CreateAndSendOtpArgs): Promise<void> {
+}: CreateAndSendOtpToPhoneArgs): Promise<void> {
   const otp = generateOTP();
   const expiresAt = new Date(Date.now() + config.security.otpExpiresIn * 60 * 1000);
 
-  // Save OTP in database
-  await prisma.oTP.create({
+  // Save new OTP in database
+  await prisma.otp.create({
     data: {
       userId,
-      value: otp,
-      purpose: purpose as OtpPurpose,
+      otp,
+      purpose,
       expiresAt,
     },
   });
 
-  if (email) {
-    await EmailService.sendOTPEmail(email, otp);
-    console.log(`✅ OTP sent to email: ${email}`);
-  }
-
-  if (phone) {
-    await SmsService.sendOtpSMS(phone, otp, isTestSms);
-    console.log(`✅ OTP sent to phone: ${phone}`);
-  }
+  // Send SMS
+  await SmsService.sendOtpSMS(phone, otp, isTestSms);
+  console.log(`✅ OTP sent to phone: ${phone}`);
 }
 
 /**
- * OTP verification by userId (works for both phone/email verification flows)
+ * Create and send OTP to email
+ */
+export async function createAndSendOtpToEmail({
+  email,
+  userId,
+  purpose,
+}: CreateAndSendOtpToEmailArgs): Promise<void> {
+  const otp = generateOTP();
+  const expiresAt = new Date(Date.now() + config.security.otpExpiresIn * 60 * 1000);
+
+  // Save new OTP in database
+  await prisma.otp.create({
+    data: {
+      userId,
+      otp,
+      purpose,
+      expiresAt,
+    },
+  });
+
+  // Send Email
+  await EmailService.sendOTPEmail(email, otp);
+  console.log(`✅ OTP sent to email: ${email}`);
+}
+
+/**
+ * OTP verification by userId
  */
 export async function verifyOTPByUserId(userId: string, otp: string, purpose: OtpPurpose): Promise<boolean> {
   try {
-    const record = await prisma.oTP.findFirst({
+    const record = await prisma.otp.findFirst({
       where: {
         userId,
-        value: otp,
+        otp,
         purpose,
         isUsed: false,
         expiresAt: { gt: new Date() }
@@ -63,7 +90,7 @@ export async function verifyOTPByUserId(userId: string, otp: string, purpose: Ot
 
     if (!record) return false;
 
-    await prisma.oTP.update({
+    await prisma.otp.update({
       where: { id: record.id },
       data: { isUsed: true }
     });
@@ -71,27 +98,6 @@ export async function verifyOTPByUserId(userId: string, otp: string, purpose: Ot
     return true;
   } catch (error) {
     console.error('❌ OTP verification failed:', error);
-    return false;
-  }
-}
-
-/**
- * Helper: Given contact (email or phone) find the user, then verify OTP
- */
-export async function verifyOTPByContact(contact: { email?: string; phone?: string }, otp: string, purpose: OtpPurpose): Promise<boolean> {
-  try {
-    let user;
-    if (contact.email) {
-      user = await prisma.user.findFirst({ where: { email: contact.email } });
-    } else if (contact.phone) {
-      user = await prisma.user.findFirst({ where: { phone: contact.phone } });
-    } else {
-      return false;
-    }
-    if (!user) return false;
-    return await verifyOTPByUserId(user.id, otp, purpose);
-  } catch (error) {
-    console.error('❌ OTP verification by contact failed:', error);
     return false;
   }
 }

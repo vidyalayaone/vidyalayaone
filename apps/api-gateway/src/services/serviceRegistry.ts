@@ -31,20 +31,18 @@ class ServiceRegistry {
       isProtected: false,
       routes: [
         { path: '/register', method: 'POST', isProtected: false },
-        { path: '/verify-otp', method: 'POST', isProtected: false },
-        { path: '/login', method: 'POST', isProtected: false },
-
-        { path: '/me', method: 'GET', isProtected: true },
-        { path: '/refresh-token', method: 'POST', isProtected: true },
+        { path: '/resend-otp', method: 'POST', isProtected: false },
+        { path: '/verify-otp/registration', method: 'POST', isProtected: false },
+        { path: '/verify-otp/password-reset', method: 'POST', isProtected: false },
       ],
       healthPath: '/health',
       timeout: config.services.auth.timeout,
     });
 
-    this.services.set('tenant', {
-      name: 'tenant-service',
-      url: config.services.tenant.url,
-      path: '/api/v1/tenant',
+    this.services.set('school', {
+      name: 'school-service',
+      url: config.services.school.url,
+      path: '/api/v1/school',
       isProtected: false,
       routes: [
         // Protected routes (platform admin only)
@@ -59,7 +57,7 @@ class ServiceRegistry {
         { path: '/resolve', method: 'GET', isProtected: false },
       ],
       healthPath: '/health',
-      timeout: config.services.tenant.timeout,
+      timeout: config.services.school.timeout,
     });
 
     // Future services - fully protected at gateway

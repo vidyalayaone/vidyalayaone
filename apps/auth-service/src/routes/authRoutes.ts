@@ -1,14 +1,9 @@
 import { Router } from 'express';
-import { register } from "../controllers/register";
-import { verifyOtp } from "../controllers/verifyOtp";
-import { login } from "../controllers/login";
-import { refreshToken } from "../controllers/refreshToken";
-import { getMe } from "../controllers/getMe";
-import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
-import { testEmail } from "../controllers/testEmail";
-import { authenticate } from '../middleware/authMiddleware';
+import { register } from '../controllers/register';
+import { resendOtp } from '../controllers/resendOtp';
+import { verifyOtpForRegistration } from '../controllers/verifyOtpForRegistration';
+import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
 import rateLimit from 'express-rate-limit';
-import config from '../config/config';
 
 const router: Router = Router();
 
@@ -32,21 +27,25 @@ const strictLimiter = rateLimit({
   }
 });
 
-// Public routes
-router.post('/register', strictLimiter, register);
-router.post('/verify-otp', strictLimiter, verifyOtp);
-router.post('/login', strictLimiter, login);
 
-// Protected routes
-router.get('/me', authLimiter, authenticate, getMe);
-router.post('/refresh-token', authLimiter, authenticate, refreshToken);
+router.post('/register', strictLimiter, register);
+router.post('/resend-otp', strictLimiter, resendOtp);
+router.post('/verify-otp/registration', strictLimiter, verifyOtpForRegistration);
+router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
+
+
+// import { login } from "../controllers/login";
+// import { refreshToken } from "../controllers/refreshToken";
+// import { getMe } from "../controllers/getMe";
+// import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
+// import { testEmail } from "../controllers/testEmail";
+// import { authenticate } from '../middleware/authMiddleware';
+
+// router.post('/login', strictLimiter, login);
+// router.get('/me', authLimiter, authenticate, getMe);
+// router.post('/refresh-token', authLimiter, authenticate, refreshToken);
 
 //Internal routes
-router.post('/add-tenant-to-admin', addTenantToAdmin)
-
-// Test routes
-if (config.server.nodeEnv === 'development') {
-  router.post('/test-email', testEmail);
-}
+// router.post('/add-tenant-to-admin', addTenantToAdmin)
 
 export default router;

@@ -33,7 +33,8 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

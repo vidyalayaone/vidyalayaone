@@ -8,7 +8,7 @@ export const registerSchema = z.object({
 
 export const resendOtpSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
-  purpose: z.enum(['registration', 'passwordReset'])
+  purpose: z.enum(['registration', 'password_reset'])
 });
 
 export const verifyOtpForRegistrationSchema = z.object({

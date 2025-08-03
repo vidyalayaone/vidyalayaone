@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { verifyOTPByUserId } from '../services/otpService';
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { verifyOtpForRegistrationSchema } from '../validations/validationSchemas';
-import { validateInput } from '../validations/validationHelper';
 import { OtpPurpose } from '../generated/client';
 
 const { prisma } = DatabaseService;
@@ -29,6 +28,15 @@ export async function verifyOtpForRegistration(req: Request, res: Response) {
       res.status(404).json({
         success: false,
         error: { message: 'User not found' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (user.isPhoneVerified) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'User is already verified' },
         timestamp: new Date().toISOString()
       });
       return;

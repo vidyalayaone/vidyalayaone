@@ -1,7 +1,7 @@
 {
-  "name": "@vidyalayaone/tenant-service",
+  "name": "@vidyalayaone/school-service",
   "version": "1.0.0",
-  "description": "Tenant management service for OnlyExams",
+  "description": "School management service for OnlyExams",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --clear --watch src --require tsconfig-paths/register src/server.ts",

@@ -10,13 +10,13 @@ datasource db {
 
 model School {
   id               String       @id @default(uuid())
-  name             String       @db.VarChar(255)
+  name             String       @unique @db.VarChar(255)
   subdomain        String       @unique @db.VarChar(50)
   address          Json         // JSON field for full address structure
   level            SchoolLevel  @map("school_level")
   board            String?      @db.VarChar(255)
   schoolCode       String?      @unique @map("school_code") @db.VarChar(50)
-  isActive         Boolean      @default(true) @map("is_active")
+  isActive         Boolean      @default(false) @map("is_active")
   phoneNumbers     String[]     @map("phone_numbers") // Array of phone numbers
   email            String?      @db.VarChar(255)
   principalName    String?      @map("principal_name") @db.VarChar(255)

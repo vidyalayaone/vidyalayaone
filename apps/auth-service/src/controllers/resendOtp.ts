@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { createAndSendOtpToPhone } from '../services/otpService';
-import { validateInput } from '../validations/validationHelper';
+import { validateInput } from '@vidyalayaone/common-utils';
 import { resendOtpSchema } from '../validations/validationSchemas';
 import { OtpPurpose } from '../generated/client/'
 

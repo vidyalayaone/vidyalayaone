@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
-import tenantRoutes from './routes/tenantRoutes';
+import schoolRoutes from "./routes/schoolRoutes";
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
@@ -35,13 +35,13 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    service: 'tenant-service',
+    service: 'school-service',
     version: '1.0.0',
   });
 });
 
 // API routes
-app.use(config.server.apiPrefix, tenantRoutes);
+app.use(config.server.apiPrefix, schoolRoutes);
 
 // 404 handler
 app.use(notFound);

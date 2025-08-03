@@ -1,14 +1,19 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
+import { updateSchoolSchema } from '../validations/validationSchemas';
 
 const { prisma } = DatabaseService;
 
 export async function updateSchool(req: Request, res: Response): Promise<void> {
   try {
-    const { tenantId } = req.params;
-    const { school_name, school_address, school_type, estimated_student_count } = req.body;
+    const { schoolId } = req.params;
+    
+    const validation = validateInput(updateSchoolSchema, req.body, res);
+    if (!validation.success) return;
 
+    const { name, subdomain, address, level, board, schoolCode, phoneNumbers, email, principalName, establishedYear, language, metaData } = validation.data;
+    
     const adminId = req.user?.id;
     const role = req.user?.role;
     const { context } = getSchoolContext(req);
@@ -17,15 +22,6 @@ export async function updateSchool(req: Request, res: Response): Promise<void> {
       res.status(400).json({
         success: false,
         error: { message: 'Provided context must be platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (role !== 'ADMIN') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Only ADMIN can update school' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -40,65 +36,27 @@ export async function updateSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (!tenantId) {
+    if (role !== 'ADMIN') {
       res.status(400).json({
         success: false,
-        error: { message: 'Tenant ID parameter is required' },
+        error: { message: 'Only ADMIN can update school' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    if (school_name && typeof school_name !== 'string') {
+    if (!schoolId) {
       res.status(400).json({
         success: false,
-        error: { message: 'School name must be a string' },
+        error: { message: 'School ID parameter is required' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    if (school_name && (school_name.length < 2 || school_name.length > 255)) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School name must be between 2-255 characters' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (school_address && typeof school_address !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School address must be a string' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const validSchoolTypes = ['primary', 'secondary', 'higher_secondary', 'mixed'];
-    if (school_type && !validSchoolTypes.includes(school_type)) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Invalid school type' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (estimated_student_count !== undefined && (typeof estimated_student_count !== 'number' || estimated_student_count < 0)) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Estimated student count must be a positive number' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const existingSchool = await prisma.tenant.findUnique({
-      where: { 
-        id: tenantId,
-      }
+    // Find the existing school
+    const existingSchool = await prisma.school.findUnique({
+      where: { id: schoolId }
     });
 
     if (!existingSchool) {
@@ -110,36 +68,80 @@ export async function updateSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (existingSchool.adminId !== adminId) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'School does not belong to this admin' },
-        timestamp: new Date().toISOString()
+    // Check for conflicts with other schools (exclude current school)
+    if (name && name !== existingSchool.name) {
+      const existingName = await prisma.school.findFirst({
+        where: { 
+          name, 
+          id: { not: schoolId } 
+        }
       });
-      return;
+      
+      if (existingName) {
+        res.status(409).json({
+          success: false,
+          error: { message: 'School with this name already exists' },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
     }
 
-    const updateData: any = {};
-    if (school_name) updateData.tenantName = school_name;
-    if (school_address) updateData.schoolAddress = school_address;
-    if (school_type) updateData.schoolType = school_type;
-    if (estimated_student_count !== undefined) updateData.estimatedStudentCount = estimated_student_count;
-
-    const updatedSchool = await prisma.tenant.update({
-      where: { id: tenantId },
-      data: updateData,
-      select: { 
-        id: true,
-        tenantName: true,
-        adminId: true,
-        subdomain: true,
-        schoolAddress: true,
-        schoolType: true,
-        estimatedStudentCount: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
+    if (subdomain && subdomain !== existingSchool.subdomain) {
+      const existingSubdomain = await prisma.school.findFirst({
+        where: { 
+          subdomain, 
+          id: { not: schoolId } 
+        }
+      });
+      
+      if (existingSubdomain) {
+        res.status(409).json({
+          success: false,
+          error: { message: 'Subdomain already taken' },
+          timestamp: new Date().toISOString()
+        });
+        return;
       }
+    }
+
+    if (schoolCode && schoolCode !== existingSchool.schoolCode) {
+      const existingSchoolCode = await prisma.school.findFirst({
+        where: { 
+          schoolCode, 
+          id: { not: schoolId } 
+        }
+      });
+      
+      if (existingSchoolCode) {
+        res.status(409).json({
+          success: false,
+          error: { message: 'School code already exists' },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+    }
+
+    // Build update data object (only include provided fields)
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (subdomain !== undefined) updateData.subdomain = subdomain;
+    if (address !== undefined) updateData.address = address;
+    if (level !== undefined) updateData.level = level;
+    if (board !== undefined) updateData.board = board;
+    if (schoolCode !== undefined) updateData.schoolCode = schoolCode;
+    if (phoneNumbers !== undefined) updateData.phoneNumbers = phoneNumbers;
+    if (email !== undefined) updateData.email = email;
+    if (principalName !== undefined) updateData.principalName = principalName;
+    if (establishedYear !== undefined) updateData.establishedYear = establishedYear;
+    if (language !== undefined) updateData.language = language;
+    if (metaData !== undefined) updateData.metaData = metaData;
+
+    // Update the school
+    const updatedSchool = await prisma.school.update({
+      where: { id: schoolId },
+      data: updateData
     });
 
     res.status(200).json({
@@ -148,18 +150,24 @@ export async function updateSchool(req: Request, res: Response): Promise<void> {
       data: {
         school: {
           id: updatedSchool.id,
-          name: updatedSchool.tenantName,
-          admin_id: updatedSchool.adminId,
+          name: updatedSchool.name,
           subdomain: updatedSchool.subdomain,
+          address: updatedSchool.address,
+          level: updatedSchool.level,
+          board: updatedSchool.board,
+          schoolCode: updatedSchool.schoolCode,
+          phoneNumbers: updatedSchool.phoneNumbers,
+          email: updatedSchool.email,
+          principalName: updatedSchool.principalName,
+          establishedYear: updatedSchool.establishedYear,
+          language: updatedSchool.language,
+          metaData: updatedSchool.metaData,
           full_url: `https://${updatedSchool.subdomain}.vidyalayaone.com`,
-          address: updatedSchool.schoolAddress,
-          type: updatedSchool.schoolType,
-          estimated_student_count: updatedSchool.estimatedStudentCount,
           isActive: updatedSchool.isActive,
           updated_at: updatedSchool.updatedAt,
+        }
       },
       timestamp: new Date().toISOString()
-      }
     });
     return;
   } catch (error) {

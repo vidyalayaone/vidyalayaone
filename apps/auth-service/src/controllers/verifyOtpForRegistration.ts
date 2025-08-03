@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { verifyOTPByUserId } from '../services/otpService';
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { verifyOtpForRegistrationSchema } from '../validations/validationSchemas';
-import { validateInput } from '../validations/validationHelper';
 import { OtpPurpose } from '../generated/client';
 
 const { prisma } = DatabaseService;

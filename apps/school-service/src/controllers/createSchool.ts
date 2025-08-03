@@ -1,16 +1,18 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getSchoolContext } from '@vidyalayaone/common-utils';
-import { SchoolType } from '../generated/client';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import config from "../config/config";
 import axios from 'axios';
+import { createSchoolSchema } from '../validations/validationSchemas';
 
 const { prisma } = DatabaseService;
 
 export async function createSchool(req: Request, res: Response): Promise<void> {
   try {
-    const { school_name, school_address, school_type, estimated_student_count, subdomain } = req.body;
+    const validation = validateInput(createSchoolSchema, req.body, res);
+    if (!validation.success) return;
 
+    const { name, subdomain, address, level, board, schoolCode, phoneNumbers, email, principalName, establishedYear, language, metaData } = validation.data;
     const adminId = req.user?.id;
     const role = req.user?.role;
     const { context } = getSchoolContext(req);
@@ -19,15 +21,6 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       res.status(400).json({
         success: false,
         error: { message: 'Provided context must be platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (role !== 'ADMIN') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Only ADMIN can create school' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -42,76 +35,21 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (!school_name || typeof school_name !== 'string') {
+    if (role !== 'ADMIN') {
       res.status(400).json({
         success: false,
-        error: { message: 'School name is required' },
+        error: { message: 'Only ADMIN can create school' },
         timestamp: new Date().toISOString()
       });
       return;
-    }
-
-    if (school_name.length < 2 || school_name.length > 255) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School name must be between 2-255 characters' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (!school_address || typeof school_address !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School address is required' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (!school_type || typeof school_type !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School type is required' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const validSchoolTypes = ['primary', 'secondary', 'higher_secondary', 'mixed'];
-    if (!validSchoolTypes.includes(school_type)) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Invalid school type' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (!subdomain || typeof subdomain !== 'string') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Subdomain name is required' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (subdomain.length < 2 || subdomain.length > 50) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Subdomain name must be between 2-50 characters' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    } 
 
     // Check if school name already exists
-    const existingTenant = await prisma.tenant.findFirst({
-      where: { tenantName: school_name }
+    const existingSchoolname = await prisma.school.findUnique({
+      where: { name }
     });
 
-    if (existingTenant) {
+    if (existingSchoolname) {
       res.status(409).json({
         success: false,
         error: { message: 'School with this name already exists' },
@@ -121,8 +59,8 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
     }
 
     // Check if school with given subdomain already exists
-    const existingSubdomain = await prisma.tenant.findFirst({
-      where: { subdomain: subdomain }
+    const existingSubdomain = await prisma.school.findUnique({
+      where: { subdomain }
     });
 
     if (existingSubdomain) {
@@ -134,29 +72,35 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const existingAdminId = await prisma.tenant.findFirst({
-      where: { adminId: adminId }
+    // check if school code already exists
+    const existingSchoolCode = await prisma.school.findUnique({
+      where: { schoolCode }
     });
 
-    if (existingAdminId) {
+    if (existingSchoolCode) {
       res.status(409).json({
         success: false,
-        error: { message: 'Admin already has a tenant' },
+        error: { message: 'School code already exists' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    // Create tenant record
-    const tenant = await prisma.tenant.create({
+    // Create school record
+    const school = await prisma.school.create({
       data: {
-        tenantName: school_name,
-        adminId: adminId,
+        name,
         subdomain,
-        schoolAddress: school_address,
-        schoolType: school_type as SchoolType,
-        estimatedStudentCount: estimated_student_count,
-        isActive: true
+        address: address as any,
+        level,
+        board,
+        schoolCode,
+        phoneNumbers,
+        email,
+        principalName,
+        establishedYear,
+        language,
+        metaData: metaData as any,
       }
     });
 
@@ -164,10 +108,10 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       const authServiceUrl: string = config.authServiceUrl;
       const authServiceTimeout: number = config.authServiceTimeout;
       const response = await axios.post(
-        `${authServiceUrl}/api/v1/add-tenant-to-admin`,
+        `${authServiceUrl}/api/v1/update-admin`,
         {
           adminId,
-          tenantId: tenant.id
+          subdomain: school.subdomain,
         },
         { 
           timeout: authServiceTimeout,
@@ -180,7 +124,7 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       if (!response.data.success) {
         res.status(500).json({
           success: false,
-          error: { message: 'Failed to add tenant to admin' },
+          error: { message: 'Failed to add school to admin' },
           timestamp: new Date().toISOString()
         });
         return;
@@ -196,18 +140,25 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // TODO: Send welcome email
-    // await sendWelcomeEmail(tenant, adminId);
+    // TODO: Send notification to admin about school creation
 
     res.status(201).json({
       success: true,
       message: "School created successfully.",
       data: {
-        tenant: {
-          id: tenant.id,
-          name: tenant.tenantName,
-          subdomain: tenant.subdomain,
-          full_url: `https://${tenant.subdomain}.vidyalayaone.com`,
+        school: {
+          id: school.id,
+          name: school.name,
+          subdomain: school.subdomain,
+          address: school.address,
+          level: school.level,
+          board: school.board,
+          schoolCode: school.schoolCode,
+          phoneNumbers: school.phoneNumbers,
+          email: school.email,
+          principalName: school.principalName,
+          establishedYear: school.establishedYear,
+          full_url: `https://${school.subdomain}.vidyalayaone.com`,
         }
       },
       timestamp: new Date().toISOString()

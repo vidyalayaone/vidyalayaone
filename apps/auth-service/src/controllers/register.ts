@@ -2,9 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
 import { createAndSendOtpToPhone } from '../services/otpService';
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
-import { validateInput } from '../validations/validationHelper';
 import { Role } from '../generated/client';
 import config from '../config/config';
 

@@ -2,9 +2,8 @@ import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
 export interface JwtPayload {
-  userId: string;
-  role: string;         // <-- add this line
-  tenantId: string | null; // <-- add this line (or just string if never null)
+  id: string;
+  role: string;
 }
 
 export function generateAccessToken(payload: JwtPayload): string {
@@ -22,10 +21,6 @@ export function generateRefreshToken(payload: JwtPayload): string {
     { expiresIn: config.jwt.refreshExpiresIn } as jwt.SignOptions
   );
 }
-
-// export function verifyAccessToken(token: string): jwt.JwtPayload | string {
-//   return jwt.verify(token, config.jwt.accessSecret);
-// }
 
 export function verifyRefreshToken(token: string): jwt.JwtPayload | string {
   return jwt.verify(token, config.jwt.refreshSecret);

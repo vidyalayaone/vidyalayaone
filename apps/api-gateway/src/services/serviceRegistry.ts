@@ -34,6 +34,8 @@ class ServiceRegistry {
         { path: '/resend-otp', method: 'POST', isProtected: false },
         { path: '/verify-otp/registration', method: 'POST', isProtected: false },
         { path: '/verify-otp/password-reset', method: 'POST', isProtected: false },
+        { path: '/login', method: 'POST', isProtected: false },
+        { path: '/me', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.auth.timeout,

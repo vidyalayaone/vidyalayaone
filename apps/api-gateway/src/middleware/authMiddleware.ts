@@ -3,9 +3,8 @@ import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
 interface JwtPayload {
-  userId: string;
+  id: string;
   role: string;
-  schoolId: string | null;
 }
 
 function verifyAccessToken(token: string): jwt.JwtPayload | string {

@@ -6,55 +6,33 @@ const { prisma } = DatabaseService;
 
 export async function getSchoolById(req: Request, res: Response): Promise<void> {
   try {
-    const { tenantId } = req.params;
+    const { schoolId } = req.params;
 
-    const adminId = req.user?.id;
-    const role = req.user?.role;
-    const { context } = getSchoolContext(req);
+    const userId = req.user?.id;
 
-    if (context !== 'platform') {
+    if (!schoolId) {
       res.status(400).json({
         success: false,
-        error: { message: 'Provided context must be platform' },
+        error: { message: 'School ID parameter is required' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    if (role !== 'ADMIN') {
-      res.status(400).json({
+    if (!userId) {
+      res.status(401).json({
         success: false,
-        error: { message: 'Only ADMIN can get school data' },
+        error: { message: 'User authentication required' },
         timestamp: new Date().toISOString()
       });
       return;
-    }
+    } 
 
-    if (!tenantId) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Tenant ID parameter is required' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const school = await prisma.tenant.findUnique({
+    // Use the new school table instead of tenant
+    const school = await prisma.school.findUnique({
       where: { 
-        id: tenantId,
+        id: schoolId,
       },
-      select: {
-        id: true,
-        tenantName: true,
-        adminId: true,
-        subdomain: true,
-        schoolAddress: true,
-        schoolType: true,
-        estimatedStudentCount: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true
-      }
     });
 
     if (!school) {
@@ -64,30 +42,29 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
         timestamp: new Date().toISOString()
       });
       return;
-    }
-
-    if (school.adminId !== adminId) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'School does not belong to this admin' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    } 
 
     res.status(200).json({
       success: true,
       data: {
         school: {
           id: school.id,
-          name: school.tenantName,
-          admin_id: school.adminId,
+          name: school.name,
           subdomain: school.subdomain,
+          address: school.address,
+          level: school.level,
+          board: school.board,
+          schoolCode: school.schoolCode,
+          phoneNumbers: school.phoneNumbers,
+          email: school.email,
+          principalName: school.principalName,
+          establishedYear: school.establishedYear,
+          language: school.language,
+          metaData: school.metaData,
           full_url: `https://${school.subdomain}.vidyalayaone.com`,
-          address: school.schoolAddress,
-          type: school.schoolType,
-          estimated_student_count: school.estimatedStudentCount,
           isActive: school.isActive,
+          created_at: school.createdAt,
+          updated_at: school.updatedAt,
         }
       },
       timestamp: new Date().toISOString()

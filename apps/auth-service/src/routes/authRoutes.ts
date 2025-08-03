@@ -3,6 +3,9 @@ import { register } from '../controllers/register';
 import { resendOtp } from '../controllers/resendOtp';
 import { verifyOtpForRegistration } from '../controllers/verifyOtpForRegistration';
 import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
+import { login } from "../controllers/login";
+import { refreshToken } from "../controllers/refreshToken";
+import { getMe } from "../controllers/getMe";
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -28,22 +31,24 @@ const strictLimiter = rateLimit({
 });
 
 
+// protected = false
 router.post('/register', strictLimiter, register);
 router.post('/resend-otp', strictLimiter, resendOtp);
 router.post('/verify-otp/registration', strictLimiter, verifyOtpForRegistration);
 router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
+router.post('/login', strictLimiter, login);
 
+// protected = true
+router.post('/refresh-token', authLimiter, refreshToken);
+router.get('/me', authLimiter, getMe);
 
-// import { login } from "../controllers/login";
-// import { refreshToken } from "../controllers/refreshToken";
-// import { getMe } from "../controllers/getMe";
 // import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
 // import { testEmail } from "../controllers/testEmail";
 // import { authenticate } from '../middleware/authMiddleware';
 
-// router.post('/login', strictLimiter, login);
-// router.get('/me', authLimiter, authenticate, getMe);
-// router.post('/refresh-token', authLimiter, authenticate, refreshToken);
+
+
+
 
 //Internal routes
 // router.post('/add-tenant-to-admin', addTenantToAdmin)

@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
-import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
+import { getSchoolContext, getUser, validateInput } from '@vidyalayaone/common-utils';
 import { refreshTokenSchema } from '../validations/validationSchemas';
 
 const { prisma } = DatabaseService;
@@ -34,6 +34,7 @@ export async function refreshToken(req: Request, res: Response) {
       where: { token: refreshToken },
       include: { user: true }
     });
+    
 
     if (!tokenRecord || tokenRecord.userId !== payload.id) {
       res.status(401).json({

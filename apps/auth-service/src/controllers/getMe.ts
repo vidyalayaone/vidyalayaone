@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
 export async function getMe(req: Request, res: Response): Promise<void> {
   try {
     const { context, subdomain } = getSchoolContext(req);
-    const userId = req.user?.id;
-    const role = req.user?.role;
+    const userData = getUser(req);
+    const userId = userData?.id;
+    const role = userData?.role;
 
     if (!userId) {
       res.status(401).json({

@@ -4,8 +4,49 @@ import DatabaseService from '../services/database';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { loginSchema } from '../validations/validationSchemas';
+import { DeviceType } from '../generated/client';
+import config from '../config/config';
 
 const { prisma } = DatabaseService;
+
+// Helper function to detect device type
+function getDeviceType(userAgent: string): DeviceType {
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+    return DeviceType.mobile;
+  } else if (ua.includes('tablet') || ua.includes('ipad')) {
+    return DeviceType.tablet;
+  } else {
+    return DeviceType.desktop;
+  }
+}
+
+// Helper function to get client IP
+function getClientIP(req: Request): string {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+         req.connection.remoteAddress ||
+         req.socket.remoteAddress ||
+         (req.connection as any).socket?.remoteAddress ||
+         'unknown';
+}
+
+// Helper function to parse refresh token expiration
+function parseRefreshTokenExpiration(expiresIn: string): number {
+  const match = expiresIn.match(/^(\d+)([dhm])$/);
+  if (!match) {
+    return 7; // Default to 7 days
+  }
+  
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  
+  switch (unit) {
+    case 'd': return value; // days
+    case 'h': return value / 24; // hours to days
+    case 'm': return value / (24 * 60); // minutes to days
+    default: return 7;
+  }
+}
 
 export async function login(req: Request, res: Response) {
   try {
@@ -118,6 +159,42 @@ export async function login(req: Request, res: Response) {
       id: user.id,
       role: user.role
     });
+
+    // Get client information
+    const ipAddress = getClientIP(req);
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceType = getDeviceType(userAgent);
+
+    // Calculate refresh token expiration
+    const refreshTokenExpiresAt = new Date();
+    const daysToAdd = parseRefreshTokenExpiration(config.jwt.refreshExpiresIn);
+    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + daysToAdd);
+
+    // Save refresh token to database
+    const savedRefreshToken = await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+        ipAddress: ipAddress.substring(0, 45), // Ensure it fits in VARCHAR(45)
+        userAgent: userAgent.substring(0, 1000), // Reasonable limit for TEXT field
+        deviceType,
+        isRevoked: false,
+        lastUsedAt: new Date()
+      }
+    });
+
+    // Optional: Clean up old/expired refresh tokens for this user
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.id,
+        OR: [
+          { expiresAt: { lt: new Date() } }, // Expired tokens
+          { isRevoked: true } // Revoked tokens
+        ]
+      }
+    });
+
     res.status(200).json({
       success: true,
       data: {

@@ -27,7 +27,14 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     const token = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token) as any;
 
-    req.user = decoded;
+    // console.log(decoded);
+    
+
+    // req.user = decoded;
+
+    req.headers['x-user-id'] = decoded.id;
+    req.headers['x-user-role'] = decoded.role;
+
     next();
   } catch (error) {
     res.status(401).json({ 

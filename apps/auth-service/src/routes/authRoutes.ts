@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { register } from '../controllers/register';
 import { resendOtp } from '../controllers/resendOtp';
 import { verifyOtpForRegistration } from '../controllers/verifyOtpForRegistration';
-import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
 import { login } from "../controllers/login";
 import { refreshToken } from "../controllers/refreshToken";
 import { getMe } from "../controllers/getMe";
+import { forgotPassword } from '../controllers/forgotPassword';
+import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
+import { resetPassword } from '../controllers/resetPassword';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -35,8 +37,10 @@ const strictLimiter = rateLimit({
 router.post('/register', strictLimiter, register);
 router.post('/resend-otp', strictLimiter, resendOtp);
 router.post('/verify-otp/registration', strictLimiter, verifyOtpForRegistration);
-router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
 router.post('/login', strictLimiter, login);
+router.post('/forgot-password', strictLimiter, forgotPassword);
+router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
+router.post('/reset-password', strictLimiter, resetPassword);
 
 // protected = true
 router.post('/refresh-token', authLimiter, refreshToken);

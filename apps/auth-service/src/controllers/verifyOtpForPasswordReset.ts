@@ -4,8 +4,21 @@ import { verifyOTPByUserId } from '../services/otpService';
 import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { verifyOtpForPasswordResetSchema } from '../validations/validationSchemas';
 import { OtpPurpose } from '../generated/client';
+import { sign } from 'jsonwebtoken';
+import config from '../config/config';
+import { fetchUserByUsernameAndContext } from '../utils/fetchUserBasedOnContext';
 
 const { prisma } = DatabaseService;
+
+// Short-lived reset-password JWT generator
+function generateResetPasswordToken(userId: string) {
+  const payload = {
+    userId,
+    type: 'reset-password',
+  };
+  // Expire in 10 minutes
+  return sign(payload, config.jwt.accessSecret, { expiresIn: '10m' });
+}
 
 export async function verifyOtpForPasswordReset(req: Request, res: Response) {
   try {
@@ -13,18 +26,17 @@ export async function verifyOtpForPasswordReset(req: Request, res: Response) {
     if (!validation.success) return;
 
     const { username, otp } = validation.data;
-    const { context } = getSchoolContext(req);
+    const { context, subdomain } = getSchoolContext(req);
 
-    const user = await prisma.user.findUnique({ where: { username } });
+    const user = await fetchUserByUsernameAndContext(prisma, username, context, subdomain);
     if (!user) {
-      res.status(404).json({
+      res.status(401).json({
         success: false,
         error: { message: 'User not found' },
         timestamp: new Date().toISOString()
       });
       return;
     }
-
     // Verify OTP
     const valid = await verifyOTPByUserId(user.id, otp, OtpPurpose.password_reset);
     if (!valid) {
@@ -36,10 +48,15 @@ export async function verifyOtpForPasswordReset(req: Request, res: Response) {
       return;
     } 
 
+    // Issue a short-lived reset-password token
+    const resetToken = generateResetPasswordToken(user.id);
+
     res.status(200).json({
       success: true,
-      message: 'OTP verified successfully. You can now reset your password.',
-      data: {},
+      message: 'OTP verified. Use the token to reset password.',
+      data: {
+        reset_token: resetToken
+      },
       timestamp: new Date().toISOString()
     });
     return;

@@ -6,6 +6,7 @@ import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
 import { Role } from '../generated/client';
 import config from '../config/config';
+import { maskPhoneNumber } from '../utils/maskPhoneNumber';
 
 const { prisma } = DatabaseService;
 
@@ -118,10 +119,4 @@ export async function register(req: Request, res: Response) {
   }
 }
 
-// Helper function to mask phone number
-function maskPhoneNumber(phone: string): string {
-  if (phone.length <= 4) return phone;
-  const visibleEnd = phone.slice(-3);
-  const masked = '*'.repeat(phone.length - 3);
-  return masked + visibleEnd;
-}
+

@@ -38,3 +38,8 @@ export const resetPasswordSchema = z.object({
   reset_token: z.string().min(10),
   new_password: z.string().min(6),
 });
+   
+
+export const logoutSchema = z.object({
+  refreshToken: z.string()
+});

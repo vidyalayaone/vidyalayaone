@@ -8,6 +8,7 @@ import { getMe } from "../controllers/getMe";
 import { forgotPassword } from '../controllers/forgotPassword';
 import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
 import { resetPassword } from '../controllers/resetPassword';
+import { logout } from '../controllers/logout';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -45,6 +46,7 @@ router.post('/reset-password', strictLimiter, resetPassword);
 // protected = true
 router.post('/refresh-token', authLimiter, refreshToken);
 router.get('/me', authLimiter, getMe);
+router.post('/logout', authLimiter, logout);
 
 // import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
 // import { testEmail } from "../controllers/testEmail";

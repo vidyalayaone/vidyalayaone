@@ -26,7 +26,7 @@ export async function forgotPassword(req: Request, res: Response) {
       });
       return;
     }
-
+    
     // Send OTP to user's phone (or use email alternative)
     if (user.phone) {
       await createAndSendOtpToPhone({
@@ -35,6 +35,14 @@ export async function forgotPassword(req: Request, res: Response) {
         isTestSms: process.env.NODE_ENV !== 'production',
         purpose: OtpPurpose.password_reset,
       });
+    }
+    else{
+      res.status(400).json({
+        success: false,
+        error: { message: 'No phone number associated with this account' },
+        timestamp: new Date().toISOString()
+      });
+      return;
     }
 
     res.status(200).json({

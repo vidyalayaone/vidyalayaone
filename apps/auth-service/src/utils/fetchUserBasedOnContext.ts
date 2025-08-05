@@ -4,13 +4,6 @@ export async function fetchUserByUsernameAndContext(prisma: any, username: strin
   if (context === 'platform') {
     user = await prisma.user.findUnique({
       where: { username },
-      select: {
-        id: true,
-        passwordHash: true,
-        role: true,
-        isActive: true,
-        isPhoneVerified: true
-      }
     });
     if (!user) {
       throw new Error('User not found');
@@ -21,25 +14,11 @@ export async function fetchUserByUsernameAndContext(prisma: any, username: strin
   } else if (context === 'school') {
     user = await prisma.user.findFirst({
       where: { username, subdomain },
-      select: {
-        id: true,
-        passwordHash: true,
-        role: true,
-        isActive: true,
-        isPhoneVerified: true
-      }
     });
     if (!user) {
       const usernameWithSubdomain = `${username}@${subdomain}`;
       user = await prisma.user.findFirst({
         where: { username: usernameWithSubdomain },
-        select: {
-          id: true,
-          passwordHash: true,
-          role: true,
-          isActive: true,
-          isPhoneVerified: true
-        }
       });
       if (!user) {
         throw new Error('User not found');

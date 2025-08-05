@@ -22,6 +22,14 @@ export async function logout(req: Request, res: Response) {
         where: { token: refreshToken }
       });
     }
+    else{
+      res.status(404).json({
+        success: false,
+        message: 'Refresh token not found',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
 
     // Always return success, even if token wasn't found (security best practice)
     res.status(200).json({
@@ -29,6 +37,7 @@ export async function logout(req: Request, res: Response) {
       message: 'Logged out successfully',
       timestamp: new Date().toISOString()
     });
+    return;
 
   } catch (error: any) {
     console.error('Logout error:', error);
@@ -39,6 +48,7 @@ export async function logout(req: Request, res: Response) {
       message: 'Logged out successfully',
       timestamp: new Date().toISOString()
     });
+    return;
   }
 }
 

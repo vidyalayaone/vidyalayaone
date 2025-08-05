@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getSchoolContext } from '@vidyalayaone/common-utils';
+import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -8,7 +8,9 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
   try {
     const { schoolId } = req.params;
 
-    const userId = req.user?.id;
+    const adminData = getUser(req);
+    const adminId = adminData?.id;
+    const role = adminData?.role;
 
     if (!schoolId) {
       res.status(400).json({

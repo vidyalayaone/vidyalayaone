@@ -51,16 +51,10 @@ class ServiceRegistry {
       path: '/api/v1/school',
       isProtected: false,
       routes: [
-        // Protected routes (platform admin only)
-        { path: '/create-school', method: 'POST', isProtected: true },
-        { path: '/schools', method: 'GET', isProtected: true },
-        { path: '/schools/:schoolId', method: 'GET', isProtected: true },
-        { path: '/schools/:schoolId', method: 'PUT', isProtected: true },
-        { path: '/schools/:schoolId', method: 'DELETE', isProtected: true },
-        
-        // Public routes (no auth required)
-        { path: '/validate-subdomain', method: 'GET', isProtected: false },
-        { path: '/resolve', method: 'GET', isProtected: false },
+        { path: '/school', method: 'POST', isProtected: true },
+        { path: '/school/:schoolId', method: 'GET', isProtected: true },
+        { path: '/school/:schoolId', method: 'PUT', isProtected: true },
+        { path: '/school/subdomain/:subdomain', method: 'GET', isProtected: false },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,

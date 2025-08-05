@@ -30,6 +30,21 @@ if (config.server.nodeEnv === 'development') {
 // app.use(express.json({ limit: '10mb' }));
 // app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// CONDITIONAL body parsing - only for POST/PUT/PATCH requests
+app.use((req, res, next) => {
+  console.log(`🔍 [AUTH SERVICE] ${req.method} ${req.url}`);
+  
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    console.log(`🔍 [AUTH SERVICE] Applying body parsing for ${req.method} request`);
+    express.json({ limit: '10mb' })(req, res, next);
+  } else {
+    console.log(`🔍 [AUTH SERVICE] Skipping body parsing for ${req.method} request`);
+    next();
+  }
+});
+
+app.use(`${config.server.apiPrefix}/school`, schoolRoutes);
+
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({

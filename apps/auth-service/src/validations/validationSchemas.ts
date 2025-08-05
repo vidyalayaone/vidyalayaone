@@ -16,11 +16,6 @@ export const verifyOtpForRegistrationSchema = z.object({
   otp: z.string().min(4, 'OTP must be at least 4 characters').max(6, 'OTP must not exceed 6 characters')
 });
 
-export const verifyOtpForPasswordResetSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
-  otp: z.string().min(4, 'OTP must be at least 4 characters').max(6, 'OTP must not exceed 6 characters')
-});
-
 export const loginSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -28,4 +23,18 @@ export const loginSchema = z.object({
 
 export const refreshTokenSchema = z.object({
   refreshToken: z.string()
+});
+
+export const forgotPasswordSchema = z.object({
+  username: z.string().min(3).max(50),
+});
+
+export const verifyOtpForPasswordResetSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
+  otp: z.string().min(4, 'OTP must be at least 4 characters').max(6, 'OTP must not exceed 6 characters')
+});
+
+export const resetPasswordSchema = z.object({
+  reset_token: z.string().min(10),
+  new_password: z.string().min(6),
 });

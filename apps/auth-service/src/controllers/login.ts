@@ -6,6 +6,7 @@ import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { loginSchema } from '../validations/validationSchemas';
 import { DeviceType } from '../generated/client';
 import config from '../config/config';
+import { fetchUserByUsernameAndContext } from '../utils/fetchUserBasedOnContext';
 
 const { prisma } = DatabaseService;
 
@@ -56,92 +57,16 @@ export async function login(req: Request, res: Response) {
     const { username, password } = validation.data;
     const { context, subdomain } = getSchoolContext(req);
 
-    let user;
-    if( context ==='platform'){
-        user = await prisma.user.findUnique({
-          where: { username },
-          select: {
-            id: true,
-            passwordHash: true,
-            role: true,
-            isActive: true,
-            isPhoneVerified: true
-          }
-        });
-        if (!user) {
-          res.status(404).json({
-            success: false,
-            error: { message: 'User not found' },
-            timestamp: new Date().toISOString()
-          });
-          return;
-        }
-        if( user.role !=='ADMIN'){
-            res.status(403).json({
-                success: false,
-                error: { message: 'Only admin users can login' },
-                timestamp: new Date().toISOString()
-            });
-            return;
-        }
-      }
-    else if( context === 'school') {
-      user = await prisma.user.findFirst({
-        where: { username, subdomain },
-        select: {
-          id: true,
-          passwordHash: true,
-          role: true,
-          isActive: true,
-          isPhoneVerified: true
-        }
-      });
-      if (!user){
-        const usernameWithSubdomain = `${username}@${subdomain}`;
-        user = await prisma.user.findFirst({
-            where: { username: usernameWithSubdomain },
-            select: {
-                id: true,
-                passwordHash: true,
-                role: true,
-                isActive: true,
-                isPhoneVerified: true
-            }
-        });
-        if (!user) {
-            res.status(404).json({
-                success: false,
-                error: { message: 'User not found' },
-                timestamp: new Date().toISOString()
-            });
-            return;
-        }
-      }
-    }
-    else {
-      res.status(400).json({
+    const user = await fetchUserByUsernameAndContext(prisma, username, context, subdomain);
+    if (!user) {
+      res.status(401).json({
         success: false,
-        error: { message: 'Invalid context' },
+        error: { message: 'User not found' },
         timestamp: new Date().toISOString()
       });
       return;
     }
-    if (!user.isActive) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'User is not active' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    if (!user.isPhoneVerified) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'Phone number not verified' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       res.status(401).json({

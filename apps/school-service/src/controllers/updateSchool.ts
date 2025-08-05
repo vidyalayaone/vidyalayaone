@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { updateSchoolSchema } from '../validations/validationSchemas';
 
 const { prisma } = DatabaseService;
@@ -13,9 +13,10 @@ export async function updateSchool(req: Request, res: Response): Promise<void> {
     if (!validation.success) return;
 
     const { name, subdomain, address, level, board, schoolCode, phoneNumbers, email, principalName, establishedYear, language, metaData } = validation.data;
-    
-    const adminId = req.user?.id;
-    const role = req.user?.role;
+
+    const adminData = getUser(req);
+    const adminId = adminData?.id;
+    const role = adminData?.role;
     const { context } = getSchoolContext(req);
 
     if (context !== 'platform') {

@@ -32,13 +32,13 @@ if (config.server.nodeEnv === 'development') {
 
 // CONDITIONAL body parsing - only for POST/PUT/PATCH requests
 app.use((req, res, next) => {
-  console.log(`🔍 [AUTH SERVICE] ${req.method} ${req.url}`);
+  console.log(`🔍 [SCHOOL SERVICE] ${req.method} ${req.url}`);
   
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    console.log(`🔍 [AUTH SERVICE] Applying body parsing for ${req.method} request`);
+    console.log(`🔍 [SCHOOL SERVICE] Applying body parsing for ${req.method} request`);
     express.json({ limit: '10mb' })(req, res, next);
   } else {
-    console.log(`🔍 [AUTH SERVICE] Skipping body parsing for ${req.method} request`);
+    console.log(`🔍 [SCHOOL SERVICE] Skipping body parsing for ${req.method} request`);
     next();
   }
 });

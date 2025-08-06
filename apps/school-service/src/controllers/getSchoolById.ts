@@ -46,6 +46,15 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
       return;
     } 
 
+    if (!school.isActive) {
+      res.status(404).json({
+        success: false,
+        error: { message: 'School is not active' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     res.status(200).json({
       success: true,
       data: {

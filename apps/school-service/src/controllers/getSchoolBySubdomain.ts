@@ -5,7 +5,9 @@ const { prisma } = DatabaseService;
 
 export async function getSchoolBySubdomain(req: Request, res: Response): Promise<void> {
   try {
-    const { subdomain } = req.query;
+    const { subdomain } = req.params;
+
+    console.log('Subdomain:', subdomain); // Log the subdomain for debugging
 
     if (!subdomain || typeof subdomain !== 'string') {
       res.status(400).json({
@@ -22,10 +24,19 @@ export async function getSchoolBySubdomain(req: Request, res: Response): Promise
       }
     });
 
-    if (!school || !school.isActive) {
+    if (!school) {
       res.status(404).json({
         success: false,
-        error: { message: 'No active school found for domain' }, // Fixed error message
+        error: { message: 'School not found' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    } 
+
+    if (!school.isActive) {
+      res.status(404).json({
+        success: false,
+        error: { message: 'School is not active' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -38,7 +49,20 @@ export async function getSchoolBySubdomain(req: Request, res: Response): Promise
           id: school.id,
           name: school.name,
           subdomain: school.subdomain,
+          address: school.address,
+          level: school.level,
+          board: school.board,
+          schoolCode: school.schoolCode,
+          phoneNumbers: school.phoneNumbers,
+          email: school.email,
+          principalName: school.principalName,
+          establishedYear: school.establishedYear,
+          language: school.language,
+          metaData: school.metaData,
+          full_url: `https://${school.subdomain}.vidyalayaone.com`,
           isActive: school.isActive,
+          created_at: school.createdAt,
+          updated_at: school.updatedAt,
         }
       },
       timestamp: new Date().toISOString()

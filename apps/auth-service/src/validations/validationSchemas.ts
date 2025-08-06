@@ -43,3 +43,7 @@ export const resetPasswordSchema = z.object({
 export const logoutSchema = z.object({
   refreshToken: z.string()
 });
+
+export const updateAdminWithSubdomainSchema = z.object({
+  subdomain: z.string().min(3, 'Subdomain must be at least 3 characters').max(30, 'Subdomain must not exceed 30 characters')
+});

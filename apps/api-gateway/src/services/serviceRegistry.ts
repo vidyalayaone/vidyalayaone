@@ -39,7 +39,8 @@ class ServiceRegistry {
         { path: '/reset-password', method: 'POST', isProtected: false },
         { path: '/me', method: 'GET', isProtected: true },
         { path: '/refresh-token', method: 'POST', isProtected: true },
-        { path: '/logout', method: 'POST', isProtected: true }
+        { path: '/logout', method: 'POST', isProtected: true },
+        { path: '/update-admin-with-subdomain', method: 'POST', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.auth.timeout,

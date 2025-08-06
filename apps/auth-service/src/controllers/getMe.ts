@@ -23,7 +23,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     if (context == 'platform' && role!='ADMIN') {
       res.status(400).json({
         success: false,
-        error: { message: 'Only admin can use getMe on platform bfnddddddd' },
+        error: { message: 'Only admin can use getMe on platform' },
         timestamp: new Date().toISOString()
       });
       return;

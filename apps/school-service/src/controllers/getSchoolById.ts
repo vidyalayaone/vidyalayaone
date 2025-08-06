@@ -21,7 +21,7 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (!userId) {
+    if (!adminId) {
       res.status(401).json({
         success: false,
         error: { message: 'User authentication required' },

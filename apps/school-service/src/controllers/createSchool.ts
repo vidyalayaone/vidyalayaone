@@ -105,42 +105,6 @@ export async function createSchool(req: Request, res: Response): Promise<void> {
       }
     });
 
-    try {
-      const authServiceUrl: string = config.authServiceUrl;
-      const authServiceTimeout: number = config.authServiceTimeout;
-      const response = await axios.post(
-        `${authServiceUrl}/api/v1/update-admin`,
-        {
-          adminId,
-          subdomain: school.subdomain,
-        },
-        { 
-          timeout: authServiceTimeout,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.data.success) {
-        res.status(500).json({
-          success: false,
-          error: { message: 'Failed to add school to admin' },
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-    }
-    catch (axiosError) {
-      console.error('Auth service communication error:', axiosError);
-      res.status(500).json({
-        success: false,
-        error: { message: 'Failed to communicate with auth service' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
     // TODO: Send notification to admin about school creation
 
     res.status(201).json({

@@ -1,27 +1,5 @@
-/*
-  Warnings:
-
-  - You are about to drop the `custom_domains` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `tenants` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
 CREATE TYPE "SchoolLevel" AS ENUM ('primary', 'secondary', 'higher_secondary', 'mixed');
-
--- DropForeignKey
-ALTER TABLE "custom_domains" DROP CONSTRAINT "custom_domains_tenant_id_fkey";
-
--- DropTable
-DROP TABLE "custom_domains";
-
--- DropTable
-DROP TABLE "tenants";
-
--- DropEnum
-DROP TYPE "SchoolType";
-
--- DropEnum
-DROP TYPE "SslStatus";
 
 -- CreateTable
 CREATE TABLE "schools" (
@@ -32,7 +10,7 @@ CREATE TABLE "schools" (
     "school_level" "SchoolLevel" NOT NULL,
     "board" VARCHAR(255),
     "school_code" VARCHAR(50),
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "is_active" BOOLEAN NOT NULL DEFAULT false,
     "phone_numbers" TEXT[],
     "email" VARCHAR(255),
     "principal_name" VARCHAR(255),
@@ -44,6 +22,9 @@ CREATE TABLE "schools" (
 
     CONSTRAINT "schools_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "schools_name_key" ON "schools"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "schools_subdomain_key" ON "schools"("subdomain");

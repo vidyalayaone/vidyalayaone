@@ -36,7 +36,7 @@ export async function resolveSchool(req: Request, res: Response, next: NextFunct
     const subdomain = parts[0];
 
     req.headers['x-context'] = 'school';
-    req.headers['x-school-subdomain'] = subdomain;
+    req.headers['x-subdomain'] = subdomain;
     
     console.log(`✅ School resolved: ${subdomain}`);
     next();

@@ -14,7 +14,7 @@ CREATE TABLE "users" (
     "email" VARCHAR(255),
     "phone" VARCHAR(20),
     "password_hash" VARCHAR(255) NOT NULL,
-    "school_id" TEXT,
+    "subdomain" TEXT,
     "role" "Role" NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_phone_verified" BOOLEAN NOT NULL DEFAULT false,

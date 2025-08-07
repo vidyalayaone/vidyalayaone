@@ -1,13 +1,15 @@
 import { Router } from 'express';
-import { register } from "../controllers/register";
-import { verifyOtp } from "../controllers/verifyOtp";
+import { register } from '../controllers/register';
+import { resendOtp } from '../controllers/resendOtp';
+import { verifyOtpForRegistration } from '../controllers/verifyOtpForRegistration';
 import { login } from "../controllers/login";
 import { refreshToken } from "../controllers/refreshToken";
 import { getMe } from "../controllers/getMe";
-import { testEmail } from "../controllers/testEmail";
-import { authenticate } from '../middleware/authMiddleware';
+import { forgotPassword } from '../controllers/forgotPassword';
+import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
+import { resetPassword } from '../controllers/resetPassword';
+import { logout } from '../controllers/logout';
 import rateLimit from 'express-rate-limit';
-import config from '../config/config';
 
 const router: Router = Router();
 
@@ -31,18 +33,30 @@ const strictLimiter = rateLimit({
   }
 });
 
-// Public routes
+
+// protected = false
 router.post('/register', strictLimiter, register);
-router.post('/verify-otp', strictLimiter, verifyOtp);
+router.post('/resend-otp', strictLimiter, resendOtp);
+router.post('/verify-otp/registration', strictLimiter, verifyOtpForRegistration);
 router.post('/login', strictLimiter, login);
+router.post('/forgot-password', strictLimiter, forgotPassword);
+router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
+router.post('/reset-password', strictLimiter, resetPassword);
 
-// Protected routes
-router.get('/me', authLimiter, authenticate, getMe);
-router.post('/refresh-token', authLimiter, authenticate, refreshToken);
+// protected = true
+router.post('/refresh-token', authLimiter, refreshToken);
+router.get('/me', authLimiter, getMe);
+router.post('/logout', authLimiter, logout);
 
-// Test routes
-if (config.server.nodeEnv === 'development') {
-  router.post('/test-email', testEmail);
-}
+// import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
+// import { testEmail } from "../controllers/testEmail";
+// import { authenticate } from '../middleware/authMiddleware';
+
+
+
+
+
+//Internal routes
+// router.post('/add-tenant-to-admin', addTenantToAdmin)
 
 export default router;

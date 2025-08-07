@@ -36,6 +36,10 @@ interface Config {
   cors: {
     origin: string;
   };
+  sms: {
+    fast2smsApiKey: string,
+    testNumbers: string
+  }
 }
 
 const config: Config = {
@@ -69,6 +73,10 @@ const config: Config = {
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   },
+  sms: {
+    fast2smsApiKey: process.env.FAST2SMS_API_KEY || '',
+    testNumbers: process.env.SMS_TEST_NUMBERS || '',
+  }
 };
 
 // Validate required environment variables

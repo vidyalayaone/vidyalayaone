@@ -2,97 +2,136 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { getTenantContext } from "../utils/tenantContext";
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { loginSchema } from '../validations/validationSchemas';
-import { validateInput } from '../validations/validationHelper';
+import { DeviceType } from '../generated/client';
+import config from '../config/config';
+import { fetchUserByUsernameAndContext } from '../utils/fetchUserBasedOnContext';
 
 const { prisma } = DatabaseService;
+
+// Helper function to detect device type
+function getDeviceType(userAgent: string): DeviceType {
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+    return DeviceType.mobile;
+  } else if (ua.includes('tablet') || ua.includes('ipad')) {
+    return DeviceType.tablet;
+  } else {
+    return DeviceType.desktop;
+  }
+}
+
+// Helper function to get client IP
+function getClientIP(req: Request): string {
+  return (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+         req.connection.remoteAddress ||
+         req.socket.remoteAddress ||
+         (req.connection as any).socket?.remoteAddress ||
+         'unknown';
+}
+
+// Helper function to parse refresh token expiration
+function parseRefreshTokenExpiration(expiresIn: string): number {
+  const match = expiresIn.match(/^(\d+)([dhm])$/);
+  if (!match) {
+    return 7; // Default to 7 days
+  }
+  
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  
+  switch (unit) {
+    case 'd': return value; // days
+    case 'h': return value / 24; // hours to days
+    case 'm': return value / (24 * 60); // minutes to days
+    default: return 7;
+  }
+}
 
 export async function login(req: Request, res: Response) {
   try {
     const validation = validateInput(loginSchema, req.body, res);
     if (!validation.success) return;
-    
-    const { email, username, password, role } = validation.data;
-    const { context, tenantId } = getTenantContext(req);
 
-    if (context == 'platform' && role!='ADMIN') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Only admin can login on platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    const { username, password } = validation.data;
+    const { context, subdomain } = getSchoolContext(req);
 
-    const identifier = email || username;
-
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: identifier },
-          { username: identifier }
-        ],
-        tenantId,
-        role: role as any
-      }
-    });
-
+    const user = await fetchUserByUsernameAndContext(prisma, username, context, subdomain);
     if (!user) {
       res.status(401).json({
         success: false,
-        error: { message: 'Invalid email or username' },
+        error: { message: 'User not found' },
         timestamp: new Date().toISOString()
       });
       return;
     }
-
-    if (!user.isVerified) {
-      res.status(401).json({
-        success: false,
-        error: { message: 'Unverified email' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      res.status(401).json({
-        success: false,
-        error: { message: 'Invalid password' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    const accessToken = generateAccessToken({ 
-      userId: user.id,
-      role: user.role,
-      tenantId: user.tenantId
-    });
     
-    const refreshToken = generateRefreshToken({ 
-      userId: user.id,
-      role: user.role,
-      tenantId: user.tenantId
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'Invalid username or password' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    const accessToken = generateAccessToken({
+      id: user.id,
+      role: user.role
+    });
+    const refreshToken = generateRefreshToken({
+      id: user.id,
+      role: user.role
     });
 
-    await prisma.refreshToken.create({
-      data: { 
-        token: refreshToken, 
+    // Get client information
+    const ipAddress = getClientIP(req);
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceType = getDeviceType(userAgent);
+
+    // Calculate refresh token expiration
+    const refreshTokenExpiresAt = new Date();
+    const daysToAdd = parseRefreshTokenExpiration(config.jwt.refreshExpiresIn);
+    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + daysToAdd);
+
+    // Save refresh token to database
+    const savedRefreshToken = await prisma.refreshToken.create({
+      data: {
         userId: user.id,
-        tenantId: user.tenantId,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+        ipAddress: ipAddress.substring(0, 45), // Ensure it fits in VARCHAR(45)
+        userAgent: userAgent.substring(0, 1000), // Reasonable limit for TEXT field
+        deviceType,
+        isRevoked: false,
+        lastUsedAt: new Date()
+      }
+    });
+
+    // Optional: Clean up old/expired refresh tokens for this user
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.id,
+        OR: [
+          { expiresAt: { lt: new Date() } }, // Expired tokens
+          { isRevoked: true } // Revoked tokens
+        ]
       }
     });
 
     res.status(200).json({
       success: true,
-      data: { accessToken, refreshToken },
+      data: {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          role: user.role
+        }
+      },
       timestamp: new Date().toISOString()
     });
-    return;
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({

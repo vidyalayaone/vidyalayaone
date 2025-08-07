@@ -9,61 +9,75 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  tenantId  String?  // Nullable for platform admins
-  email      String
-  username   String?
-  password   String
-  role       UserRole @default(STUDENT)
-  isVerified Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                String    @id @default(uuid())
+  username          String    @unique @db.VarChar(50) // Now globally unique
+  email             String?   @db.VarChar(255) // Non-unique, nullable
+  phone             String?   @db.VarChar(20) // Non-unique, nullable
+  passwordHash      String    @map("password_hash") @db.VarChar(255)
+  subdomain         String?   @map("subdomain")
+  role              Role
+  isActive          Boolean   @default(true) @map("is_active")
+  isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
+  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
+  phoneVerifiedAt   DateTime? @map("phone_verified_at")
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  lastLoginAt       DateTime? @map("last_login_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  otps          OTP[]
-  refreshTokens RefreshToken[]
+  refreshTokens     RefreshToken[]
+  otps              Otp[]
 
-  // Constraints
-  @@unique([tenantId, email]) // Tenant-scoped uniqueness
-  @@unique([tenantId, username]) // Tenant-scoped uniqueness
   @@map("users")
 }
 
-enum UserRole {
-  STUDENT
-  TEACHER
-  FINANCE
-  PRINCIPAL
-  ADMIN
-}
+model Otp {
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  otp       String     @db.VarChar(6) // Renamed from 'value' to match plan
+  purpose   OtpPurpose
+  isUsed    Boolean    @default(false) @map("is_used")
+  expiresAt DateTime   @map("expires_at")
+  createdAt DateTime   @default(now()) @map("created_at")
 
-model OTP {
-  id         String   @id @default(cuid())
-  tenantId  String?  // Nullable for platform
-  email      String
-  otp        String
-  expiresAt  DateTime
-  isUsed     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  // Relations
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("otps")
 }
 
 model RefreshToken {
-  id         String   @id @default(cuid())
-  tenantId  String?  // Nullable for platform
-  token      String   @unique
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id         String      @id @default(uuid())
+  userId     String      @map("user_id")
+  token      String      @unique @db.Text // Renamed from 'value' to match plan
+  expiresAt  DateTime    @map("expires_at")
+  isRevoked  Boolean     @default(false) @map("is_revoked")
+  ipAddress  String?     @map("ip_address") @db.VarChar(45)
+  userAgent  String?     @map("user_agent") @db.Text
+  deviceType DeviceType? @map("device_type")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  lastUsedAt DateTime?   @map("last_used_at")
 
-  // Relations
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
 
+// Enums
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum DeviceType {
+  desktop
+  mobile
+  tablet
+}
+
+enum OtpPurpose {
+  registration
+  password_reset
+}

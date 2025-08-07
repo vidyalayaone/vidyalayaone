@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { getTenantContext } from "../utils/tenantContext";
+import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
 export async function getMe(req: Request, res: Response): Promise<void> {
   try {
-    const { context, tenantId } = getTenantContext(req);
-    const userId = req.user?.id;
-    const role = req.user?.role;
+    const { context, subdomain } = getSchoolContext(req);
+    const userData = getUser(req);
+    const userId = userData?.id;
+    const role = userData?.role;
 
     if (!userId) {
       res.status(401).json({
@@ -30,9 +31,18 @@ export async function getMe(req: Request, res: Response): Promise<void> {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, username: true, role: true, tenantId: true, isVerified: true, createdAt: true }
+      select: { 
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        subdomain: true,
+        isPhoneVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        phone: true
+      }
     });
-
     res.status(200).json({
       success: true,
       user,

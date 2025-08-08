@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { User, School, APIResponse, AuthResponse } from '../api/types';
 import { api } from '../api/api';
+import { tokenManager } from '../api/config'; // ✅ Import tokenManager
 import toast from 'react-hot-toast';
 
 interface PasswordResetFlow {
@@ -42,6 +43,10 @@ interface AuthState {
   fetchSchool: () => Promise<void>;
   initialize: () => Promise<void>;
   
+  // ✅ Add token management methods
+  setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
+  clearTokens: () => void;
+  
   // Helper methods
   isInPasswordResetFlow: () => boolean;
   canAccessOTPPage: () => boolean;
@@ -59,10 +64,28 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     isInitializing: true,
     resetFlow: {
+      step: 'idle', 
       username: null,
       isInOTPFlow: false,
       isInResetFlow: false,
       resetToken: null,
+    },
+
+    // ✅ Token management methods
+    setTokens: (tokens) => {
+      tokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+      set({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      });
+    },
+
+    clearTokens: () => {
+      tokenManager.clearTokens();
+      set({
+        accessToken: null,
+        refreshToken: null,
+      });
     },
 
     // Login action
@@ -75,8 +98,8 @@ export const useAuthStore = create<AuthState>()(
         if (response.success && response.data) {
           const { accessToken, refreshToken, user, school } = response.data;
           
-          // Store tokens
-          sessionStorage.setItem('refreshToken', refreshToken);
+          // ✅ Use tokenManager instead of direct sessionStorage
+          get().setTokens({ accessToken, refreshToken });
           
           // Update state
           set({
@@ -118,8 +141,8 @@ export const useAuthStore = create<AuthState>()(
         api.logout(refreshToken).catch(console.error);
       }
       
-      // Clear storage
-      sessionStorage.removeItem('refreshToken');
+      // ✅ Use tokenManager instead of direct sessionStorage
+      get().clearTokens();
       
       // Reset state
       set({
@@ -152,6 +175,8 @@ export const useAuthStore = create<AuthState>()(
         
         if (response.success && response.data) {
           set({ accessToken: response.data.accessToken });
+          // ✅ Update stored access token
+          tokenManager.setTokens(response.data.accessToken, refreshToken);
           return true;
         } else {
           // Refresh token is invalid, logout user
@@ -214,8 +239,12 @@ export const useAuthStore = create<AuthState>()(
           username: resetFlow.username,
           otp
         });
+
+        // console.log(response)
         
         if (response.success && response.data) {
+
+          console.log(response.data);
           set({
             isLoading: false,
             resetFlow: {
@@ -313,11 +342,9 @@ export const useAuthStore = create<AuthState>()(
     // Fetch school data
     fetchSchool: async (): Promise<void> => {
       try {
-        const subdomain = window.location.hostname.split('.')[0] || 'riversid';
-        // console.log(subdomain);
+        const subdomain = window.location.hostname.split('.')[0] || 'riverside';
         
         const response = await api.getSchoolBySubdomain(subdomain);
-        // const response = await api.getSchoolBySubdomain('riverside');
         
         if (response.success && response.data) {
           set({ school: response.data });
@@ -329,21 +356,23 @@ export const useAuthStore = create<AuthState>()(
 
     // Initialize auth state from storage
     initialize: async (): Promise<void> => {
-
       await get().fetchSchool();
 
-      const refreshToken = sessionStorage.getItem('refreshToken');
+      // ✅ Use tokenManager instead of direct sessionStorage
+      const refreshToken = tokenManager.getRefreshToken();
+      const accessToken = tokenManager.getAccessToken();
       
       if (refreshToken) {
-        set({ refreshToken });
+        set({ 
+          refreshToken,
+          accessToken 
+        });
         
         // Try to refresh access token
         const success = await get().refreshAccessToken();
         
         if (success) {
-
           await get().fetchMe();
-          
           set({ isAuthenticated: true });
         }
       }

@@ -66,7 +66,7 @@ export const api = {
 
   verifyOTP: async (request: VerifyOTPRequest): Promise<APIResponse<{ resetToken: string }>> => {
     try {
-      const response = await httpClient.post('/auth/verify-otp', request);
+      const response = await httpClient.post('/auth/verify-otp/password-reset', request);
       return handleResponse<{ resetToken: string }>(response);
     } catch (error) {
       return handleError(error);
@@ -177,18 +177,18 @@ export const api = {
   },
 
   // Students endpoints
-  getStudents: async (params?: PaginationParams): Promise<APIResponse<PaginatedResponse<User>>> => {
+   getStudents: async (params?: PaginationParams): Promise<APIResponse<PaginatedResponse<User>>> => {
     try {
       const queryParams = new URLSearchParams();
       if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.limit) queryParams.append('limit', params.limit.limit.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString()); // Fix: Remove the extra .limit
       
       const response = await httpClient.get(`/users/students?${queryParams.toString()}`);
       return handleResponse<PaginatedResponse<User>>(response);
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)

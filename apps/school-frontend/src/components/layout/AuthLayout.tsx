@@ -3,6 +3,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { useAuthStore } from '../../store/authStore';
+
 interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
@@ -16,6 +18,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   description,
   showLogo = true 
 }) => {
+  const { school } = useAuthStore();
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       {/* Background Pattern */}
@@ -64,11 +67,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         {/* School Name Footer */}
         <div className="text-center mt-6">
           <p className="text-white/80 text-sm font-medium">
-            Riverside Academy
+          { school?.name || 'Your School Name' }
           </p>
+          {/* 
           <p className="text-white/60 text-xs mt-1">
             Excellence in Education Since 1985
           </p>
+          */}
         </div>
       </div>
     </div>

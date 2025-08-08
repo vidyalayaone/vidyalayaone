@@ -33,6 +33,9 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   const { isInitializing } = useAuthStore();
+  // const { school } = useAuthStore();
+
+  // console.log('App initialized with school:', school);
 
   // Show loading screen while initializing auth state
   if (isInitializing) {

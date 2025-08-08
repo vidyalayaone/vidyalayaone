@@ -274,6 +274,7 @@ export const mockAPI = {
   // School endpoints
   getSchoolBySubdomain: async (subdomain: string): Promise<APIResponse<School>> => {
     await delay(300);
+    // console.log(subdomain);
     
     return {
       success: true,

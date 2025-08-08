@@ -313,7 +313,11 @@ export const useAuthStore = create<AuthState>()(
     // Fetch school data
     fetchSchool: async (): Promise<void> => {
       try {
-        const response = await mockAPI.getSchoolBySubdomain('riverside');
+        const subdomain = window.location.hostname.split('.')[0] || 'riversid';
+        // console.log(subdomain);
+        
+        const response = await mockAPI.getSchoolBySubdomain(subdomain);
+        // const response = await mockAPI.getSchoolBySubdomain('riverside');
         
         if (response.success && response.data) {
           set({ school: response.data });
@@ -325,6 +329,9 @@ export const useAuthStore = create<AuthState>()(
 
     // Initialize auth state from storage
     initialize: async (): Promise<void> => {
+
+      await get().fetchSchool();
+
       const refreshToken = sessionStorage.getItem('refreshToken');
       
       if (refreshToken) {
@@ -334,11 +341,8 @@ export const useAuthStore = create<AuthState>()(
         const success = await get().refreshAccessToken();
         
         if (success) {
-          // Fetch user and school data
-          await Promise.all([
-            get().fetchMe(),
-            get().fetchSchool()
-          ]);
+
+          await get().fetchMe();
           
           set({ isAuthenticated: true });
         }

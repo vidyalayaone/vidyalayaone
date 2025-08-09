@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { User, School, APIResponse, AuthResponse } from '../api/types';
 import { api } from '../api/api';
-import { tokenManager } from '../api/config'; // ✅ Import tokenManager
+import { tokenManager } from '../api/config';
 import toast from 'react-hot-toast';
 
 interface PasswordResetFlow {

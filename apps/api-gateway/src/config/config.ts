@@ -12,8 +12,8 @@ interface ServiceConfig {
 
 interface ServicesConfig {
   auth: ServiceConfig;
-  school: ServiceConfig;  // Add school service type
-  // add more services
+  school: ServiceConfig;
+  profile: ServiceConfig;
 }
 
 interface Config {
@@ -53,6 +53,10 @@ const config: Config = {
     school: {
       url: process.env.SCHOOL_SERVICE_URL || 'http://localhost:3002',
       timeout: parseInt(process.env.SCHOOL_SERVICE_URL || '30000', 10),
+    },
+    profile: {
+      url: process.env.PROFILE_SERVICE_URL || 'http://localhost:3003',
+      timeout: parseInt(process.env.PROFILE_SERVICE_TIMEOUT || '30000', 10),
     },
   },
   jwt: {

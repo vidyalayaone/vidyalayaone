@@ -181,14 +181,13 @@ export const api = {
     try {
       const queryParams = new URLSearchParams();
       if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.limit) queryParams.append('limit', params.limit.toString()); // Fix: Remove the extra .limit
-      
+      if (params?.limit) queryParams.append('limit', params.limit.toString()); // Fix: Remove the extra .limit      
       const response = await httpClient.get(`/users/students?${queryParams.toString()}`);
       return handleResponse<PaginatedResponse<User>>(response);
     } catch (error) {
       return handleError(error);
     }
-  },
+  }
 };
 
 // Export individual functions for easier importing (keeping same interface)

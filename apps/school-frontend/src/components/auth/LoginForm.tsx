@@ -137,7 +137,7 @@ const LoginForm: React.FC = () => {
       </Form>
 
       {/* Demo Credentials */}
-      {/*
+      {
       <div className="bg-muted/50 rounded-lg p-4 space-y-3">
         <p className="text-sm font-medium text-muted-foreground">Demo Credentials:</p>
         <div className="grid grid-cols-1 gap-2 text-xs">
@@ -155,7 +155,7 @@ const LoginForm: React.FC = () => {
           </div>
         </div>
       </div>
-      */}
+      }
     </div>
   );
 };

@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { User, School, APIResponse, AuthResponse } from '../api/types';
-import { mockAPI } from '../api/api';
+import { api } from '../api/api';
 import toast from 'react-hot-toast';
 
 interface PasswordResetFlow {
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       
       try {
-        const response = await mockAPI.login({ username, password });
+        const response = await api.login({ username, password });
         
         if (response.success && response.data) {
           const { accessToken, refreshToken, user, school } = response.data;
@@ -115,7 +115,7 @@ export const useAuthStore = create<AuthState>()(
       
       // Call logout API (fire and forget)
       if (refreshToken) {
-        mockAPI.logout(refreshToken).catch(console.error);
+        api.logout(refreshToken).catch(console.error);
       }
       
       // Clear storage
@@ -148,7 +148,7 @@ export const useAuthStore = create<AuthState>()(
       }
       
       try {
-        const response = await mockAPI.refreshToken({ refreshToken });
+        const response = await api.refreshToken({ refreshToken });
         
         if (response.success && response.data) {
           set({ accessToken: response.data.accessToken });
@@ -170,7 +170,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       
       try {
-        const response = await mockAPI.forgotPassword({ username });
+        const response = await api.forgotPassword({ username });
         
         if (response.success) {
           set({
@@ -210,7 +210,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       
       try {
-        const response = await mockAPI.verifyOTP({
+        const response = await api.verifyOTP({
           username: resetFlow.username,
           otp
         });
@@ -253,7 +253,7 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true });
       
       try {
-        const response = await mockAPI.resetPassword({
+        const response = await api.resetPassword({
           resetToken: resetFlow.resetToken,
           newPassword,
           confirmPassword
@@ -300,7 +300,7 @@ export const useAuthStore = create<AuthState>()(
     // Fetch current user
     fetchMe: async (): Promise<void> => {
       try {
-        const response = await mockAPI.getMe();
+        const response = await api.getMe();
         
         if (response.success && response.data) {
           set({ user: response.data });
@@ -316,8 +316,8 @@ export const useAuthStore = create<AuthState>()(
         const subdomain = window.location.hostname.split('.')[0] || 'riversid';
         // console.log(subdomain);
         
-        const response = await mockAPI.getSchoolBySubdomain(subdomain);
-        // const response = await mockAPI.getSchoolBySubdomain('riverside');
+        const response = await api.getSchoolBySubdomain(subdomain);
+        // const response = await api.getSchoolBySubdomain('riverside');
         
         if (response.success && response.data) {
           set({ school: response.data });

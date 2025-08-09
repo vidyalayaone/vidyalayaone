@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuthStore } from '@/store/authStore';
-import { mockAPI } from '@/api/api';
+import { api } from '@/api/api';
 import { AdminStats, TeacherStats, StudentStats } from '@/api/types';
 import { isAdmin, isTeacher, isStudent } from '@/utils/auth';
 
@@ -26,11 +26,11 @@ const DashboardPage: React.FC = () => {
         
         let response;
         if (isAdmin(user)) {
-          response = await mockAPI.getAdminStats();
+          response = await api.getAdminStats();
         } else if (isTeacher(user)) {
-          response = await mockAPI.getTeacherStats();
+          response = await api.getTeacherStats();
         } else if (isStudent(user)) {
-          response = await mockAPI.getStudentStats();
+          response = await api.getStudentStats();
         }
 
         if (response?.success && response.data) {

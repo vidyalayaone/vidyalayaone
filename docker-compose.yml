@@ -44,7 +44,7 @@ services:
     container_name: vidyalayaone-auth
     ports:
       - "3001:3001"
-      - "5555:5555"  # Add this line for Prisma Studio
+      - "5556:5556"  # Add this line for Prisma Studio
     depends_on:
       migration:
         condition: service_completed_successfully
@@ -72,7 +72,7 @@ services:
     container_name: vidyalayaone-school
     ports:
       - "3002:3002"
-      - "5556:5555"
+      - "5557:5557"
     depends_on:
       migration:
         condition: service_completed_successfully

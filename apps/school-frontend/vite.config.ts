@@ -6,8 +6,15 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "schoolname.vidyalayaone.local",
+    host: "0.0.0.0",
     port: 8080,
+    watch: {
+      usePolling: true, // Enable polling for Docker volume mounts
+    },
+    hmr: {
+      port: 8080,
+      host: '0.0.0.0', // HMR should use localhost for browser access
+    },
   },
   plugins: [
     react(),

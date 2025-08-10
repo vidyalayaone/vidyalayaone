@@ -19,13 +19,21 @@ export interface School {
   id: string;
   name: string;
   subdomain: string;
-  logo?: string;
-  address: string;
-  phoneNumber: string;
+  schoolCode: string;
+  address: any;
+  level: string;
+  board: string;
+  schoolCode: string;
+  phoneNumbers: string[];
   email: string;
-  website?: string;
-  timezone: string;
+  principalName: string;
+  establishedYear: number;
+  language: string;
+  metaData: any;
+  full_url: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   settings: SchoolSettings;
 }
 

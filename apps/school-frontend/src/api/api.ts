@@ -113,7 +113,7 @@ export const api = {
   // School endpoints
   getSchoolBySubdomain: async (subdomain: string): Promise<APIResponse<School>> => {
     try {
-      const response = await httpClient.get(`/schools/subdomain/${subdomain}`);
+      const response = await httpClient.get(`/school/get-by-subdomain/${subdomain}`);
       return handleResponse<School>(response);
     } catch (error) {
       return handleError(error);

@@ -342,12 +342,12 @@ export const useAuthStore = create<AuthState>()(
     // Fetch school data
     fetchSchool: async (): Promise<void> => {
       try {
-        const subdomain = window.location.hostname.split('.')[0] || 'riverside';
+        const subdomain = window.location.hostname.split('.')[0] || 'riverside';        
         
         const response = await api.getSchoolBySubdomain(subdomain);
         
         if (response.success && response.data) {
-          set({ school: response.data });
+          set({ school: response.data.school });
         }
       } catch (error) {
         console.error('Fetch school error:', error);

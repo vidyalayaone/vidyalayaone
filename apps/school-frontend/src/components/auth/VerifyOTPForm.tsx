@@ -32,6 +32,8 @@ const VerifyOTPForm: React.FC = () => {
   const { verifyResetOTP, isLoading, resetFlow, canAccessOTPPage } = useAuthStore();
   const navigate = useNavigate();
 
+  console.log(resetFlow);
+
   // Redirect if not in proper flow
   useEffect(() => {
     if (!canAccessOTPPage()) {

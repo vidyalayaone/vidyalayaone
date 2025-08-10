@@ -35,8 +35,8 @@ export const verifyOtpForPasswordResetSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  reset_token: z.string().min(10),
-  new_password: z.string().min(6),
+  resetToken: z.string().min(10),
+  newPassword: z.string().min(6),
 });
    
 

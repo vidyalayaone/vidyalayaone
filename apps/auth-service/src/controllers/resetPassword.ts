@@ -13,12 +13,12 @@ export async function resetPassword(req: Request, res: Response) {
     const validation = validateInput(resetPasswordSchema, req.body, res);
     if (!validation.success) return;
 
-    const { reset_token, new_password } = validation.data;
+    const { resetToken, newPassword } = validation.data;
 
     // Verify reset_token and payload
     let payload: any;
     try {
-      payload = verify(reset_token, config.jwt.accessSecret) as any;
+      payload = verify(resetToken, config.jwt.accessSecret) as any;
     } catch (err) {
       res.status(401).json({
         success: false,
@@ -49,7 +49,7 @@ export async function resetPassword(req: Request, res: Response) {
     }
 
     // Update password
-    const passwordHash = await bcrypt.hash(new_password, 12);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
       where: { id: user.id },
       data: {

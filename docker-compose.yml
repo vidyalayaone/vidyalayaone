@@ -116,6 +116,30 @@ services:
       - vidyalayaone-network
     restart: unless-stopped
 
+  # School Frontend
+  school-frontend:
+    build:
+      context: .
+      dockerfile: apps/school-frontend/Dockerfile
+    container_name: vidyalayaone-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api-gateway
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+      - VITE_AUTH_SERVICE_URL=http://localhost:3001
+      - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
+    volumes:
+      - ./apps/school-frontend:/app/apps/school-frontend
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/school-frontend/node_modules
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 

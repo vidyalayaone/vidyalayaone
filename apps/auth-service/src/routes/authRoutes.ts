@@ -16,7 +16,7 @@ const router: Router = Router();
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
+  max: 100,
   message: {
     success: false,
     error: { message: 'Too many requests, please try again later.' },
@@ -26,7 +26,7 @@ const authLimiter = rateLimit({
 
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 100,
   message: {
     success: false,
     error: { message: 'Too many attempts, please try again later.' },

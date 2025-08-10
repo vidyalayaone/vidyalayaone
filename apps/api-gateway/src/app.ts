@@ -140,24 +140,6 @@ services.forEach(service => {
 
 console.log('🔧 Service registration complete\n');
 
-// // Dynamic service registration
-// const services = ServiceRegistry.getAllServices();
-//
-// console.log('\n🔧 Registering services:');
-// services.forEach(service => {
-//   console.log(`   📍 ${service.name}: ${service.path} (protected: ${service.isProtected})`);
-//
-//   if (service.isProtected) {
-//     // Protected service - apply auth to all routes
-//     app.use(service.path, authenticate, createServiceProxy(service));
-//   } else {
-//     // Unprotected service - let service handle auth internally
-//     app.use(service.path, createServiceProxy(service));
-//   }
-// });
-//
-// console.log('🔧 Service registration complete\n');
-
 // 404 handler
 app.use(notFound);
 

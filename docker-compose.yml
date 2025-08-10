@@ -1,0 +1,124 @@
+services:
+  # Database container
+  postgres:
+    image: postgres:16-alpine
+    container_name: vidyalayaone-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vidyalayaone-network
+
+  # Migration container
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migration
+    container_name: vidyalayaone-migration
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
+      - SCHOOL_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
+    networks:
+      - vidyalayaone-network
+    restart: "no"
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: vidyalayaone-auth
+    ports:
+      - "3001:3001"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
+      - PORT=3001
+      - NODE_ENV=development
+    volumes:
+    - ./apps/auth-service:/app/apps/auth-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/auth-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/auth-service/src/generated
+    - /app/apps/auth-service/node_modules/.prisma
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
+  # School Service
+  school-service:
+    build:
+      context: .
+      dockerfile: apps/school-service/Dockerfile
+    container_name: vidyalayaone-school
+    ports:
+      - "3002:3002"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
+      - PORT=3002
+      - NODE_ENV=development
+    volumes:
+    - ./apps/school-service:/app/apps/school-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/school-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/school-service/src/generated
+    - /app/apps/school-service/node_modules/.prisma
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: vidyalayaone-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - school-service
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - SCHOOL_SERVICE_URL=http://school-service:3002
+      - JWT_SECRET=your-jwt-secret-here
+    volumes:
+      - ./apps/api-gateway:/app/apps/api-gateway
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/api-gateway/node_modules
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  vidyalayaone-network:
+    driver: bridge

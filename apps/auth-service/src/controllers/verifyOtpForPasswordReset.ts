@@ -55,7 +55,7 @@ export async function verifyOtpForPasswordReset(req: Request, res: Response) {
       success: true,
       message: 'OTP verified. Use the token to reset password.',
       data: {
-        reset_token: resetToken
+        resetToken
       },
       timestamp: new Date().toISOString()
     });

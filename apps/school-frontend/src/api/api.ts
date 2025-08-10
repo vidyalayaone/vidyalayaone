@@ -187,7 +187,7 @@ export const api = {
     } catch (error) {
       return handleError(error);
     }
-  }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)

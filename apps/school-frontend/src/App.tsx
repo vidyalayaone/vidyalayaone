@@ -14,6 +14,18 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 
+// Teachers Pages
+import TeachersPage from './pages/teachers/TeachersPage';
+import CreateTeacherPage from './pages/teachers/CreateTeacherPage';
+import TeacherDetailPage from './pages/teachers/TeacherDetailPage';
+import EditTeacherPage from './pages/teachers/EditTeacherPage';
+
+// Students Pages
+import StudentsPage from './pages/students/StudentsPage';
+import CreateStudentPage from './pages/students/CreateStudentPage';
+import StudentDetailPage from './pages/students/StudentDetailPage';
+import EditStudentPage from './pages/students/EditStudentPage';
+
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
@@ -111,6 +123,74 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Teachers Routes - Admin only */}
+            <Route
+              path="/teachers"
+              element={
+                <ProtectedRoute>
+                  <TeachersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teachers/create"
+              element={
+                <ProtectedRoute>
+                  <CreateTeacherPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teachers/:id"
+              element={
+                <ProtectedRoute>
+                  <TeacherDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teachers/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditTeacherPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Students Routes - Admin only */}
+            <Route
+              path="/students"
+              element={
+                <ProtectedRoute>
+                  <StudentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/create"
+              element={
+                <ProtectedRoute>
+                  <CreateStudentPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/:id"
+              element={
+                <ProtectedRoute>
+                  <StudentDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditStudentPage />
                 </ProtectedRoute>
               }
             />

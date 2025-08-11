@@ -15,6 +15,218 @@ export interface User {
   updatedAt: string;
 }
 
+// Teacher-specific interfaces
+export interface Teacher extends User {
+  role: 'TEACHER';
+  employeeId: string;
+  joiningDate: string;
+  qualification: string;
+  experience: number; // years of experience
+  subjects: Subject[];
+  classes: ClassAssignment[];
+  address: Address;
+  emergencyContact: EmergencyContact;
+  salary?: number;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  maritalStatus: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+}
+
+// Student-specific interfaces
+export interface Student extends User {
+  role: 'STUDENT';
+  studentId: string;
+  enrollmentDate: string;
+  currentClass: StudentClass;
+  parentGuardian: ParentGuardian;
+  address: Address;
+  emergencyContact: EmergencyContact;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  medicalInfo?: MedicalInfo;
+  documents: StudentDocument[];
+  academicHistory: AcademicRecord[];
+  feeStatus: FeeStatus;
+}
+
+export interface StudentClass {
+  id: string;
+  grade: string;
+  section: string;
+  className: string;
+  academicYear: string;
+}
+
+export interface ParentGuardian {
+  fatherName: string;
+  fatherPhone?: string;
+  fatherEmail?: string;
+  fatherOccupation?: string;
+  motherName: string;
+  motherPhone?: string;
+  motherEmail?: string;
+  motherOccupation?: string;
+  guardianName?: string;
+  guardianPhone?: string;
+  guardianEmail?: string;
+  guardianRelation?: string;
+}
+
+export interface MedicalInfo {
+  allergies?: string[];
+  chronicConditions?: string[];
+  medications?: string[];
+  doctorName?: string;
+  doctorPhone?: string;
+  healthInsurance?: string;
+}
+
+export interface StudentDocument {
+  id: string;
+  type: 'BIRTH_CERTIFICATE' | 'ID_PROOF' | 'ADDRESS_PROOF' | 'PHOTO' | 'MEDICAL_CERTIFICATE' | 'TRANSFER_CERTIFICATE' | 'OTHER';
+  name: string;
+  url: string;
+  uploadedAt: string;
+  uploadedBy: string;
+}
+
+export interface AcademicRecord {
+  id: string;
+  academicYear: string;
+  grade: string;
+  section: string;
+  subjects: SubjectGrade[];
+  attendance: number; // percentage
+  overallGrade: string;
+  rank?: number;
+  remarks?: string;
+}
+
+export interface SubjectGrade {
+  subject: Subject;
+  grade: string;
+  marks: number;
+  maxMarks: number;
+  percentage: number;
+}
+
+export interface FeeStatus {
+  totalFee: number;
+  paidAmount: number;
+  pendingAmount: number;
+  dueDate?: string;
+  status: 'PAID' | 'PENDING' | 'OVERDUE';
+  transactions: FeeTransaction[];
+}
+
+export interface FeeTransaction {
+  id: string;
+  amount: number;
+  type: 'PAYMENT' | 'REFUND';
+  method: 'CASH' | 'BANK_TRANSFER' | 'ONLINE' | 'CHEQUE';
+  transactionId?: string;
+  date: string;
+  remarks?: string;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface ClassAssignment {
+  id: string;
+  classId: string;
+  className: string;
+  grade: string;
+  section: string;
+  subject: Subject;
+  isClassTeacher: boolean; // if this teacher is the main class teacher
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phoneNumber: string;
+  email?: string;
+}
+
+// Teacher form data interfaces
+export interface CreateTeacherData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  employeeId: string;
+  joiningDate: string;
+  qualification: string;
+  experience: number;
+  subjectIds: string[];
+  classAssignments: {
+    classId: string;
+    subjectId: string;
+    isClassTeacher: boolean;
+  }[];
+  address: Address;
+  emergencyContact: EmergencyContact;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  maritalStatus: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+}
+
+export interface UpdateTeacherData extends Partial<CreateTeacherData> {
+  id: string;
+}
+
+// Student form data interfaces
+export interface CreateStudentData {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phoneNumber?: string;
+  studentId: string;
+  enrollmentDate: string;
+  classId: string;
+  grade: string;
+  section: string;
+  dateOfBirth: string;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  address: Address;
+  parentGuardian: ParentGuardian;
+  emergencyContact: EmergencyContact;
+  medicalInfo?: MedicalInfo;
+  documents?: File[];
+}
+
+export interface UpdateStudentData extends Partial<CreateStudentData> {
+  id: string;
+}
+
+// Teacher activity log
+export interface TeacherActivity {
+  id: string;
+  teacherId: string;
+  type: 'LOGIN' | 'CLASS_ASSIGNED' | 'CLASS_REMOVED' | 'PROFILE_UPDATED' | 'PASSWORD_RESET';
+  description: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
 export interface School {
   id: string;
   name: string;
@@ -23,7 +235,6 @@ export interface School {
   address: any;
   level: string;
   board: string;
-  schoolCode: string;
   phoneNumbers: string[];
   email: string;
   principalName: string;

@@ -16,39 +16,39 @@ httpClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for token refresh
-httpClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  async (error: AxiosError) => {
-    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+// // Response interceptor for token refresh
+// httpClient.interceptors.response.use(
+//   (response: AxiosResponse) => response,
+//   async (error: AxiosError) => {
+//     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
-    if (error.response?.status === 401 && !original?._retry) {
-      original._retry = true;
+//     if (error.response?.status === 401 && !original?._retry) {
+//       original._retry = true;
       
-      try {
-        const refreshToken = tokenManager.getRefreshToken();
-        if (refreshToken) {
-          const response = await httpClient.post('/auth/refresh', {
-            refreshToken,
-          });
+//       try {
+//         const refreshToken = tokenManager.getRefreshToken();
+//         if (refreshToken) {
+//           const response = await httpClient.post('/auth/refresh', {
+//             refreshToken,
+//           });
           
-          const { accessToken } = response.data.data;
-          tokenManager.setTokens(accessToken, refreshToken);
+//           const { accessToken } = response.data.data;
+//           tokenManager.setTokens(accessToken, refreshToken);
           
-          // Retry original request
-          if (original.headers) {
-            original.headers.Authorization = `Bearer ${accessToken}`;
-          }
-          return httpClient(original);
-        }
-      } catch (refreshError) {
-        tokenManager.clearTokens();
-        window.location.href = '/login';
-      }
-    }
+//           // Retry original request
+//           if (original.headers) {
+//             original.headers.Authorization = `Bearer ${accessToken}`;
+//           }
+//           return httpClient(original);
+//         }
+//       } catch (refreshError) {
+//         tokenManager.clearTokens();
+//         window.location.href = '/login';
+//       }
+//     }
     
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 export default httpClient;

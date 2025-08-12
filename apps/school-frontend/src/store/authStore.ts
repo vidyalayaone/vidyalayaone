@@ -17,8 +17,6 @@ interface PasswordResetFlow {
 interface AuthState {
   // User and authentication data
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   
   // School data
@@ -34,7 +32,6 @@ interface AuthState {
   // Actions
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  refreshAccessToken: () => Promise<boolean>;
   startPasswordReset: (username: string) => Promise<boolean>;
   verifyResetOTP: (otp: string) => Promise<boolean>;
   resetPassword: (newPassword: string, confirmPassword: string) => Promise<boolean>;
@@ -42,10 +39,6 @@ interface AuthState {
   fetchMe: () => Promise<void>;
   fetchSchool: () => Promise<void>;
   initialize: () => Promise<void>;
-  
-  // ✅ Add token management methods
-  setTokens: (tokens: { accessToken: string; refreshToken: string }) => void;
-  clearTokens: () => void;
   
   // Helper methods
   isInPasswordResetFlow: () => boolean;
@@ -57,8 +50,6 @@ export const useAuthStore = create<AuthState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     user: null,
-    accessToken: null,
-    refreshToken: null,
     isAuthenticated: false,
     school: null,
     isLoading: false,
@@ -71,23 +62,6 @@ export const useAuthStore = create<AuthState>()(
       resetToken: null,
     },
 
-    // ✅ Token management methods
-    setTokens: (tokens) => {
-      tokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
-      set({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      });
-    },
-
-    clearTokens: () => {
-      tokenManager.clearTokens();
-      set({
-        accessToken: null,
-        refreshToken: null,
-      });
-    },
-
     // Login action
     login: async (username: string, password: string): Promise<boolean> => {
       set({ isLoading: true });
@@ -96,17 +70,13 @@ export const useAuthStore = create<AuthState>()(
         const response = await api.login({ username, password });
         
         if (response.success && response.data) {
-          const { accessToken, refreshToken, user, school } = response.data;
-          
-          // ✅ Use tokenManager instead of direct sessionStorage
-          get().setTokens({ accessToken, refreshToken });
-          
+          const { accessToken, refreshToken, user } = response.data;
+
+          tokenManager.setTokens(accessToken, refreshToken);
+
           // Update state
           set({
             user,
-            school,
-            accessToken,
-            refreshToken,
             isAuthenticated: true,
             isLoading: false,
             resetFlow: {
@@ -134,23 +104,25 @@ export const useAuthStore = create<AuthState>()(
 
     // Logout action
     logout: () => {
-      const { refreshToken } = get();
-      
-      // Call logout API (fire and forget)
+      const refreshToken = tokenManager.getRefreshToken() || null;
+
+      // Call logout API first (before clearing tokens so backend can authenticate)
       if (refreshToken) {
-        api.logout(refreshToken).catch(console.error);
+        api.logout(refreshToken)
+          .catch(console.error)
+          .finally(() => {
+            // Clear tokens after API call completes (success or failure)
+            tokenManager.clearTokens();
+          });
+      } else {
+        // If no refresh token, just clear tokens immediately
+        tokenManager.clearTokens();
       }
-      
-      // ✅ Use tokenManager instead of direct sessionStorage
-      get().clearTokens();
-      
-      // Reset state
+
+      // Reset state immediately (don't wait for API call)
       set({
         user: null,
-        accessToken: null,
-        refreshToken: null,
         isAuthenticated: false,
-        school: null,
         resetFlow: {
           username: null,
           isInOTPFlow: false,
@@ -162,33 +134,31 @@ export const useAuthStore = create<AuthState>()(
       toast.success('Logged out successfully');
     },
 
-    // Refresh access token
-    refreshAccessToken: async (): Promise<boolean> => {
-      const { refreshToken } = get();
+    // // Refresh access token
+    // refreshAccessToken: async (): Promise<boolean> => {
+    //   const refreshToken = tokenManager.getRefreshToken();
       
-      if (!refreshToken) {
-        return false;
-      }
+    //   if (!refreshToken) {
+    //     return false;
+    //   }
       
-      try {
-        const response = await api.refreshToken({ refreshToken });
+    //   try {
+    //     const response = await api.refreshToken({ refreshToken });
         
-        if (response.success && response.data) {
-          set({ accessToken: response.data.accessToken });
-          // ✅ Update stored access token
-          tokenManager.setTokens(response.data.accessToken, refreshToken);
-          return true;
-        } else {
-          // Refresh token is invalid, logout user
-          get().logout();
-          return false;
-        }
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        get().logout();
-        return false;
-      }
-    },
+    //     if (response.success && response.data) {
+    //       tokenManager.setTokens(response.data.accessToken, response.data.refreshToken);
+    //       return true;
+    //     } else {
+    //       // Refresh token is invalid, logout user
+    //       get().logout();
+    //       return false;
+    //     }
+    //   } catch (error) {
+    //     console.error('Token refresh error:', error);
+    //     get().logout();
+    //     return false;
+    //   }
+    // },
 
     // Start password reset flow
     startPasswordReset: async (username: string): Promise<boolean> => {
@@ -330,9 +300,11 @@ export const useAuthStore = create<AuthState>()(
     fetchMe: async (): Promise<void> => {
       try {
         const response = await api.getMe();
+
+        console.log('Fetched user:', response);
         
         if (response.success && response.data) {
-          set({ user: response.data });
+          set({ user: response.data.user });
         }
       } catch (error) {
         console.error('Fetch user error:', error);
@@ -362,19 +334,26 @@ export const useAuthStore = create<AuthState>()(
       const refreshToken = tokenManager.getRefreshToken();
       const accessToken = tokenManager.getAccessToken();
       
-      if (refreshToken) {
-        set({ 
-          refreshToken,
-          accessToken 
-        });
+      // if (refreshToken) {
         
-        // Try to refresh access token
-        const success = await get().refreshAccessToken();
+      //   // Try to refresh access token
+      //   const success = await get().refreshAccessToken();
         
-        if (success) {
-          await get().fetchMe();
-          set({ isAuthenticated: true });
-        }
+      //   if (success) {
+      //     await get().fetchMe();
+      //     set({ isAuthenticated: true });
+      //   }
+      // }
+
+      console.log(accessToken);
+
+      if (accessToken) {
+        // If access token exists, fetch user data
+        await get().fetchMe();
+        set({ isAuthenticated: true });
+      } else {
+        // No access token, user is not authenticated
+        set({ isAuthenticated: false });
       }
       
       set({ isInitializing: false });
@@ -401,24 +380,24 @@ export const useAuthStore = create<AuthState>()(
 // Auto-initialize auth state when store is created
 useAuthStore.getState().initialize();
 
-// Set up automatic token refresh
-let refreshTokenInterval: NodeJS.Timeout | null = null;
+// // Set up automatic token refresh
+// let refreshTokenInterval: NodeJS.Timeout | null = null;
 
-// Subscribe to authentication state changes
-useAuthStore.subscribe(
-  (state) => state.isAuthenticated,
-  (isAuthenticated) => {
-    if (isAuthenticated) {
-      // Set up token refresh interval (refresh every 30 minutes)
-      refreshTokenInterval = setInterval(() => {
-        useAuthStore.getState().refreshAccessToken();
-      }, 30 * 60 * 1000);
-    } else {
-      // Clear refresh interval when logged out
-      if (refreshTokenInterval) {
-        clearInterval(refreshTokenInterval);
-        refreshTokenInterval = null;
-      }
-    }
-  }
-);
+// // Subscribe to authentication state changes
+// useAuthStore.subscribe(
+//   (state) => state.isAuthenticated,
+//   (isAuthenticated) => {
+//     if (isAuthenticated) {
+//       // Set up token refresh interval (refresh every 30 minutes)
+//       refreshTokenInterval = setInterval(() => {
+//         useAuthStore.getState().refreshAccessToken();
+//       }, 30 * 60 * 1000);
+//     } else {
+//       // Clear refresh interval when logged out
+//       if (refreshTokenInterval) {
+//         clearInterval(refreshTokenInterval);
+//         refreshTokenInterval = null;
+//       }
+//     }
+//   }
+// );

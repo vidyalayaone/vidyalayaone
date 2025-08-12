@@ -82,14 +82,14 @@ export const api = {
     }
   },
 
-  refreshToken: async (request: RefreshTokenRequest): Promise<APIResponse<{ accessToken: string }>> => {
-    try {
-      const response = await httpClient.post('/auth/refresh', request);
-      return handleResponse<{ accessToken: string }>(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
+  // refreshToken: async (request: RefreshTokenRequest): Promise<APIResponse<{ accessToken: string, refreshToken: string }>> => {
+  //   try {
+  //     const response = await httpClient.post('/auth/refresh', request);
+  //     return handleResponse<{ accessToken: string, refreshToken: string }>(response);
+  //   } catch (error) {
+  //     return handleError(error);
+  //   }
+  // },
 
   logout: async (refreshToken: string): Promise<APIResponse> => {
     try {
@@ -101,20 +101,20 @@ export const api = {
   },
 
   // User endpoints
-  getMe: async (): Promise<APIResponse<User>> => {
+  getMe: async (): Promise<APIResponse> => {
     try {
-      const response = await httpClient.get('/users/me');
-      return handleResponse<User>(response);
+      const response = await httpClient.get('/auth/me');
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
   },
 
   // School endpoints
-  getSchoolBySubdomain: async (subdomain: string): Promise<APIResponse<School>> => {
+  getSchoolBySubdomain: async (subdomain: string): Promise<APIResponse> => {
     try {
       const response = await httpClient.get(`/school/get-by-subdomain/${subdomain}`);
-      return handleResponse<School>(response);
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
@@ -196,7 +196,7 @@ export const {
   forgotPassword,
   verifyOTP,
   resetPassword,
-  refreshToken,
+  // refreshToken,
   logout,
   getMe,
   getSchoolBySubdomain,

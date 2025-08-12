@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
     },
     hmr: {
       port: 8080,
-      host: '0.0.0.0', // HMR should use localhost for browser access
+      host: 'localhost', // HMR should use localhost for browser access
     },
   },
   plugins: [

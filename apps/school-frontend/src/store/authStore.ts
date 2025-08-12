@@ -32,7 +32,6 @@ interface AuthState {
   // Actions
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  refreshAccessToken: () => Promise<boolean>;
   startPasswordReset: (username: string) => Promise<boolean>;
   verifyResetOTP: (otp: string) => Promise<boolean>;
   resetPassword: (newPassword: string, confirmPassword: string) => Promise<boolean>;
@@ -107,15 +106,20 @@ export const useAuthStore = create<AuthState>()(
     logout: () => {
       const refreshToken = tokenManager.getRefreshToken() || null;
 
-      // Call logout API (fire and forget)
+      // Call logout API first (before clearing tokens so backend can authenticate)
       if (refreshToken) {
-        api.logout(refreshToken).catch(console.error);
+        api.logout(refreshToken)
+          .catch(console.error)
+          .finally(() => {
+            // Clear tokens after API call completes (success or failure)
+            tokenManager.clearTokens();
+          });
+      } else {
+        // If no refresh token, just clear tokens immediately
+        tokenManager.clearTokens();
       }
-      
-      // ✅ Use tokenManager instead of direct sessionStorage
-      tokenManager.clearTokens();
 
-      // Reset state
+      // Reset state immediately (don't wait for API call)
       set({
         user: null,
         isAuthenticated: false,
@@ -130,31 +134,31 @@ export const useAuthStore = create<AuthState>()(
       toast.success('Logged out successfully');
     },
 
-    // Refresh access token
-    refreshAccessToken: async (): Promise<boolean> => {
-      const refreshToken = tokenManager.getRefreshToken();
+    // // Refresh access token
+    // refreshAccessToken: async (): Promise<boolean> => {
+    //   const refreshToken = tokenManager.getRefreshToken();
       
-      if (!refreshToken) {
-        return false;
-      }
+    //   if (!refreshToken) {
+    //     return false;
+    //   }
       
-      try {
-        const response = await api.refreshToken({ refreshToken });
+    //   try {
+    //     const response = await api.refreshToken({ refreshToken });
         
-        if (response.success && response.data) {
-          tokenManager.setTokens(response.data.accessToken, response.data.refreshToken);
-          return true;
-        } else {
-          // Refresh token is invalid, logout user
-          get().logout();
-          return false;
-        }
-      } catch (error) {
-        console.error('Token refresh error:', error);
-        get().logout();
-        return false;
-      }
-    },
+    //     if (response.success && response.data) {
+    //       tokenManager.setTokens(response.data.accessToken, response.data.refreshToken);
+    //       return true;
+    //     } else {
+    //       // Refresh token is invalid, logout user
+    //       get().logout();
+    //       return false;
+    //     }
+    //   } catch (error) {
+    //     console.error('Token refresh error:', error);
+    //     get().logout();
+    //     return false;
+    //   }
+    // },
 
     // Start password reset flow
     startPasswordReset: async (username: string): Promise<boolean> => {
@@ -296,6 +300,8 @@ export const useAuthStore = create<AuthState>()(
     fetchMe: async (): Promise<void> => {
       try {
         const response = await api.getMe();
+
+        console.log('Fetched user:', response);
         
         if (response.success && response.data) {
           set({ user: response.data.user });
@@ -339,6 +345,8 @@ export const useAuthStore = create<AuthState>()(
       //   }
       // }
 
+      console.log(accessToken);
+
       if (accessToken) {
         // If access token exists, fetch user data
         await get().fetchMe();
@@ -372,24 +380,24 @@ export const useAuthStore = create<AuthState>()(
 // Auto-initialize auth state when store is created
 useAuthStore.getState().initialize();
 
-// Set up automatic token refresh
-let refreshTokenInterval: NodeJS.Timeout | null = null;
+// // Set up automatic token refresh
+// let refreshTokenInterval: NodeJS.Timeout | null = null;
 
-// Subscribe to authentication state changes
-useAuthStore.subscribe(
-  (state) => state.isAuthenticated,
-  (isAuthenticated) => {
-    if (isAuthenticated) {
-      // Set up token refresh interval (refresh every 30 minutes)
-      refreshTokenInterval = setInterval(() => {
-        useAuthStore.getState().refreshAccessToken();
-      }, 30 * 60 * 1000);
-    } else {
-      // Clear refresh interval when logged out
-      if (refreshTokenInterval) {
-        clearInterval(refreshTokenInterval);
-        refreshTokenInterval = null;
-      }
-    }
-  }
-);
+// // Subscribe to authentication state changes
+// useAuthStore.subscribe(
+//   (state) => state.isAuthenticated,
+//   (isAuthenticated) => {
+//     if (isAuthenticated) {
+//       // Set up token refresh interval (refresh every 30 minutes)
+//       refreshTokenInterval = setInterval(() => {
+//         useAuthStore.getState().refreshAccessToken();
+//       }, 30 * 60 * 1000);
+//     } else {
+//       // Clear refresh interval when logged out
+//       if (refreshTokenInterval) {
+//         clearInterval(refreshTokenInterval);
+//         refreshTokenInterval = null;
+//       }
+//     }
+//   }
+// );

@@ -82,14 +82,14 @@ export const api = {
     }
   },
 
-  refreshToken: async (request: RefreshTokenRequest): Promise<APIResponse<{ accessToken: string, refreshToken: string }>> => {
-    try {
-      const response = await httpClient.post('/auth/refresh', request);
-      return handleResponse<{ accessToken: string, refreshToken: string }>(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
+  // refreshToken: async (request: RefreshTokenRequest): Promise<APIResponse<{ accessToken: string, refreshToken: string }>> => {
+  //   try {
+  //     const response = await httpClient.post('/auth/refresh', request);
+  //     return handleResponse<{ accessToken: string, refreshToken: string }>(response);
+  //   } catch (error) {
+  //     return handleError(error);
+  //   }
+  // },
 
   logout: async (refreshToken: string): Promise<APIResponse> => {
     try {
@@ -196,7 +196,7 @@ export const {
   forgotPassword,
   verifyOTP,
   resetPassword,
-  refreshToken,
+  // refreshToken,
   logout,
   getMe,
   getSchoolBySubdomain,

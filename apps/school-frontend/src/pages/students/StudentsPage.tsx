@@ -417,6 +417,8 @@ const StudentsPage: React.FC = () => {
         {/* Filters and Search */}
         <Card>
           <CardHeader>
+            <CardTitle>Students List ({filteredStudents.length})</CardTitle>
+            <p className="text-sm text-muted-foreground">Click on any student row to view details</p>
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
               <div className="flex-1">
                 <div className="relative">
@@ -477,7 +479,11 @@ const StudentsPage: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredStudents.map((student) => (
-                    <TableRow key={student.id}>
+                    <TableRow 
+                      key={student.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => navigate(`/students/${student.id}`)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
@@ -537,7 +543,11 @@ const StudentsPage: React.FC = () => {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <span className="sr-only">Open menu</span>
                               <MoreVertical className="h-4 w-4" />
                             </Button>

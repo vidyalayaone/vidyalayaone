@@ -413,6 +413,7 @@ const TeachersPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Teachers List ({filteredTeachers.length})</CardTitle>
+            <p className="text-sm text-muted-foreground">Click on any teacher row to view details</p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -431,7 +432,11 @@ const TeachersPage: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredTeachers.map((teacher) => (
-                    <TableRow key={teacher.id}>
+                    <TableRow 
+                      key={teacher.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => navigate(`/teachers/${teacher.id}`)}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
@@ -492,7 +497,11 @@ const TeachersPage: React.FC = () => {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>

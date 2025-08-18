@@ -175,15 +175,6 @@ const AppSidebar: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
                     onClick={handleLogout}
                     className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
                   >

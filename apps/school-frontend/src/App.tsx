@@ -26,6 +26,10 @@ import CreateStudentPage from './pages/students/CreateStudentPage';
 import StudentDetailPage from './pages/students/StudentDetailPage';
 import EditStudentPage from './pages/students/EditStudentPage';
 
+// Classes Pages
+import ClassesPage from './pages/classes/ClassesPage';
+import ClassSectionPage from './pages/classes/ClassSectionPage';
+
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
@@ -191,6 +195,24 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <EditStudentPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Classes Routes - Admin only */}
+            <Route
+              path="/classes"
+              element={
+                <ProtectedRoute>
+                  <ClassesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/classes/:grade/:section"
+              element={
+                <ProtectedRoute>
+                  <ClassSectionPage />
                 </ProtectedRoute>
               }
             />

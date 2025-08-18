@@ -15,7 +15,13 @@ import {
   TrendingUp,
   MessageSquare,
   Bell,
-  UserCog
+  UserCog,
+  UserPlus,
+  CalendarCheck,
+  PenTool,
+  CalendarDays,
+  MessageCircle,
+  DollarSign
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -35,59 +41,77 @@ export interface NavigationGroup {
 export const navigationConfig = {
   ADMIN: [
     {
-      label: 'Overview',
+      label: 'Main',
       items: [
-        { 
-          path: '/dashboard', 
-          label: 'Dashboard', 
-          icon: LayoutDashboard,
-          description: 'Overview and analytics'
-        },
-        { 
-          path: '/analytics', 
-          label: 'Analytics', 
-          icon: TrendingUp,
-          description: 'School performance metrics'
-        }
-      ]
-    },
-    {
-      label: 'Management',
-      items: [
-        { 
-          path: '/teachers', 
-          label: 'Teachers', 
-          icon: Users,
-          description: 'Manage teaching staff'
-        },
         { 
           path: '/students', 
           label: 'Students', 
           icon: GraduationCap,
-          description: 'Manage student records'
+          description: 'Manage student records and enrollment'
+        },
+        { 
+          path: '/teachers', 
+          label: 'Teachers', 
+          icon: Users,
+          description: 'Manage teaching staff and faculty'
         },
         { 
           path: '/classes', 
           label: 'Classes', 
           icon: BookOpen,
-          description: 'Manage class schedules'
+          description: 'Manage class schedules and sections'
+        },
+        { 
+          path: '/admission', 
+          label: 'Admission', 
+          icon: UserPlus,
+          description: 'Handle new student admissions'
         }
       ]
     },
     {
-      label: 'System',
+      label: 'Academic',
       items: [
         { 
-          path: '/users', 
-          label: 'User Management', 
-          icon: UserCog,
-          description: 'Manage user accounts and permissions'
+          path: '/attendance', 
+          label: 'Attendance', 
+          icon: CalendarCheck,
+          description: 'Track and manage student attendance'
         },
         { 
-          path: '/settings', 
-          label: 'Settings', 
-          icon: Settings,
-          description: 'School settings and configuration'
+          path: '/exams', 
+          label: 'Exams', 
+          icon: PenTool,
+          description: 'Manage examinations and assessments'
+        },
+        { 
+          path: '/timetable', 
+          label: 'Time Table', 
+          icon: Calendar,
+          description: 'Manage class schedules and timetables'
+        },
+        { 
+          path: '/academic-calendar', 
+          label: 'Academic Calendar', 
+          icon: CalendarDays,
+          description: 'Manage academic year calendar'
+        }
+      ]
+    },
+    {
+      label: 'Operations',
+      items: [
+        { 
+          path: '/communication', 
+          label: 'Communication', 
+          icon: MessageCircle,
+          description: 'Send announcements and messages'
+        },
+        { 
+          path: '/fees', 
+          label: 'Fees', 
+          icon: DollarSign,
+          description: 'Manage student fees and payments'
         }
       ]
     }

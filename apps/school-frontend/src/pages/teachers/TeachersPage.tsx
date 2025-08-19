@@ -15,7 +15,9 @@ import {
   BookOpen,
   Mail,
   Phone,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -209,6 +211,343 @@ const mockTeachers: Teacher[] = [
     gender: 'MALE',
     bloodGroup: 'O+',
     maritalStatus: 'MARRIED'
+  },
+  {
+    id: '4',
+    username: 'emily.davis',
+    email: 'emily.davis@school.edu',
+    firstName: 'Emily',
+    lastName: 'Davis',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0401',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-03-01T08:00:00Z',
+    updatedAt: '2024-03-01T08:00:00Z',
+    employeeId: 'EMP004',
+    joiningDate: '2024-03-01',
+    qualification: 'M.A. History, B.Ed.',
+    experience: 6,
+    subjects: [
+      { id: 'history-1', name: 'History', code: 'HIST', description: 'World History', isActive: true },
+      { id: 'geography-1', name: 'Geography', code: 'GEO', description: 'Physical Geography', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-4',
+        classId: '11-A',
+        className: 'Grade 11 Section A',
+        grade: '11',
+        section: 'A',
+        subject: { id: 'history-1', name: 'History', code: 'HIST', description: 'World History', isActive: true },
+        isClassTeacher: true
+      }
+    ],
+    address: {
+      street: '321 Scholar Street',
+      city: 'History Town',
+      state: 'Cultural State',
+      postalCode: '11223',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'David Davis',
+      relationship: 'Husband',
+      phoneNumber: '+1-555-0402',
+      email: 'david.davis@email.com'
+    },
+    salary: 72000,
+    dateOfBirth: '1987-09-12',
+    gender: 'FEMALE',
+    bloodGroup: 'AB+',
+    maritalStatus: 'MARRIED'
+  },
+  {
+    id: '5',
+    username: 'robert.wilson',
+    email: 'robert.wilson@school.edu',
+    firstName: 'Robert',
+    lastName: 'Wilson',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0501',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-01-20T08:00:00Z',
+    updatedAt: '2024-01-20T08:00:00Z',
+    employeeId: 'EMP005',
+    joiningDate: '2024-01-20',
+    qualification: 'M.P.E., B.Ed.',
+    experience: 4,
+    subjects: [
+      { id: 'pe-1', name: 'Physical Education', code: 'PE', description: 'Sports and Fitness', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-5',
+        classId: '9-B',
+        className: 'Grade 9 Section B',
+        grade: '9',
+        section: 'B',
+        subject: { id: 'pe-1', name: 'Physical Education', code: 'PE', description: 'Sports and Fitness', isActive: true },
+        isClassTeacher: true
+      }
+    ],
+    address: {
+      street: '654 Sports Avenue',
+      city: 'Athletic City',
+      state: 'Fitness State',
+      postalCode: '33445',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'Maria Wilson',
+      relationship: 'Wife',
+      phoneNumber: '+1-555-0502',
+      email: 'maria.wilson@email.com'
+    },
+    salary: 65000,
+    dateOfBirth: '1989-05-25',
+    gender: 'MALE',
+    bloodGroup: 'O-',
+    maritalStatus: 'MARRIED'
+  },
+  {
+    id: '6',
+    username: 'lisa.anderson',
+    email: 'lisa.anderson@school.edu',
+    firstName: 'Lisa',
+    lastName: 'Anderson',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0601',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-02-15T08:00:00Z',
+    updatedAt: '2024-02-15T08:00:00Z',
+    employeeId: 'EMP006',
+    joiningDate: '2024-02-15',
+    qualification: 'M.F.A. Art, B.Ed.',
+    experience: 7,
+    subjects: [
+      { id: 'art-1', name: 'Art', code: 'ART', description: 'Fine Arts', isActive: true },
+      { id: 'craft-1', name: 'Craft', code: 'CRAFT', description: 'Arts and Crafts', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-6',
+        classId: '12-A',
+        className: 'Grade 12 Section A',
+        grade: '12',
+        section: 'A',
+        subject: { id: 'art-1', name: 'Art', code: 'ART', description: 'Fine Arts', isActive: true },
+        isClassTeacher: false
+      }
+    ],
+    address: {
+      street: '987 Creative Lane',
+      city: 'Art City',
+      state: 'Creative State',
+      postalCode: '55667',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'James Anderson',
+      relationship: 'Brother',
+      phoneNumber: '+1-555-0602',
+      email: 'james.anderson@email.com'
+    },
+    salary: 70000,
+    dateOfBirth: '1986-11-30',
+    gender: 'FEMALE',
+    bloodGroup: 'A-',
+    maritalStatus: 'SINGLE'
+  },
+  {
+    id: '7',
+    username: 'david.martinez',
+    email: 'david.martinez@school.edu',
+    firstName: 'David',
+    lastName: 'Martinez',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0701',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-03-10T08:00:00Z',
+    updatedAt: '2024-03-10T08:00:00Z',
+    employeeId: 'EMP007',
+    joiningDate: '2024-03-10',
+    qualification: 'M.Mus., B.Ed.',
+    experience: 9,
+    subjects: [
+      { id: 'music-1', name: 'Music', code: 'MUS', description: 'Music Theory and Practice', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-7',
+        classId: '10-C',
+        className: 'Grade 10 Section C',
+        grade: '10',
+        section: 'C',
+        subject: { id: 'music-1', name: 'Music', code: 'MUS', description: 'Music Theory and Practice', isActive: true },
+        isClassTeacher: true
+      }
+    ],
+    address: {
+      street: '147 Melody Street',
+      city: 'Music Town',
+      state: 'Harmony State',
+      postalCode: '77889',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'Carmen Martinez',
+      relationship: 'Wife',
+      phoneNumber: '+1-555-0702',
+      email: 'carmen.martinez@email.com'
+    },
+    salary: 73000,
+    dateOfBirth: '1984-08-18',
+    gender: 'MALE',
+    bloodGroup: 'B-',
+    maritalStatus: 'MARRIED'
+  },
+  {
+    id: '8',
+    username: 'jennifer.taylor',
+    email: 'jennifer.taylor@school.edu',
+    firstName: 'Jennifer',
+    lastName: 'Taylor',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0801',
+    schoolId: 'school-1',
+    isActive: false,
+    createdAt: '2023-11-01T08:00:00Z',
+    updatedAt: '2024-07-01T08:00:00Z',
+    employeeId: 'EMP008',
+    joiningDate: '2023-11-01',
+    qualification: 'M.Sc. Computer Science, B.Ed.',
+    experience: 10,
+    subjects: [
+      { id: 'computer-1', name: 'Computer Science', code: 'CS', description: 'Programming and Software', isActive: true },
+      { id: 'it-1', name: 'Information Technology', code: 'IT', description: 'IT Systems', isActive: true }
+    ],
+    classes: [],
+    address: {
+      street: '258 Tech Avenue',
+      city: 'Silicon Valley',
+      state: 'Tech State',
+      postalCode: '99001',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'Michael Taylor',
+      relationship: 'Husband',
+      phoneNumber: '+1-555-0802',
+      email: 'michael.taylor@email.com'
+    },
+    salary: 85000,
+    dateOfBirth: '1982-04-22',
+    gender: 'FEMALE',
+    bloodGroup: 'AB-',
+    maritalStatus: 'MARRIED'
+  },
+  {
+    id: '9',
+    username: 'william.garcia',
+    email: 'william.garcia@school.edu',
+    firstName: 'William',
+    lastName: 'Garcia',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-0901',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-01-05T08:00:00Z',
+    updatedAt: '2024-01-05T08:00:00Z',
+    employeeId: 'EMP009',
+    joiningDate: '2024-01-05',
+    qualification: 'M.A. Spanish Literature, B.Ed.',
+    experience: 11,
+    subjects: [
+      { id: 'spanish-1', name: 'Spanish', code: 'SPA', description: 'Spanish Language and Literature', isActive: true },
+      { id: 'french-1', name: 'French', code: 'FR', description: 'French Language', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-8',
+        classId: '11-B',
+        className: 'Grade 11 Section B',
+        grade: '11',
+        section: 'B',
+        subject: { id: 'spanish-1', name: 'Spanish', code: 'SPA', description: 'Spanish Language and Literature', isActive: true },
+        isClassTeacher: true
+      }
+    ],
+    address: {
+      street: '369 Language Lane',
+      city: 'Multilingual City',
+      state: 'Language State',
+      postalCode: '44556',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'Rosa Garcia',
+      relationship: 'Wife',
+      phoneNumber: '+1-555-0902',
+      email: 'rosa.garcia@email.com'
+    },
+    salary: 78000,
+    dateOfBirth: '1981-12-07',
+    gender: 'MALE',
+    bloodGroup: 'O+',
+    maritalStatus: 'MARRIED'
+  },
+  {
+    id: '10',
+    username: 'amanda.rodriguez',
+    email: 'amanda.rodriguez@school.edu',
+    firstName: 'Amanda',
+    lastName: 'Rodriguez',
+    role: 'TEACHER',
+    phoneNumber: '+1-555-1001',
+    schoolId: 'school-1',
+    isActive: true,
+    createdAt: '2024-02-28T08:00:00Z',
+    updatedAt: '2024-02-28T08:00:00Z',
+    employeeId: 'EMP010',
+    joiningDate: '2024-02-28',
+    qualification: 'M.Ed. Special Education, B.Ed.',
+    experience: 3,
+    subjects: [
+      { id: 'special-ed-1', name: 'Special Education', code: 'SPED', description: 'Special Needs Education', isActive: true }
+    ],
+    classes: [
+      {
+        id: 'class-9',
+        classId: '12-B',
+        className: 'Grade 12 Section B',
+        grade: '12',
+        section: 'B',
+        subject: { id: 'special-ed-1', name: 'Special Education', code: 'SPED', description: 'Special Needs Education', isActive: true },
+        isClassTeacher: true
+      }
+    ],
+    address: {
+      street: '741 Care Street',
+      city: 'Support Town',
+      state: 'Helping State',
+      postalCode: '66778',
+      country: 'USA'
+    },
+    emergencyContact: {
+      name: 'Carlos Rodriguez',
+      relationship: 'Father',
+      phoneNumber: '+1-555-1002',
+      email: 'carlos.rodriguez@email.com'
+    },
+    salary: 67000,
+    dateOfBirth: '1990-01-14',
+    gender: 'FEMALE',
+    bloodGroup: 'A+',
+    maritalStatus: 'SINGLE'
   }
 ];
 
@@ -219,6 +558,8 @@ const TeachersPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [deleteTeacherId, setDeleteTeacherId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const teachersPerPage = 10;
 
   // Get unique subjects for filter
   const allSubjects = useMemo(() => {
@@ -250,6 +591,17 @@ const TeachersPage: React.FC = () => {
       return matchesSearch && matchesStatus && matchesSubject;
     });
   }, [teachers, searchTerm, statusFilter, subjectFilter]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredTeachers.length / teachersPerPage);
+  const startIndex = (currentPage - 1) * teachersPerPage;
+  const endIndex = startIndex + teachersPerPage;
+  const currentTeachers = filteredTeachers.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, subjectFilter]);
 
   const handleDeleteTeacher = (teacherId: string) => {
     setTeachers(prev => prev.filter(t => t.id !== teacherId));
@@ -300,77 +652,34 @@ const TeachersPage: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Teachers</h1>
-            <p className="text-muted-foreground">Manage teaching staff and their assignments</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={exportToCSV}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
-            <Button
-              asChild
-              className="flex items-center gap-2"
-            >
-              <Link to="/teachers/create">
-                <Plus className="w-4 h-4" />
-                Add Teacher
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <div className="h-2 w-2 bg-green-500 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-              <div className="h-2 w-2 bg-red-500 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.inactive}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subjects</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.subjects}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters */}
+        {/* Teachers Details Card with integrated stats, filters, and action buttons */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col lg:flex-row gap-4">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <CardTitle>Teachers Details ({filteredTeachers.length} total, showing {currentTeachers.length})</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={exportToCSV}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+                <Button
+                  asChild
+                  className="flex items-center gap-2"
+                >
+                  <Link to="/teachers/create">
+                    <Plus className="w-4 h-4" />
+                    Add Teacher
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            
+            {/* Search and Filters Section */}
+            <div className="flex flex-col lg:flex-row gap-4 mb-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -406,14 +715,46 @@ const TeachersPage: React.FC = () => {
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Teachers Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Teachers List ({filteredTeachers.length})</CardTitle>
-            <p className="text-sm text-muted-foreground">Click on any teacher row to view details</p>
+            {/* Stats Cards Section */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.total}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active</CardTitle>
+                  <div className="h-2 w-2 bg-green-500 rounded-full" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.active}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+                  <div className="h-2 w-2 bg-red-500 rounded-full" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.inactive}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Subjects</CardTitle>
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.subjects}</div>
+                </CardContent>
+              </Card>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -431,7 +772,7 @@ const TeachersPage: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTeachers.map((teacher) => (
+                  {currentTeachers.map((teacher) => (
                     <TableRow 
                       key={teacher.id}
                       className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -535,7 +876,7 @@ const TeachersPage: React.FC = () => {
               </Table>
             </div>
 
-            {filteredTeachers.length === 0 && (
+            {currentTeachers.length === 0 && (
               <div className="text-center py-8">
                 <Users className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-2 text-sm font-semibold text-foreground">No teachers found</h3>
@@ -544,6 +885,50 @@ const TeachersPage: React.FC = () => {
                     ? 'Try adjusting your search or filter criteria.'
                     : 'Get started by adding a new teacher.'}
                 </p>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {filteredTeachers.length > teachersPerPage && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredTeachers.length)} of {filteredTeachers.length} teachers
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="min-w-[40px]"
+                      >
+                        {pageNum}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

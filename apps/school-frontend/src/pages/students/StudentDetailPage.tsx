@@ -108,6 +108,8 @@ const mockStudent: Student = {
   dateOfBirth: '2009-03-15',
   gender: 'FEMALE',
   bloodGroup: 'O+',
+  category: 'General',
+  religion: 'Christianity',
   medicalInfo: {
     allergies: ['Peanuts', 'Shellfish'],
     chronicConditions: [],
@@ -407,6 +409,14 @@ const StudentDetailPage: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Username</p>
                       <p className="font-mono text-sm">{student.username}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Category</p>
+                      <p>{student.category || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Religion</p>
+                      <p>{student.religion || 'Not specified'}</p>
                     </div>
                   </div>
                 </CardContent>

@@ -37,6 +37,13 @@ import BulkImportAdmissionPage from './pages/admission/BulkImportAdmissionPage';
 import AdmissionApplicationsPage from './pages/admission/AdmissionApplicationsPage';
 import ApplicationDetailPage from './pages/admission/ApplicationDetailPage';
 
+// Attendance Pages
+import AttendancePage from './pages/attendance/AttendancePage';
+
+// Exams Pages
+import ExamsPage from './pages/exams/ExamsPage';
+import ExamDetailPage from './pages/exams/ExamDetailPage';
+
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
@@ -262,6 +269,34 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ApplicationDetailPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Attendance Routes - Admin only */}
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute>
+                  <AttendancePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Exams Routes - Admin only */}
+            <Route
+              path="/exams"
+              element={
+                <ProtectedRoute>
+                  <ExamsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exams/:id"
+              element={
+                <ProtectedRoute>
+                  <ExamDetailPage />
                 </ProtectedRoute>
               }
             />

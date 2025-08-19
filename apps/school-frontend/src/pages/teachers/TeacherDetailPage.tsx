@@ -540,6 +540,14 @@ const TeacherDetailPage: React.FC = () => {
                       <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
                       <p>{formatDate(teacher.dateOfBirth)}</p>
                     </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Category</p>
+                      <p>General</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Religion</p>
+                      <p>Christianity</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

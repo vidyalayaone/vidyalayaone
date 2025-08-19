@@ -17,7 +17,11 @@ import {
   Calendar,
   MapPin,
   Users,
-  FileText
+  FileText,
+  UserPlus,
+  Upload,
+  ChevronDown,
+  ClipboardList
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -353,12 +357,46 @@ const StudentsPage: React.FC = () => {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button asChild>
-              <Link to="/students/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Student
-              </Link>
-            </Button>
+            
+            {/* Admission Options Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Add Students
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Admission Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/admission/single" className="flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Single Student
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/admission/multiple" className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Multiple Students
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/admission/bulk-import" className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Bulk Import
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/admission/applications" className="flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4" />
+                    Review Applications
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

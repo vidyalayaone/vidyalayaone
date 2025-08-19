@@ -22,13 +22,20 @@ import EditTeacherPage from './pages/teachers/EditTeacherPage';
 
 // Students Pages
 import StudentsPage from './pages/students/StudentsPage';
-import CreateStudentPage from './pages/students/CreateStudentPage';
 import StudentDetailPage from './pages/students/StudentDetailPage';
 import EditStudentPage from './pages/students/EditStudentPage';
 
 // Classes Pages
 import ClassesPage from './pages/classes/ClassesPage';
 import ClassSectionPage from './pages/classes/ClassSectionPage';
+
+// Admission Pages
+import AdmissionPage from './pages/admission/AdmissionPage';
+import SingleStudentAdmissionPage from './pages/admission/SingleStudentAdmissionPage';
+import MultipleStudentAdmissionPage from './pages/admission/MultipleStudentAdmissionPage';
+import BulkImportAdmissionPage from './pages/admission/BulkImportAdmissionPage';
+import AdmissionApplicationsPage from './pages/admission/AdmissionApplicationsPage';
+import ApplicationDetailPage from './pages/admission/ApplicationDetailPage';
 
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
@@ -175,14 +182,6 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/students/create"
-              element={
-                <ProtectedRoute>
-                  <CreateStudentPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/students/:id"
               element={
                 <ProtectedRoute>
@@ -213,6 +212,56 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ClassSectionPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admission Routes - Admin only */}
+            <Route
+              path="/admission"
+              element={
+                <ProtectedRoute>
+                  <AdmissionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admission/single"
+              element={
+                <ProtectedRoute>
+                  <SingleStudentAdmissionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admission/multiple"
+              element={
+                <ProtectedRoute>
+                  <MultipleStudentAdmissionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admission/bulk-import"
+              element={
+                <ProtectedRoute>
+                  <BulkImportAdmissionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admission/applications"
+              element={
+                <ProtectedRoute>
+                  <AdmissionApplicationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admission/applications/:id"
+              element={
+                <ProtectedRoute>
+                  <ApplicationDetailPage />
                 </ProtectedRoute>
               }
             />

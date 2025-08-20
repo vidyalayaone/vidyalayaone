@@ -1,0 +1,104 @@
+/* Print styles for Academic Calendar */
+@media print {
+  /* Hide navigation and non-essential elements */
+  .sidebar,
+  .topbar,
+  button:not(.print-include),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure the calendar takes full width */
+  .print-container {
+    margin: 0 !important;
+    padding: 20px !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Style calendar header */
+  .print-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  .print-title {
+    font-size: 24px !important;
+    color: #000 !important;
+    margin-bottom: 5px !important;
+    font-weight: bold !important;
+  }
+
+  .print-subtitle {
+    font-size: 16px !important;
+    color: #666 !important;
+  }
+
+  /* Style events table */
+  .print-events-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 20px !important;
+  }
+
+  .print-events-table th,
+  .print-events-table td {
+    border: 1px solid #000 !important;
+    padding: 8px !important;
+    text-align: left !important;
+    font-size: 12px !important;
+  }
+
+  .print-events-table th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Calendar grid styling */
+  .print-calendar {
+    page-break-inside: avoid !important;
+    margin: 20px 0 !important;
+  }
+
+  /* Event badges */
+  .print-badge {
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 10px !important;
+    border: 1px solid #ccc !important;
+    background-color: #f9f9f9 !important;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always !important;
+  }
+
+  /* Remove shadows and effects */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* General print optimizations */
+  body {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Card styling for print */
+  .card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* Remove backgrounds for better print quality */
+  .bg-muted,
+  .bg-background,
+  .bg-card {
+    background: white !important;
+  }
+}

@@ -44,6 +44,12 @@ import AttendancePage from './pages/attendance/AttendancePage';
 import ExamsPage from './pages/exams/ExamsPage';
 import ExamDetailPage from './pages/exams/ExamDetailPage';
 
+// Timetable Pages
+import TimetablePage from './pages/timetable/TimetablePage';
+
+// Academic Calendar Pages
+import AcademicCalendarPage from './pages/academic-calendar/AcademicCalendarPage';
+
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
@@ -297,6 +303,26 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ExamDetailPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Timetable Routes - Admin only */}
+            <Route
+              path="/timetable"
+              element={
+                <ProtectedRoute>
+                  <TimetablePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Academic Calendar Routes - Admin only */}
+            <Route
+              path="/academic-calendar"
+              element={
+                <ProtectedRoute>
+                  <AcademicCalendarPage />
                 </ProtectedRoute>
               }
             />

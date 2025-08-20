@@ -67,11 +67,17 @@ const mockStudent = {
   status: "Active",
   feeStatus: "Pending",
   avatar: "/placeholder.svg",
-  guardians: [
-    { name: "Jane Doe", relation: "Mother", phone: "+91-9876500000" },
-    { name: "Mike Doe", relation: "Father", phone: "+91-9876500001" }
-  ],
-  transport: { route: "Bus 5", pickup: "Station Road" },
+  parentGuardian: {
+    fatherName: 'Mike Doe',
+    fatherPhone: '+91-9876500001',
+    fatherEmail: 'mike.doe@example.com',
+    fatherOccupation: 'Engineer',
+    motherName: 'Jane Doe',
+    motherPhone: '+91-9876500000',
+    motherEmail: 'jane.doe@example.com',
+    motherOccupation: 'Teacher'
+  },
+  transport: { route: 'Bus 5', pickup: 'Station Road' },
   documents: [
     { id: 1, name: "Birth Certificate", url: "#" },
     { id: 2, name: "Previous School TC", url: "#" },
@@ -317,28 +323,39 @@ const StudentDetailPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Users className="mr-2 h-5 w-5" />
-                    Guardian Information
+                    Parents / Guardians
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {student.guardians.map((guardian, index) => (
-                    <div key={index} className="border-b pb-3 last:border-b-0">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Name</p>
-                          <p>{guardian.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Relation</p>
-                          <p>{guardian.relation}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                          <p>{guardian.phone}</p>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium text-muted-foreground">Father</p>
+                      <p className="font-medium">{student.parentGuardian.fatherName}</p>
+                      {student.parentGuardian.fatherOccupation && (
+                        <p className="text-sm text-muted-foreground">{student.parentGuardian.fatherOccupation}</p>
+                      )}
+                      {student.parentGuardian.fatherPhone && (
+                        <p className="text-sm">{student.parentGuardian.fatherPhone}</p>
+                      )}
+                      {student.parentGuardian.fatherEmail && (
+                        <p className="text-sm text-muted-foreground">{student.parentGuardian.fatherEmail}</p>
+                      )}
                     </div>
-                  ))}
+
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium text-muted-foreground">Mother</p>
+                      <p className="font-medium">{student.parentGuardian.motherName}</p>
+                      {student.parentGuardian.motherOccupation && (
+                        <p className="text-sm text-muted-foreground">{student.parentGuardian.motherOccupation}</p>
+                      )}
+                      {student.parentGuardian.motherPhone && (
+                        <p className="text-sm">{student.parentGuardian.motherPhone}</p>
+                      )}
+                      {student.parentGuardian.motherEmail && (
+                        <p className="text-sm text-muted-foreground">{student.parentGuardian.motherEmail}</p>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

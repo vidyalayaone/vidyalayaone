@@ -360,7 +360,7 @@ const StudentDetailPage: React.FC = () => {
               </Card>
 
               {/* Transport Info Card */}
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Transport Information</CardTitle>
                 </CardHeader>
@@ -374,7 +374,7 @@ const StudentDetailPage: React.FC = () => {
                     <p>{student.transport.pickup}</p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </TabsContent>
 
@@ -536,7 +536,7 @@ const StudentDetailPage: React.FC = () => {
         </Tabs>
 
         {/* Activity Timeline */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Activity Timeline</CardTitle>
           </CardHeader>
@@ -555,7 +555,7 @@ const StudentDetailPage: React.FC = () => {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Deactivate Confirmation Dialog */}
         <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>

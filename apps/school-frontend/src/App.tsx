@@ -29,6 +29,9 @@ import EditStudentPage from './pages/students/EditStudentPage';
 import ClassesPage from './pages/classes/ClassesPage';
 import ClassSectionPage from './pages/classes/ClassSectionPage';
 
+// Subjects Pages
+import SubjectsPage from './pages/subjects/SubjectsPage';
+
 // Admission Pages
 import AdmissionPage from './pages/admission/AdmissionPage';
 import SingleStudentAdmissionPage from './pages/admission/SingleStudentAdmissionPage';
@@ -225,6 +228,16 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ClassSectionPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Subjects Routes - Admin only */}
+            <Route
+              path="/subjects"
+              element={
+                <ProtectedRoute>
+                  <SubjectsPage />
                 </ProtectedRoute>
               }
             />

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Plus, 
   Search, 
+  Filter, 
   Download, 
   Eye, 
   Edit, 
@@ -711,43 +712,10 @@ const StudentsPage: React.FC = () => {
 
   // State for filters and search
   const [searchTerm, setSearchTerm] = useState('');
-  const [classFilter, setClassFilter] = useState<string>('all');
+  const [gradeFilter, setGradeFilter] = useState<string>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const [feeStatusFilter, setFeeStatusFilter] = useState<string>('all');
   const [quickFilter, setQuickFilter] = useState<string>('all');
-
-  // Helper function to get available classes
-  const availableClasses = useMemo(() => {
-    const classes = [...new Set(mockStudents.map(student => student.currentClass.grade))].sort();
-    return classes;
-  }, []);
-
-  // Helper function to get available sections for selected class
-  const availableSections = useMemo(() => {
-    if (classFilter === 'all') {
-      return [...new Set(mockStudents.map(student => student.currentClass.section))].sort();
-    }
-    const sections = [...new Set(
-      mockStudents
-        .filter(student => student.currentClass.grade === classFilter)
-        .map(student => student.currentClass.section)
-    )].sort();
-    return sections;
-  }, [classFilter]);
-
-  // Reset section filter when class changes
-  React.useEffect(() => {
-    if (classFilter !== 'all' && availableSections.length === 1) {
-      // If only one section available, auto-select it
-      setSectionFilter(availableSections[0]);
-    } else if (classFilter === 'all') {
-      // Reset to all when class is reset
-      setSectionFilter('all');
-    } else {
-      // Reset to all when changing classes
-      setSectionFilter('all');
-    }
-  }, [classFilter, availableSections]);
 
   // State for sorting
   const [sortField, setSortField] = useState<SortField>('name');
@@ -807,8 +775,8 @@ const StudentsPage: React.FC = () => {
         student.studentId.toLowerCase().includes(searchLower) ||
         student.rollNo.toLowerCase().includes(searchLower);
 
-      // Class filter
-      const matchesClass = classFilter === 'all' || student.currentClass.grade === classFilter;
+      // Grade filter
+      const matchesGrade = gradeFilter === 'all' || student.currentClass.grade === gradeFilter;
 
       // Section filter
       const matchesSection = sectionFilter === 'all' || student.currentClass.section === sectionFilter;
@@ -827,7 +795,7 @@ const StudentsPage: React.FC = () => {
         matchesQuickFilter = student.currentClass.grade === grade;
       }
 
-      return matchesSearch && matchesClass && matchesSection && matchesFeeStatus && matchesQuickFilter;
+      return matchesSearch && matchesGrade && matchesSection && matchesFeeStatus && matchesQuickFilter;
     });
 
     // Sort
@@ -862,7 +830,7 @@ const StudentsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
+  }, [searchTerm, gradeFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedStudents.length / studentsPerPage);
@@ -873,7 +841,7 @@ const StudentsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter]);
+  }, [searchTerm, gradeFilter, sectionFilter, feeStatusFilter, quickFilter]);
 
   // Helper functions
   const handleSort = (field: SortField) => {
@@ -934,7 +902,7 @@ const StudentsPage: React.FC = () => {
 
   const handleQuickFilter = (filter: string) => {
     setQuickFilter(filter);
-    setClassFilter('all');
+    setGradeFilter('all');
     setFeeStatusFilter('all');
   };
 
@@ -955,33 +923,11 @@ const StudentsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>Export All</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('csv')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button 
-              className="space-x-2"
-              onClick={() => navigate('/admission')}
-            >
+            <Button variant="outline" className="space-x-2">
+              <Upload className="h-4 w-4" />
+              <span>Import</span>
+            </Button>
+            <Button className="space-x-2">
               <UserPlus className="h-4 w-4" />
               <span>Add Student</span>
             </Button>
@@ -1070,7 +1016,7 @@ const StudentsPage: React.FC = () => {
         {/* Search and Filters */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-end sm:space-x-4 sm:space-y-0">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -1082,60 +1028,49 @@ const StudentsPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-2 sm:space-y-0">
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Class</label>
-                  <Select value={classFilter} onValueChange={setClassFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Select Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Classes</SelectItem>
-                      {availableClasses.map(classGrade => (
-                        <SelectItem key={classGrade} value={classGrade}>
-                          Class {classGrade}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="flex space-x-2">
+                <Select value={gradeFilter} onValueChange={setGradeFilter}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="Grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Grades</SelectItem>
+                    <SelectItem value="9">Grade 9</SelectItem>
+                    <SelectItem value="10">Grade 10</SelectItem>
+                    <SelectItem value="11">Grade 11</SelectItem>
+                    <SelectItem value="12">Grade 12</SelectItem>
+                  </SelectContent>
+                </Select>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Section</label>
-                  <Select 
-                    value={sectionFilter} 
-                    onValueChange={setSectionFilter}
-                    disabled={classFilter !== 'all' && availableSections.length === 1}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Select Section" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sections</SelectItem>
-                      {availableSections.map(section => (
-                        <SelectItem key={section} value={section}>
-                          Section {section}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={sectionFilter} onValueChange={setSectionFilter}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="Section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sections</SelectItem>
+                    <SelectItem value="A">Section A</SelectItem>
+                    <SelectItem value="B">Section B</SelectItem>
+                    <SelectItem value="C">Section C</SelectItem>
+                  </SelectContent>
+                </Select>
 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Fee Status</label>
-                  <Select value={feeStatusFilter} onValueChange={setFeeStatusFilter}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="PAID">Paid</SelectItem>
-                      <SelectItem value="PARTIAL">Partial</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="OVERDUE">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={feeStatusFilter} onValueChange={setFeeStatusFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Fee Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="PAID">Paid</SelectItem>
+                    <SelectItem value="PARTIAL">Partial</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="OVERDUE">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button variant="outline" size="sm">
+                  <Filter className="mr-2 h-4 w-4" />
+                  More Filters
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -1269,12 +1204,11 @@ const StudentsPage: React.FC = () => {
                   {currentStudents.map((student) => (
                     <TableRow 
                       key={student.id}
-                      className={`hover:bg-muted/50 transition-colors cursor-pointer ${
+                      className={`hover:bg-muted/50 transition-colors ${
                         !student.isActive ? 'opacity-60' : ''
                       }`}
-                      onClick={() => navigate(`/students/${student.id}`)}
                     >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                      <TableCell>
                         <Checkbox
                           checked={selectedStudents.includes(student.id)}
                           onCheckedChange={() => handleSelectStudent(student.id)}
@@ -1316,11 +1250,21 @@ const StudentsPage: React.FC = () => {
                         <div className="space-y-1">
                           <div className="flex items-center text-sm">
                             <Phone className="mr-1 h-3 w-3" />
-                            <span>{student.phoneNumber}</span>
+                            <a 
+                              href={`tel:${student.phoneNumber}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {student.phoneNumber}
+                            </a>
                           </div>
                           <div className="flex items-center text-sm">
                             <Mail className="mr-1 h-3 w-3" />
-                            <span>{student.email}</span>
+                            <a 
+                              href={`mailto:${student.email}`}
+                              className="text-blue-600 hover:underline"
+                            >
+                              {student.email}
+                            </a>
                           </div>
                         </div>
                       </TableCell>
@@ -1339,7 +1283,7 @@ const StudentsPage: React.FC = () => {
                           {new Date(student.enrollmentDate).toLocaleDateString()}
                         </div>
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">

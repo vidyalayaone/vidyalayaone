@@ -15,11 +15,18 @@ import {
   UserCheck,
   UserX,
   AlertTriangle,
+  ChevronRight,
+  MoreHorizontal,
   BookOpen,
   Clock,
   MapPin,
   FileDown,
-  Printer
+  Printer,
+  Upload,
+  BarChart3,
+  User,
+  FileText,
+  UserCog
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -95,6 +102,35 @@ interface AttendanceRecord {
   status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
   reason?: string;
   markedBy: string;
+}
+
+interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  qualification: string;
+  experience: number;
+}
+
+interface Subject {
+  id: string;
+  name: string;
+  code: string;
+  teachers: Teacher[];
+  periodsPerWeek: number;
+  averageGrade: number;
+  totalStudents: number;
+  syllabusUploaded: boolean;
+  syllabusFileName?: string;
+  description: string;
+}
+
+interface SubjectPerformance {
+  subjectId: string;
+  averageScore: number;
+  totalStudents: number;
+  passRate: number;
 }
 
 // Mock data
@@ -264,6 +300,126 @@ const mockAttendance: AttendanceRecord[] = [
   { studentId: '5', studentName: 'Ashley Davis', date: '2024-01-15', status: 'LATE', markedBy: 'Mrs. Rachel Green' },
 ];
 
+const mockTeachers: Teacher[] = [
+  {
+    id: 'teacher-1',
+    name: 'Mr. John Smith',
+    email: 'john.smith@school.edu',
+    qualification: 'M.Sc. Mathematics, B.Ed.',
+    experience: 8,
+  },
+  {
+    id: 'teacher-2',
+    name: 'Mrs. Mary Johnson',
+    email: 'mary.johnson@school.edu',
+    qualification: 'M.A. English Literature, B.Ed.',
+    experience: 6,
+  },
+  {
+    id: 'teacher-3',
+    name: 'Dr. Robert Wilson',
+    email: 'robert.wilson@school.edu',
+    qualification: 'Ph.D. Physics, M.Ed.',
+    experience: 12,
+  },
+  {
+    id: 'teacher-4',
+    name: 'Mrs. Linda Brown',
+    email: 'linda.brown@school.edu',
+    qualification: 'M.A. History, B.Ed.',
+    experience: 10,
+  },
+  {
+    id: 'teacher-5',
+    name: 'Ms. Jennifer Davis',
+    email: 'jennifer.davis@school.edu',
+    qualification: 'M.F.A. Fine Arts, B.Ed.',
+    experience: 5,
+  },
+];
+
+const mockSubjects: Subject[] = [
+  {
+    id: 'math-1',
+    name: 'Mathematics',
+    code: 'MATH',
+    teachers: [mockTeachers[0]],
+    periodsPerWeek: 6,
+    averageGrade: 85.5,
+    totalStudents: 40,
+    syllabusUploaded: true,
+    syllabusFileName: 'mathematics_syllabus_2024.pdf',
+    description: 'Advanced Mathematics covering Algebra, Geometry, and Statistics',
+  },
+  {
+    id: 'eng-1',
+    name: 'English Literature',
+    code: 'ENG',
+    teachers: [mockTeachers[1]],
+    periodsPerWeek: 5,
+    averageGrade: 78.2,
+    totalStudents: 40,
+    syllabusUploaded: true,
+    syllabusFileName: 'english_syllabus_2024.pdf',
+    description: 'English Language and Literature with focus on communication skills',
+  },
+  {
+    id: 'sci-1',
+    name: 'Physics',
+    code: 'PHY',
+    teachers: [mockTeachers[2]],
+    periodsPerWeek: 4,
+    averageGrade: 72.8,
+    totalStudents: 40,
+    syllabusUploaded: false,
+    description: 'Physics covering Mechanics, Thermodynamics, and Electromagnetism',
+  },
+  {
+    id: 'hist-1',
+    name: 'History',
+    code: 'HIST',
+    teachers: [mockTeachers[3]],
+    periodsPerWeek: 3,
+    averageGrade: 81.3,
+    totalStudents: 40,
+    syllabusUploaded: true,
+    syllabusFileName: 'history_syllabus_2024.pdf',
+    description: 'World History and Indian History from ancient to modern times',
+  },
+  {
+    id: 'art-1',
+    name: 'Fine Arts',
+    code: 'ART',
+    teachers: [mockTeachers[4]],
+    periodsPerWeek: 2,
+    averageGrade: 89.7,
+    totalStudents: 40,
+    syllabusUploaded: true,
+    syllabusFileName: 'arts_syllabus_2024.pdf',
+    description: 'Visual Arts including Drawing, Painting, and Sculpture',
+  },
+  {
+    id: 'pe-1',
+    name: 'Physical Education',
+    code: 'PE',
+    teachers: [mockTeachers[0], mockTeachers[2]], // Co-teaching example
+    periodsPerWeek: 3,
+    averageGrade: 92.1,
+    totalStudents: 40,
+    syllabusUploaded: false,
+    description: 'Physical fitness, sports, and health education',
+  },
+];
+
+const mockPerformanceData: SubjectPerformance[] = [
+  { subjectId: 'math-1', averageScore: 85, totalStudents: 40, passRate: 92 },
+  { subjectId: 'eng-1', averageScore: 78, totalStudents: 40, passRate: 88 },
+  { subjectId: 'sci-1', averageScore: 73, totalStudents: 40, passRate: 85 },
+  { subjectId: 'hist-1', averageScore: 81, totalStudents: 40, passRate: 90 },
+  { subjectId: 'art-1', averageScore: 90, totalStudents: 40, passRate: 97 },
+  { subjectId: 'pe-1', averageScore: 88, totalStudents: 40, passRate: 95 },
+];
+
 const ClassSectionPage: React.FC = () => {
   const { grade, section } = useParams<{ grade: string; section: string }>();
   const navigate = useNavigate();
@@ -273,6 +429,12 @@ const ClassSectionPage: React.FC = () => {
   const [selectedAttendanceFilter, setSelectedAttendanceFilter] = useState<string>('all');
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [isTeacherProfileOpen, setIsTeacherProfileOpen] = useState(false);
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [isChangeTeacherOpen, setIsChangeTeacherOpen] = useState(false);
+  const [isSyllabusViewOpen, setIsSyllabusViewOpen] = useState(false);
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
 
   // Get section data
   const sectionData = grade && section ? mockSectionData[grade as keyof typeof mockSectionData]?.[section as any] : null;
@@ -457,10 +619,14 @@ const ClassSectionPage: React.FC = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="students">
               <Users className="mr-2 h-4 w-4" />
               Students
+            </TabsTrigger>
+            <TabsTrigger value="subjects">
+              <BookOpen className="mr-2 h-4 w-4" />
+              Subjects
             </TabsTrigger>
             <TabsTrigger value="timetable">
               <Calendar className="mr-2 h-4 w-4" />
@@ -579,6 +745,180 @@ const ClassSectionPage: React.FC = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Subjects Tab Content */}
+          <TabsContent value="subjects">
+            <div className="space-y-6">
+              {/* Subject Management Header */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">Subject Management</h3>
+                  <p className="text-sm text-gray-600">Manage subjects, teachers, and curriculum for Grade {grade} - Section {section}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setIsFileUploadOpen(true)}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Curriculum
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Performance Report
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subjects Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Subjects</p>
+                      <p className="text-2xl font-bold">{mockSubjects.length}</p>
+                    </div>
+                    <BookOpen className="h-8 w-8 text-blue-600" />
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Average Performance</p>
+                      <p className="text-2xl font-bold">87%</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-green-600" />
+                  </div>
+                </Card>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Active Teachers</p>
+                      <p className="text-2xl font-bold">{mockTeachers.length}</p>
+                    </div>
+                    <User className="h-8 w-8 text-purple-600" />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Subjects Table */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Subjects & Teachers</CardTitle>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Search subjects..."
+                        className="max-w-sm"
+                      />
+                      <Button variant="outline" size="sm">
+                        <Filter className="mr-2 h-4 w-4" />
+                        Filter
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Teacher</TableHead>
+                          <TableHead>Hours/Week</TableHead>
+                          <TableHead>Performance</TableHead>
+                          <TableHead>Curriculum</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {mockSubjects.map((subject) => {
+                          const teacher = subject.teachers[0]; // Get first teacher
+                          const performance = mockPerformanceData.find(p => p.subjectId === subject.id);
+                          
+                          return (
+                            <TableRow key={subject.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <BookOpen className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{subject.name}</div>
+                                    <div className="text-sm text-gray-500">{subject.code}</div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <User className="h-4 w-4 text-green-600" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{teacher?.name}</div>
+                                    <Button 
+                                      variant="link" 
+                                      size="sm" 
+                                      className="p-0 h-auto text-blue-600 text-xs"
+                                      onClick={() => {
+                                        setSelectedTeacher(teacher || null);
+                                        setIsTeacherProfileOpen(true);
+                                      }}
+                                    >
+                                      View Profile
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{subject.periodsPerWeek}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-green-600 h-2 rounded-full" 
+                                      style={{ width: `${performance?.averageScore || 0}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-sm font-medium">{performance?.averageScore || 0}%</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => setIsSyllabusViewOpen(true)}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View
+                                </Button>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedSubject(subject);
+                                      setIsChangeTeacherOpen(true);
+                                    }}
+                                  >
+                                    <UserCog className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Timetable Tab */}

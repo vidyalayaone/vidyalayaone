@@ -4,6 +4,9 @@
 
 /* School Portal Design System - Modern Educational Theme */
 
+/* Import print styles */
+@import './styles/print.css';
+
 @layer base {
   :root {
     /* Core Brand Colors - Professional Education Palette */

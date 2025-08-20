@@ -21,7 +21,8 @@ import {
   PenTool,
   CalendarDays,
   MessageCircle,
-  DollarSign
+  DollarSign,
+  Library
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -60,6 +61,12 @@ export const navigationConfig = {
           label: 'Classes', 
           icon: BookOpen,
           description: 'Manage class schedules and sections'
+        },
+        { 
+          path: '/subjects', 
+          label: 'Subjects', 
+          icon: Library,
+          description: 'Manage subjects, teachers, and curriculum'
         },
         { 
           path: '/admission', 

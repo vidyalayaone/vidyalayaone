@@ -367,6 +367,74 @@ const mockClasses: SchoolClass[] = [
         totalGirls: 19,
       }
     ]
+  },
+  {
+    id: 'grade-11',
+    grade: '11',
+    displayName: 'Grade 11',
+    sections: [
+      {
+        id: 'grade-11-a',
+        name: 'Science',
+        classTeacher: 'Mr. Kevin Martinez',
+        classTeacherId: 'teacher-26',
+        totalStudents: 35,
+        totalBoys: 18,
+        totalGirls: 17,
+      },
+      {
+        id: 'grade-11-b',
+        name: 'Commerce',
+        classTeacher: 'Mrs. Susan Thompson',
+        classTeacherId: 'teacher-27',
+        totalStudents: 33,
+        totalBoys: 17,
+        totalGirls: 16,
+      },
+      {
+        id: 'grade-11-c',
+        name: 'Humanities',
+        classTeacher: 'Mrs. Henry Thompson',
+        classTeacherId: 'teacher-28',
+        totalStudents: 34,
+        totalBoys: 17,
+        totalGirls: 17,
+      }
+    ]
+  },
+  {
+    id: 'grade-12',
+    grade: '12',
+    displayName: 'Grade 12',
+    sections: [
+      {
+        id: 'grade-12-a',
+        name: 'A',
+        classTeacher: 'Mr. Anthony Wilson',
+        classTeacherId: 'teacher-29',
+        totalStudents: 32,
+        totalBoys: 16,
+        totalGirls: 16,
+      },
+      {
+        id: 'grade-12-b',
+        name: 'B',
+        classTeacher: 'Mrs. Margaret Davis',
+        classTeacherId: 'teacher-30',
+        totalStudents: 30,
+        totalBoys: 15,
+        totalGirls: 15,
+      },
+      {
+        id: 'grade-12-b',
+        name: 'B',
+        classTeacher: 'Mrs. Laura Davis',
+        classTeacherId: 'teacher-31',
+        totalStudents: 35,
+        totalBoys: 18,
+        totalGirls: 17,
+      }
+    ]
   }
 ];
 
@@ -515,7 +583,7 @@ const ClassesPage: React.FC = () => {
                   <SelectItem value="Nursery">Nursery</SelectItem>
                   <SelectItem value="KG1">KG1</SelectItem>
                   <SelectItem value="KG2">KG2</SelectItem>
-                  {Array.from({ length: 10 }, (_, i) => (
+                  {Array.from({ length: 12 }, (_, i) => (
                     <SelectItem key={i + 1} value={(i + 1).toString()}>
                       Grade {i + 1}
                     </SelectItem>

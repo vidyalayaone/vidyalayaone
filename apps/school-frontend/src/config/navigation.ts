@@ -46,6 +46,12 @@ export const navigationConfig = {
       label: 'Main',
       items: [
         { 
+          path: '/dashboard', 
+          label: 'Dashboard', 
+          icon: LayoutDashboard,
+          description: 'Overview and quick actions'
+        },
+        { 
           path: '/students', 
           label: 'Students', 
           icon: GraduationCap,

@@ -13,18 +13,54 @@ import {
   Printer,
   FileText,
   UserCheck,
-  TrendingUp
+  TrendingUp,
+  Plus,
+  Trash2,
+  Save
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ExamScheduleTab } from '@/components/exams';
 import { examAPI, type Exam } from '@/api/exams';
+
+// Seating Plan Types
+interface SeatingPlanRow {
+  id: string;
+  roomName: string;
+  className: string;
+  fromRollNumber: string;
+  toRollNumber: string;
+}
+
+// Mock available rooms and classes
+const mockRooms = [
+  'Room 101', 'Room 102', 'Room 103', 'Room 104', 'Room 105',
+  'Lab A', 'Lab B', 'Auditorium', 'Library Hall'
+];
+
+const mockClasses = ['10-A', '10-B', '11-A', '11-B', '12-A', '12-B'];
 
 const ExamDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +68,38 @@ const ExamDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('schedule');
   const [exam, setExam] = useState<Exam | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Seating Plan State
+  const [seatingPlan, setSeatingPlan] = useState<SeatingPlanRow[]>([]);
+  const [showSeatingTable, setShowSeatingTable] = useState(false);
+
+  // Seating Plan Functions
+  const addSeatingRow = () => {
+    const newRow: SeatingPlanRow = {
+      id: `row-${Date.now()}`,
+      roomName: '',
+      className: '',
+      fromRollNumber: '',
+      toRollNumber: ''
+    };
+    setSeatingPlan([...seatingPlan, newRow]);
+  };
+
+  const updateSeatingRow = (id: string, field: keyof SeatingPlanRow, value: string) => {
+    setSeatingPlan(seatingPlan.map(row => 
+      row.id === id ? { ...row, [field]: value } : row
+    ));
+  };
+
+  const removeSeatingRow = (id: string) => {
+    setSeatingPlan(seatingPlan.filter(row => row.id !== id));
+  };
+
+  const saveSeatingPlan = () => {
+    // Here you would typically save to API
+    console.log('Saving seating plan:', seatingPlan);
+    // Add toast notification or success feedback
+  };
 
   // Load exam data
   useEffect(() => {
@@ -218,22 +286,143 @@ const ExamDetailPage: React.FC = () => {
           <TabsContent value="seating" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Seating Plan</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Manage seating arrangements for the exam
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Seating Plan</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Manage seating arrangements for the exam
+                    </p>
+                  </div>
+                  {!showSeatingTable ? (
+                    <Button onClick={() => setShowSeatingTable(true)}>
+                      Create Seating Plan
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={addSeatingRow}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Row
+                      </Button>
+                      <Button onClick={saveSeatingPlan}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Plan
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Seating Plan</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Seating plan management will be available here
-                  </p>
-                  <Button variant="outline">
-                    Create Seating Plan
-                  </Button>
-                </div>
+                {!showSeatingTable ? (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Seating Plan</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create a seating arrangement for exam rooms and assign students
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[200px]">Room/Class</TableHead>
+                            <TableHead className="w-[150px]">Class</TableHead>
+                            <TableHead className="w-[120px]">From Roll No.</TableHead>
+                            <TableHead className="w-[120px]">To Roll No.</TableHead>
+                            <TableHead className="w-[100px]">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {seatingPlan.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                No seating arrangements added yet. Click "Add Row" to start.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            seatingPlan.map((row) => (
+                              <TableRow key={row.id}>
+                                <TableCell>
+                                  <Select 
+                                    value={row.roomName} 
+                                    onValueChange={(value) => updateSeatingRow(row.id, 'roomName', value)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select room" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {mockRooms.map((room) => (
+                                        <SelectItem key={room} value={room}>
+                                          {room}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <Select 
+                                    value={row.className} 
+                                    onValueChange={(value) => updateSeatingRow(row.id, 'className', value)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select class" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {mockClasses.map((className) => (
+                                        <SelectItem key={className} value={className}>
+                                          {className}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    placeholder="From"
+                                    value={row.fromRollNumber}
+                                    onChange={(e) => updateSeatingRow(row.id, 'fromRollNumber', e.target.value)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    placeholder="To"
+                                    value={row.toRollNumber}
+                                    onChange={(e) => updateSeatingRow(row.id, 'toRollNumber', e.target.value)}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => removeSeatingRow(row.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    {seatingPlan.length > 0 && (
+                      <div className="flex justify-between items-center text-sm text-muted-foreground">
+                        <span>Total arrangements: {seatingPlan.length}</span>
+                        <span>
+                          Total students: {seatingPlan.reduce((total, row) => {
+                            const from = parseInt(row.fromRollNumber) || 0;
+                            const to = parseInt(row.toRollNumber) || 0;
+                            return total + Math.max(0, to - from + 1);
+                          }, 0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

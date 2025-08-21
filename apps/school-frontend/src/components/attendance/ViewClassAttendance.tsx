@@ -63,7 +63,7 @@ interface Student {
 interface AttendanceRecord {
   studentId: string;
   date: string;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+  status: 'PRESENT' | 'ABSENT' | 'LEAVE';
   markedBy: string;
 }
 
@@ -110,19 +110,18 @@ const mockStudents: Student[] = [
 
 const generateMockAttendance = (students: Student[], dateRange: string[]): AttendanceRecord[] => {
   const records: AttendanceRecord[] = [];
-  const statuses: ('PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED')[] = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'];
+  const statuses: ('PRESENT' | 'ABSENT' | 'LEAVE')[] = ['PRESENT', 'ABSENT', 'LEAVE'];
   const teachers = ['Mrs. Johnson', 'Mr. Smith', 'Ms. Davis', 'Mr. Brown'];
 
   students.forEach(student => {
     dateRange.forEach(date => {
-      // Randomly generate attendance (80% present, 10% absent, 5% late, 5% excused)
+      // Randomly generate attendance (80% present, 15% absent, 5% leave)
       const rand = Math.random();
-      let status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+      let status: 'PRESENT' | 'ABSENT' | 'LEAVE';
       
       if (rand < 0.8) status = 'PRESENT';
-      else if (rand < 0.9) status = 'ABSENT';
-      else if (rand < 0.95) status = 'LATE';
-      else status = 'EXCUSED';
+      else if (rand < 0.95) status = 'ABSENT';
+      else status = 'LEAVE';
 
       records.push({
         studentId: student.id,
@@ -222,8 +221,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
             }
             .present { background-color: #d4edda; color: #155724; }
             .absent { background-color: #f8d7da; color: #721c24; }
-            .late { background-color: #fff3cd; color: #856404; }
-            .excused { background-color: #d1ecf1; color: #0c5460; }
+            .leave { background-color: #fff3cd; color: #856404; }
             .summary { 
               margin-top: 20px; 
               padding: 15px;
@@ -275,7 +273,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                 ${attendanceData.dateRange.map(date => `<th>${formatDate(date)}</th>`).join('')}
                 <th rowspan="2">Present</th>
                 <th rowspan="2">Absent</th>
-                <th rowspan="2">Late</th>
+                <th rowspan="2">Leave</th>
                 <th rowspan="2">Attendance %</th>
               </tr>
             </thead>
@@ -289,16 +287,26 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                     ${attendanceData.dateRange.map(date => {
                       const status = getAttendanceStatus(student.id, date);
                       const statusClass = status.toLowerCase();
-                      const statusSymbol = status === 'PRESENT' ? '●' : status === 'ABSENT' ? '✖' : status === 'LATE' ? '◐' : '△';
+                      const statusSymbol = status === 'PRESENT' ? '●' : status === 'ABSENT' ? '✖' : '△';
                       return `<td class="${statusClass}">${statusSymbol}</td>`;
                     }).join('')}
                     <td class="present">${stats.present}</td>
                     <td class="absent">${stats.absent}</td>
-                    <td class="late">${stats.late}</td>
+                    <td class="leave">${stats.leave}</td>
                     <td><strong>${stats.percentage.toFixed(1)}%</strong></td>
                   </tr>
                 `;
               }).join('')}
+              <tr style="background-color: #f8f9fa; border-top: 2px solid #333;">
+                <td colspan="2" style="font-weight: bold; text-align: center;">Daily Attendance %</td>
+                ${attendanceData.dateRange.map(date => {
+                  const percentage = getDateAttendancePercentage(date);
+                  return `<td style="font-weight: bold;">${percentage.toFixed(1)}%</td>`;
+                }).join('')}
+                <td colspan="4" style="text-align: center; font-style: italic;">
+                  Average: ${(attendanceData.dateRange.reduce((acc, date) => acc + getDateAttendancePercentage(date), 0) / attendanceData.dateRange.length).toFixed(1)}%
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -312,12 +320,8 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
               <span>✖ Absent</span>
             </div>
             <div class="legend-item">
-              <div class="legend-box late"></div>
-              <span>◐ Late</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-box excused"></div>
-              <span>△ Excused</span>
+              <div class="legend-box leave"></div>
+              <span>△ Leave</span>
             </div>
           </div>
 
@@ -362,8 +366,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
         ...attendanceData.dateRange.map(date => formatDate(date)),
         'Present Days',
         'Absent Days', 
-        'Late Days',
-        'Excused Days',
+        'Leave Days',
         'Attendance %'
       ],
       
@@ -375,15 +378,25 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
           student.rollNumber,
           ...attendanceData.dateRange.map(date => {
             const status = getAttendanceStatus(student.id, date);
-            return status === 'PRESENT' ? 'P' : status === 'ABSENT' ? 'A' : status === 'LATE' ? 'L' : 'E';
+            return status === 'PRESENT' ? 'P' : status === 'ABSENT' ? 'A' : 'L';
           }),
           stats.present,
           stats.absent,
-          stats.late,
-          stats.excused,
+          stats.leave,
           `${stats.percentage.toFixed(1)}%`
         ];
       }),
+      
+      // Daily percentage row
+      [
+        'Daily Attendance %',
+        '',
+        ...attendanceData.dateRange.map(date => `${getDateAttendancePercentage(date).toFixed(1)}%`),
+        '',
+        '',
+        '',
+        `Average: ${(attendanceData.dateRange.reduce((acc, date) => acc + getDateAttendancePercentage(date), 0) / attendanceData.dateRange.length).toFixed(1)}%`
+      ],
       
       [], // Empty row
       ['Summary Statistics'],
@@ -431,17 +444,16 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
 
   // Calculate student statistics
   const calculateStudentStats = (studentId: string) => {
-    if (!attendanceData) return { present: 0, absent: 0, late: 0, excused: 0, percentage: 0 };
+    if (!attendanceData) return { present: 0, absent: 0, leave: 0, percentage: 0 };
 
     const studentRecords = attendanceData.attendance.filter(r => r.studentId === studentId);
     const present = studentRecords.filter(r => r.status === 'PRESENT').length;
     const absent = studentRecords.filter(r => r.status === 'ABSENT').length;
-    const late = studentRecords.filter(r => r.status === 'LATE').length;
-    const excused = studentRecords.filter(r => r.status === 'EXCUSED').length;
+    const leave = studentRecords.filter(r => r.status === 'LEAVE').length;
     const total = studentRecords.length;
-    const percentage = total > 0 ? ((present + late) / total) * 100 : 0;
+    const percentage = total > 0 ? (present / total) * 100 : 0;
 
-    return { present, absent, late, excused, percentage };
+    return { present, absent, leave, percentage };
   };
 
   // Get attendance status for specific student and date
@@ -456,16 +468,27 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
     return record?.markedBy || '-';
   };
 
+  // Calculate attendance percentage for a specific date
+  const getDateAttendancePercentage = (date: string) => {
+    if (!attendanceData) return 0;
+    
+    const totalStudents = attendanceData.students.length;
+    const presentStudents = attendanceData.students.filter(student => {
+      const status = getAttendanceStatus(student.id, date);
+      return status === 'PRESENT';
+    }).length;
+    
+    return totalStudents > 0 ? (presentStudents / totalStudents) * 100 : 0;
+  };
+
   const getStatusIcon = (status: string, size = 'h-4 w-4') => {
     switch (status) {
       case 'PRESENT':
         return <CheckCircle className={`${size} text-green-500`} />;
       case 'ABSENT':
         return <XCircle className={`${size} text-red-500`} />;
-      case 'LATE':
-        return <Clock className={`${size} text-yellow-500`} />;
-      case 'EXCUSED':
-        return <AlertTriangle className={`${size} text-blue-500`} />;
+      case 'LEAVE':
+        return <AlertTriangle className={`${size} text-yellow-500`} />;
       default:
         return <XCircle className={`${size} text-red-500`} />;
     }
@@ -477,10 +500,8 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
         return 'bg-green-100 border-green-200';
       case 'ABSENT':
         return 'bg-red-100 border-red-200';
-      case 'LATE':
+      case 'LEAVE':
         return 'bg-yellow-100 border-yellow-200';
-      case 'EXCUSED':
-        return 'bg-blue-100 border-blue-200';
       default:
         return 'bg-red-100 border-red-200';
     }
@@ -632,7 +653,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                       ))}
                       <TableHead className="text-center min-w-[80px]">Present</TableHead>
                       <TableHead className="text-center min-w-[80px]">Absent</TableHead>
-                      <TableHead className="text-center min-w-[80px]">Late</TableHead>
+                      <TableHead className="text-center min-w-[80px]">Leave</TableHead>
                       <TableHead className="text-center min-w-[80px]">%</TableHead>
                     </TableRow>
                     {showAttendanceTaker && (
@@ -678,7 +699,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                             {stats.absent}
                           </TableCell>
                           <TableCell className="text-center font-medium text-yellow-600">
-                            {stats.late}
+                            {stats.leave}
                           </TableCell>
                           <TableCell className="text-center font-bold">
                             <span className={stats.percentage >= 90 ? 'text-green-600' : stats.percentage >= 75 ? 'text-yellow-600' : 'text-red-600'}>
@@ -688,6 +709,29 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                         </TableRow>
                       );
                     })}
+                    
+                    {/* Date-wise Percentage Row */}
+                    <TableRow className="bg-gray-50 border-t-2">
+                      <TableCell className="sticky left-0 bg-gray-50 border-r font-medium text-sm">
+                        Daily Attendance %
+                      </TableCell>
+                      {attendanceData.dateRange.map(date => {
+                        const percentage = getDateAttendancePercentage(date);
+                        return (
+                          <TableCell 
+                            key={`percentage-${date}`} 
+                            className="text-center p-2 border font-medium text-sm"
+                          >
+                            <span className={percentage >= 90 ? 'text-green-600' : percentage >= 75 ? 'text-yellow-600' : 'text-red-600'}>
+                              {percentage.toFixed(1)}%
+                            </span>
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                        Average: {(attendanceData.dateRange.reduce((acc, date) => acc + getDateAttendancePercentage(date), 0) / attendanceData.dateRange.length).toFixed(1)}%
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </div>
@@ -710,12 +754,8 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                   <span className="text-sm">Absent</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-yellow-500" />
-                  <span className="text-sm">Late</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm">Excused</span>
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm">Leave</span>
                 </div>
               </div>
             </CardContent>

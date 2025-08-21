@@ -22,7 +22,8 @@ import {
   CalendarDays,
   MessageCircle,
   DollarSign,
-  Library
+  Library,
+  Clock
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -102,6 +103,12 @@ export const navigationConfig = {
           label: 'Time Table', 
           icon: Calendar,
           description: 'Manage class schedules and timetables'
+        },
+        { 
+          path: '/substitute-teacher', 
+          label: 'Substitute Teacher', 
+          icon: Clock,
+          description: 'Manage substitute teacher assignments and timetable'
         },
         { 
           path: '/academic-calendar', 

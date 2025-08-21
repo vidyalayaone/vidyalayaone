@@ -8,33 +8,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model School {
-  id               String       @id @default(uuid())
-  name             String       @unique @db.VarChar(255)
-  subdomain        String       @unique @db.VarChar(50)
-  address          Json         // JSON field for full address structure
-  level            SchoolLevel  @map("school_level")
-  board            String?      @db.VarChar(255)
-  schoolCode       String?      @unique @map("school_code") @db.VarChar(50)
-  isActive         Boolean      @default(false) @map("is_active")
-  phoneNumbers     String[]     @map("phone_numbers") // Array of phone numbers
-  email            String?      @db.VarChar(255)
-  principalName    String?      @map("principal_name") @db.VarChar(255)
-  establishedYear  Int?         @map("established_year") @db.SmallInt
-  language         String?      @db.VarChar(50)
-  metaData         Json?        @map("meta_data") // JSONB for extensibility
-  createdAt        DateTime     @default(now()) @map("created_at")
-  updatedAt        DateTime     @updatedAt @map("updated_at")
-
-  // Relations
-
-  @@map("schools")
-}
-
 // Enums
 enum SchoolLevel {
   primary
   secondary
   higher_secondary
   mixed
+}
+
+model School {
+  id               String     @id @default(uuid())
+  name             String     @unique @db.VarChar(255)
+  subdomain        String     @unique @db.VarChar(50)
+  address          Json
+  level            SchoolLevel  @map("school_level")
+  board            String?    @db.VarChar(255)
+  schoolCode       String?    @unique @map("school_code") @db.VarChar(50)
+  isActive         Boolean    @default(false) @map("is_active")
+  phoneNumbers     String[]   @map("phone_numbers")
+  email            String?    @db.VarChar(255)
+  principalName    String?    @map("principal_name") @db.VarChar(255)
+  establishedYear  Int?       @map("established_year") @db.SmallInt
+  language         String?    @db.VarChar(50)
+  metaData         Json?      @map("meta_data")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  classes          Class[]
+
+  @@map("schools")
+}
+
+model Class {
+  id            String     @id @default(uuid())
+  school        School     @relation(fields: [schoolId], references: [id])
+  schoolId      String
+  name          String
+  academicYear  String
+  sections      Section[]
+  subjects      Subject[]  @relation("ClassSubjects")
+  metaData      Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([schoolId, name, academicYear])
+}
+
+model Section {
+  id        String   @id @default(uuid())
+  class     Class    @relation(fields: [classId], references: [id])
+  classId   String
+  name      String   // e.g. "A", "B"
+  metaData  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, name])
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  code        String   @db.VarChar(10)
+  description String?
+  classes     Class[]  @relation("ClassSubjects")
+  metaData    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([code])
 }

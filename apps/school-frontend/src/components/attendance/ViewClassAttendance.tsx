@@ -7,7 +7,13 @@ import {
   Clock,
   AlertTriangle,
   Download,
-  Filter
+  Filter,
+  FileText,
+  FileSpreadsheet,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -149,6 +161,253 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('2025-08-12');
   const [endDate, setEndDate] = useState<string>('2025-08-19');
+  const [showAttendanceTaker, setShowAttendanceTaker] = useState<boolean>(false);
+
+  // Export functions
+  const exportToPDF = () => {
+    if (!attendanceData) return;
+
+    const className = mockClasses.find(c => c.id === selectedClass)?.name || '';
+    const sectionName = availableSections.find(s => s.id === selectedSection)?.name || '';
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    // Generate HTML content for PDF
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Attendance Report - ${className} ${sectionName}</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              font-size: 12px;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #333;
+              padding-bottom: 15px;
+            }
+            .school-info {
+              margin-bottom: 20px;
+              text-align: center;
+            }
+            .report-info { 
+              margin-bottom: 20px; 
+              display: flex;
+              justify-content: space-between;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 20px;
+              font-size: 10px;
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 4px; 
+              text-align: center; 
+            }
+            th { 
+              background-color: #f5f5f5; 
+              font-weight: bold;
+            }
+            .student-name { 
+              text-align: left; 
+              font-weight: bold;
+            }
+            .present { background-color: #d4edda; color: #155724; }
+            .absent { background-color: #f8d7da; color: #721c24; }
+            .late { background-color: #fff3cd; color: #856404; }
+            .excused { background-color: #d1ecf1; color: #0c5460; }
+            .summary { 
+              margin-top: 20px; 
+              padding: 15px;
+              background-color: #f8f9fa;
+              border-radius: 5px;
+            }
+            .legend {
+              display: flex;
+              justify-content: center;
+              gap: 20px;
+              margin-top: 15px;
+              font-size: 11px;
+            }
+            .legend-item {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            }
+            .legend-box {
+              width: 15px;
+              height: 15px;
+              border: 1px solid #ccc;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>School Attendance Report</h1>
+            <div class="school-info">
+              <h2>${className} - Section ${sectionName}</h2>
+            </div>
+          </div>
+          
+          <div class="report-info">
+            <div><strong>Period:</strong> ${formatDate(startDate)} to ${formatDate(endDate)}</div>
+            <div><strong>Generated:</strong> ${new Date().toLocaleDateString()}</div>
+            <div><strong>Total Students:</strong> ${attendanceData.students.length}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">Student Name</th>
+                <th rowspan="2">Roll Number</th>
+                ${attendanceData.dateRange.map(date => `<th>${formatDate(date)}</th>`).join('')}
+                <th rowspan="2">Present</th>
+                <th rowspan="2">Absent</th>
+                <th rowspan="2">Late</th>
+                <th rowspan="2">Attendance %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${attendanceData.students.map(student => {
+                const stats = calculateStudentStats(student.id);
+                return `
+                  <tr>
+                    <td class="student-name">${student.name}</td>
+                    <td>${student.rollNumber}</td>
+                    ${attendanceData.dateRange.map(date => {
+                      const status = getAttendanceStatus(student.id, date);
+                      const statusClass = status.toLowerCase();
+                      const statusSymbol = status === 'PRESENT' ? '●' : status === 'ABSENT' ? '✖' : status === 'LATE' ? '◐' : '△';
+                      return `<td class="${statusClass}">${statusSymbol}</td>`;
+                    }).join('')}
+                    <td class="present">${stats.present}</td>
+                    <td class="absent">${stats.absent}</td>
+                    <td class="late">${stats.late}</td>
+                    <td><strong>${stats.percentage.toFixed(1)}%</strong></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-box present"></div>
+              <span>● Present</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box absent"></div>
+              <span>✖ Absent</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box late"></div>
+              <span>◐ Late</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-box excused"></div>
+              <span>△ Excused</span>
+            </div>
+          </div>
+
+          <div class="summary">
+            <h3>Summary Statistics</h3>
+            <p><strong>Class Average Attendance:</strong> ${(attendanceData.students.reduce((acc, student) => acc + calculateStudentStats(student.id).percentage, 0) / attendanceData.students.length).toFixed(1)}%</p>
+            <p><strong>Total School Days:</strong> ${attendanceData.dateRange.length}</p>
+            <p><strong>Report Generated:</strong> ${new Date().toLocaleString()}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load then print
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
+  const exportToExcel = () => {
+    if (!attendanceData) return;
+
+    const className = mockClasses.find(c => c.id === selectedClass)?.name || '';
+    const sectionName = availableSections.find(s => s.id === selectedSection)?.name || '';
+
+    // Create CSV content
+    const csvContent = [
+      // Header rows
+      [`Attendance Report - ${className} Section ${sectionName}`],
+      [`Period: ${formatDate(startDate)} to ${formatDate(endDate)}`],
+      [`Generated: ${new Date().toLocaleDateString()}`],
+      [], // Empty row
+      
+      // Table headers
+      [
+        'Student Name',
+        'Roll Number',
+        ...attendanceData.dateRange.map(date => formatDate(date)),
+        'Present Days',
+        'Absent Days', 
+        'Late Days',
+        'Excused Days',
+        'Attendance %'
+      ],
+      
+      // Student data
+      ...attendanceData.students.map(student => {
+        const stats = calculateStudentStats(student.id);
+        return [
+          student.name,
+          student.rollNumber,
+          ...attendanceData.dateRange.map(date => {
+            const status = getAttendanceStatus(student.id, date);
+            return status === 'PRESENT' ? 'P' : status === 'ABSENT' ? 'A' : status === 'LATE' ? 'L' : 'E';
+          }),
+          stats.present,
+          stats.absent,
+          stats.late,
+          stats.excused,
+          `${stats.percentage.toFixed(1)}%`
+        ];
+      }),
+      
+      [], // Empty row
+      ['Summary Statistics'],
+      [`Class Average: ${(attendanceData.students.reduce((acc, student) => acc + calculateStudentStats(student.id).percentage, 0) / attendanceData.students.length).toFixed(1)}%`],
+      [`Total Students: ${attendanceData.students.length}`],
+      [`Total School Days: ${attendanceData.dateRange.length}`]
+    ];
+
+    // Convert to CSV string
+    const csvString = csvContent
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `attendance_report_${className}_${sectionName}_${startDate}_to_${endDate}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Get available sections for selected class
   const availableSections = useMemo(() => {
@@ -254,7 +513,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
           <CardTitle>Select Class and Date Range</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Class</label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
@@ -311,13 +570,6 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-
-            <div className="flex items-end">
-              <Button className="w-full" disabled={!selectedClass || !selectedSection}>
-                <Filter className="h-4 w-4 mr-2" />
-                Apply Filters
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -325,23 +577,46 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
       {/* Attendance Matrix */}
       {attendanceData && (
         <>
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold">
-                {mockClasses.find(c => c.id === selectedClass)?.name} - 
-                {availableSections.find(s => s.id === selectedSection)?.name}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Attendance from {formatDate(startDate)} to {formatDate(endDate)}
-              </p>
-            </div>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
-          </div>
-
-          <Card>
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  {mockClasses.find(c => c.id === selectedClass)?.name} - 
+                  {availableSections.find(s => s.id === selectedSection)?.name}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Attendance from {formatDate(startDate)} to {formatDate(endDate)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowAttendanceTaker(!showAttendanceTaker)}
+                >
+                  {showAttendanceTaker ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                  {showAttendanceTaker ? 'Hide' : 'Show'} Attendance Taker
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Report
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={exportToPDF}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Export as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={exportToExcel}>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Export as Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>          <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
@@ -360,17 +635,19 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                       <TableHead className="text-center min-w-[80px]">Late</TableHead>
                       <TableHead className="text-center min-w-[80px]">%</TableHead>
                     </TableRow>
-                    <TableRow>
-                      <TableHead className="sticky left-0 bg-background border-r text-xs">
-                        Attendance Taker
-                      </TableHead>
-                      {attendanceData.dateRange.map(date => (
-                        <TableHead key={date} className="text-center text-xs px-1">
-                          {getAttendanceTaker(date)}
+                    {showAttendanceTaker && (
+                      <TableRow>
+                        <TableHead className="sticky left-0 bg-background border-r text-xs">
+                          Attendance Taker
                         </TableHead>
-                      ))}
-                      <TableHead colSpan={4}></TableHead>
-                    </TableRow>
+                        {attendanceData.dateRange.map(date => (
+                          <TableHead key={date} className="text-center text-xs px-1">
+                            {getAttendanceTaker(date)}
+                          </TableHead>
+                        ))}
+                        <TableHead colSpan={4}></TableHead>
+                      </TableRow>
+                    )}
                   </TableHeader>
                   <TableBody>
                     {attendanceData.students.map(student => {

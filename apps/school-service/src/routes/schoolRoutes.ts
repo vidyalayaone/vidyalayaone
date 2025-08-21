@@ -7,6 +7,8 @@ import { activateSchool } from "../controllers/activateSchool";
 import { createClasses } from "../controllers/createClasses";
 import { createSections } from "../controllers/createSections";
 import { getClassesAndSections } from "../controllers/getClassesAndSections";
+import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
+import { createClassSubjects } from "../controllers/createClassSubjects";
 
 const router: Router = Router();
 
@@ -20,5 +22,9 @@ router.get('/activate/:schoolId', activateSchool);
 router.post('/classes', createClasses);
 router.post('/sections', createSections);
 router.get('/classes-sections/:schoolId', getClassesAndSections);
+
+// Subject management routes (admin only, platform context)
+router.post('/subjects/global', createGlobalSubjects);
+router.post('/subjects', createClassSubjects);
 
 export default router;

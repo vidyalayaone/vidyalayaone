@@ -52,6 +52,9 @@ import EditExamPage from './pages/exams/EditExamPage';
 // Timetable Pages
 import TimetablePage from './pages/timetable/TimetablePage';
 
+// Substitute Teacher Pages
+import SubstituteTeacherPage from './pages/substitute-teacher/SubstituteTeacherPage';
+
 // Academic Calendar Pages
 import AcademicCalendarPage from './pages/academic-calendar/AcademicCalendarPage';
 
@@ -344,6 +347,16 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <TimetablePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Substitute Teacher Routes - Admin only */}
+            <Route
+              path="/substitute-teacher"
+              element={
+                <ProtectedRoute>
+                  <SubstituteTeacherPage />
                 </ProtectedRoute>
               }
             />

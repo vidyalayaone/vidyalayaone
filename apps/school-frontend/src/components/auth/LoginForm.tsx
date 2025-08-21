@@ -138,23 +138,23 @@ const LoginForm: React.FC = () => {
 
       {/* Demo Credentials */}
       {
-      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-        <p className="text-sm font-medium text-muted-foreground">Demo Credentials:</p>
-        <div className="grid grid-cols-1 gap-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Admin:</span>
-            <span className="font-mono">admin / password123</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Teacher:</span>
-            <span className="font-mono">teacher / password123</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Student:</span>
-            <span className="font-mono">student / password123</span>
-          </div>
-        </div>
-      </div>
+      // <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+      //   <p className="text-sm font-medium text-muted-foreground">Demo Credentials:</p>
+      //   <div className="grid grid-cols-1 gap-2 text-xs">
+      //     <div className="flex justify-between">
+      //       <span className="text-muted-foreground">Admin:</span>
+      //       <span className="font-mono">admin / password123</span>
+      //     </div>
+      //     <div className="flex justify-between">
+      //       <span className="text-muted-foreground">Teacher:</span>
+      //       <span className="font-mono">teacher / password123</span>
+      //     </div>
+      //     <div className="flex justify-between">
+      //       <span className="text-muted-foreground">Student:</span>
+      //       <span className="font-mono">student / password123</span>
+      //     </div>
+      //   </div>
+      // </div>
       }
     </div>
   );

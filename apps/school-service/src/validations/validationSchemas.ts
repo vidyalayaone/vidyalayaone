@@ -168,6 +168,25 @@ export const updateSchoolSchema = z.object({
   'At least one field must be provided for update'
 );
 
+// Classes schema
+export const createClassesSchema = z.object({
+  schoolId: z.string().uuid('Invalid school ID format'),
+  classes: z.array(z.string().min(1, 'Class name cannot be empty').max(50, 'Class name too long')).min(1, 'At least one class is required'),
+  academicYear: z.string().regex(/^\d{4}-\d{2}$/, 'Academic year must be in format YYYY-YY (e.g., 2024-25)')
+});
+
+// Sections schema
+export const createSectionsSchema = z.object({
+  schoolId: z.string().uuid('Invalid school ID format'),
+  academicYear: z.string().regex(/^\d{4}-\d{2}$/, 'Academic year must be in format YYYY-YY (e.g., 2024-25)'),
+  sections: z.array(z.object({
+    className: z.string().min(1, 'Class name cannot be empty'),
+    sectionNames: z.array(z.string().min(1, 'Section name cannot be empty').max(20, 'Section name too long')).min(1, 'At least one section is required')
+  })).optional()
+});
+
 // Type exports for TypeScript
 export type CreateSchoolInput = z.infer<typeof createSchoolSchema>;
 export type UpdateSchoolInput = z.infer<typeof updateSchoolSchema>;
+export type CreateClassesInput = z.infer<typeof createClassesSchema>;
+export type CreateSectionsInput = z.infer<typeof createSectionsSchema>;

@@ -121,7 +121,11 @@ const ExamDetailPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               {getStatusBadge(exam)}
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/exams/${exam.id}/edit`)}
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
@@ -129,44 +133,33 @@ const ExamDetailPage: React.FC = () => {
           </div>
 
           {/* Exam Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Duration</CardTitle>
+                <CardTitle className="text-sm font-medium">Start Date</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {Math.ceil((new Date(exam.endDate).getTime() - new Date(exam.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                  {format(new Date(exam.startDate), 'MMM dd')}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {format(new Date(exam.startDate), 'MMM dd')} - {format(new Date(exam.endDate), 'MMM dd, yyyy')}
+                  {format(new Date(exam.startDate), 'yyyy')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Classes</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">End Date</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{new Set(exam.selectedSections.map(s => s.grade)).size}</div>
+                <div className="text-2xl font-bold">
+                  {format(new Date(exam.endDate), 'MMM dd')}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Across all grades
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sections</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{exam.selectedSections.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Selected sections
+                  {format(new Date(exam.endDate), 'yyyy')}
                 </p>
               </CardContent>
             </Card>
@@ -190,16 +183,16 @@ const ExamDetailPage: React.FC = () => {
             </Card>
           </div>
 
-          {/* Selected Sections */}
+          {/* Selected Classes */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Selected Sections</CardTitle>
+              <CardTitle className="text-lg">Selected Classes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {exam.selectedSections.map((section) => (
-                  <Badge key={section.id} variant="outline">
-                    Grade {section.grade} - Section {section.section}
+                {Array.from(new Set(exam.selectedSections.map(s => s.grade))).sort((a, b) => parseInt(a) - parseInt(b)).map((grade) => (
+                  <Badge key={grade} variant="outline">
+                    Class {grade}
                   </Badge>
                 ))}
               </div>
@@ -219,7 +212,7 @@ const ExamDetailPage: React.FC = () => {
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-4">
-            <ExamScheduleTab examId={exam.id} />
+            <ExamScheduleTab examId={exam.id} exam={exam} />
           </TabsContent>
 
           <TabsContent value="seating" className="space-y-4">

@@ -4,6 +4,7 @@
 export interface Exam {
   id: string;
   name: string;
+  academicYear?: string;
   startDate: string;
   endDate: string;
   status: 'draft' | 'scheduled' | 'ongoing' | 'completed';
@@ -13,6 +14,12 @@ export interface Exam {
     id: string;
     grade: string;
     section: string;
+  }>;
+  slots?: Array<{
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
   }>;
   createdAt: string;
   isScheduled: boolean;
@@ -41,6 +48,7 @@ const mockExams: Exam[] = [
   {
     id: '1',
     name: 'Half Yearly Examination',
+    academicYear: '2024-25',
     startDate: '2024-09-15',
     endDate: '2024-09-25',
     status: 'scheduled',
@@ -52,6 +60,10 @@ const mockExams: Exam[] = [
       { id: '12-A', grade: '12', section: 'A' },
       { id: '12-B', grade: '12', section: 'B' }
     ],
+    slots: [
+      { id: '1', name: 'Morning Session', startTime: '09:00', endTime: '12:00' },
+      { id: '2', name: 'Afternoon Session', startTime: '14:00', endTime: '17:00' }
+    ],
     createdAt: '2024-08-15T10:00:00Z',
     isScheduled: false,
     isFinalised: false,
@@ -60,6 +72,7 @@ const mockExams: Exam[] = [
   {
     id: '2',
     name: 'Annual Examination',
+    academicYear: '2024-25',
     startDate: '2024-12-05',
     endDate: '2024-12-20',
     status: 'scheduled',
@@ -79,6 +92,7 @@ const mockExams: Exam[] = [
   {
     id: '3',
     name: 'Monthly Test - October',
+    academicYear: '2024-25',
     startDate: '2024-10-15',
     endDate: '2024-10-18',
     status: 'completed',

@@ -624,10 +624,10 @@ const ClassSectionPage: React.FC = () => {
               <Users className="mr-2 h-4 w-4" />
               Students
             </TabsTrigger>
-            <TabsTrigger value="subjects">
+            {/* <TabsTrigger value="subjects">
               <BookOpen className="mr-2 h-4 w-4" />
               Subjects
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="timetable">
               <Calendar className="mr-2 h-4 w-4" />
               Timetable

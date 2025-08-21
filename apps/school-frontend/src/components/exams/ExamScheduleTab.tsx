@@ -45,7 +45,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { timeSlotAPI, type TimeSlot as APITimeSlot } from '@/api/exams';
+import { timeSlotAPI, type TimeSlot as APITimeSlot, type Exam } from '@/api/exams';
 
 // Mock data
 interface TimeSlot {
@@ -115,15 +115,16 @@ const examDates = [
 
 interface ExamScheduleTabProps {
   examId: string;
+  exam: Exam;
 }
 
-const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
+const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId, exam }) => {
   const { toast } = useToast();
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddSlotDialogOpen, setIsAddSlotDialogOpen] = useState(false);
   const [editingCell, setEditingCell] = useState<{ slotId: string; classId: string; date: string } | null>(null);
-  const [finaliseDialog, setFinaliseDialog] = useState<{ slotId: string; isOpen: boolean }>({ slotId: '', isOpen: false });
+  const [finaliseDialog, setFinaliseDialog] = useState<{ slotId: string; isOpen: boolean; hasWarnings: boolean }>({ slotId: '', isOpen: false, hasWarnings: false });
   
   const [newSlot, setNewSlot] = useState({
     name: '',
@@ -131,21 +132,128 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
     endTime: ''
   });
 
+  // Generate exam dates from the exam start and end dates
+  const examDates = React.useMemo(() => {
+    const dates: string[] = [];
+    const startDate = new Date(exam.startDate);
+    const endDate = new Date(exam.endDate);
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    
+    return dates;
+  }, [exam.startDate, exam.endDate]);
+
+  // Generate class subjects mapping from exam data (grouped by class, not section)
+  const mockClassSubjects = React.useMemo(() => {
+    const classSubjects: Record<string, string[]> = {};
+    
+    // Group sections by class
+    const classesByGrade: Record<string, any[]> = {};
+    exam.selectedSections.forEach(section => {
+      if (!classesByGrade[section.grade]) {
+        classesByGrade[section.grade] = [];
+      }
+      classesByGrade[section.grade].push(section);
+    });
+    
+    // Create subjects mapping for each class (not section)
+    Object.keys(classesByGrade).forEach(grade => {
+      const classKey = `Class ${grade}`;
+      // Mock subjects for now - in real app this would come from API
+      classSubjects[classKey] = ['Mathematics', 'English', 'Science', 'Social Studies', 'Hindi'];
+    });
+    
+    return classSubjects;
+  }, [exam.selectedSections]);
+
   // Load time slots on component mount
   useEffect(() => {
     const loadTimeSlots = async () => {
       try {
-        const timeSlotsData = await timeSlotAPI.getTimeSlots(examId);
-        setTimeSlots(timeSlotsData);
+        // Use exam slots if they exist, otherwise load from API
+        if (exam.slots && exam.slots.length > 0) {
+          const slotsWithTimetable = exam.slots.map(slot => {
+            // Initialize timetable with all selected classes (not sections)
+            const timetable: Record<string, Record<string, string>> = {};
+            
+            // Group sections by class
+            const classesByGrade: Record<string, any[]> = {};
+            exam.selectedSections.forEach(section => {
+              if (!classesByGrade[section.grade]) {
+                classesByGrade[section.grade] = [];
+              }
+              classesByGrade[section.grade].push(section);
+            });
+            
+            // Create timetable for each class
+            Object.keys(classesByGrade).forEach(grade => {
+              const classKey = `Class ${grade}`;
+              timetable[classKey] = {};
+              examDates.forEach(date => {
+                timetable[classKey][date] = '';
+              });
+            });
+
+            return {
+              id: slot.id,
+              name: slot.name,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              isFinalised: false,
+              timetable
+            };
+          });
+          setTimeSlots(slotsWithTimetable);
+        } else {
+          const timeSlotsData = await timeSlotAPI.getTimeSlots(examId);
+          setTimeSlots(timeSlotsData);
+        }
       } catch (error) {
         console.error('Error loading time slots:', error);
+        // Fallback to exam slots if API fails
+        if (exam.slots && exam.slots.length > 0) {
+          const slotsWithTimetable = exam.slots.map(slot => {
+            // Initialize timetable with all selected classes (not sections)
+            const timetable: Record<string, Record<string, string>> = {};
+            
+            // Group sections by class
+            const classesByGrade: Record<string, any[]> = {};
+            exam.selectedSections.forEach(section => {
+              if (!classesByGrade[section.grade]) {
+                classesByGrade[section.grade] = [];
+              }
+              classesByGrade[section.grade].push(section);
+            });
+            
+            // Create timetable for each class
+            Object.keys(classesByGrade).forEach(grade => {
+              const classKey = `Class ${grade}`;
+              timetable[classKey] = {};
+              examDates.forEach(date => {
+                timetable[classKey][date] = '';
+              });
+            });
+
+            return {
+              id: slot.id,
+              name: slot.name,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              isFinalised: false,
+              timetable
+            };
+          });
+          setTimeSlots(slotsWithTimetable);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadTimeSlots();
-  }, [examId]);
+  }, [examId, exam.slots, exam.selectedSections, examDates]);
 
   const handleAddTimeSlot = async () => {
     if (!newSlot.name || !newSlot.startTime || !newSlot.endTime) {
@@ -208,10 +316,13 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
     if (!slot) return [];
 
     const allSubjects = mockClassSubjects[classId] || [];
+    
+    // Get all subjects already assigned for this class in this slot (excluding current date)
     const usedSubjects = Object.entries(slot.timetable[classId] || {})
       .filter(([date, subject]) => date !== currentDate && subject)
-      .map(([, subject]) => subject);
+      .map(([_, subject]) => subject);
 
+    // Return subjects that haven't been used yet
     return allSubjects.filter(subject => !usedSubjects.includes(subject));
   };
 
@@ -235,18 +346,7 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
     return missingSubjects;
   };
 
-  const handleFinalise = async (slotId: string) => {
-    const missingSubjects = checkMissingSubjects(slotId);
-    
-    if (missingSubjects.length > 0) {
-      toast({
-        title: "Warning",
-        description: `Some subjects are missing: ${missingSubjects.join('; ')}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSave = async (slotId: string) => {
     try {
       await timeSlotAPI.finaliseTimeSlot(examId, slotId);
       
@@ -254,20 +354,199 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
         slot.id === slotId ? { ...slot, isFinalised: true } : slot
       ));
       
-      setFinaliseDialog({ slotId: '', isOpen: false });
+      setFinaliseDialog({ slotId: '', isOpen: false, hasWarnings: false });
       
       toast({
         title: "Success",
-        description: "Timetable finalised successfully",
+        description: "Timetable saved successfully",
       });
     } catch (error) {
-      console.error('Error finalising timetable:', error);
+      console.error('Error saving timetable:', error);
       toast({
         title: "Error",
-        description: "Failed to finalise timetable",
+        description: "Failed to save timetable",
         variant: "destructive",
       });
     }
+  };
+
+  const handleEdit = async (slotId: string) => {
+    try {
+      // Clear any pending edit state
+      setEditingCell(null);
+      
+      // Enable editing mode by setting isFinalised to false
+      setTimeSlots(prev => prev.map(slot => 
+        slot.id === slotId ? { ...slot, isFinalised: false } : slot
+      ));
+      
+      toast({
+        title: "Success",
+        description: "Timetable is now editable",
+      });
+    } catch (error) {
+      console.error('Error enabling edit mode:', error);
+      toast({
+        title: "Error",
+        description: "Failed to enable edit mode",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOpenSaveDialog = (slotId: string) => {
+    const missingSubjects = checkMissingSubjects(slotId);
+    setFinaliseDialog({ 
+      slotId, 
+      isOpen: true, 
+      hasWarnings: missingSubjects.length > 0 
+    });
+  };
+
+  const handlePrint = (slot: TimeSlot) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Error",
+        description: "Unable to open print window. Please check your browser settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const classes = Object.keys(slot.timetable);
+    
+    // Generate the HTML content for printing
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Exam Schedule - ${slot.name}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              color: #333;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #333;
+              padding-bottom: 15px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+              color: #333;
+            }
+            .header p {
+              margin: 5px 0;
+              color: #666;
+              font-size: 14px;
+            }
+            .exam-info {
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .exam-info div {
+              font-size: 14px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            th, td {
+              border: 1px solid #333;
+              padding: 8px;
+              text-align: center;
+              font-size: 12px;
+            }
+            th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+            }
+            .class-cell {
+              background-color: #f9f9f9;
+              font-weight: bold;
+              text-align: left;
+            }
+            .subject-cell {
+              background-color: #e8f4fd;
+              color: #1a73e8;
+              font-weight: 500;
+            }
+            .empty-cell {
+              background-color: #fff;
+              height: 30px;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+              border-top: 1px solid #ddd;
+              padding-top: 15px;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Exam Schedule</h1>
+            <p><strong>${exam.name}</strong> - ${exam.academicYear}</p>
+            <p>Time Slot: ${slot.name} (${slot.startTime} - ${slot.endTime})</p>
+          </div>
+          
+          <div class="exam-info">
+            <div><strong>Exam Period:</strong> ${format(new Date(exam.startDate), 'MMM dd, yyyy')} - ${format(new Date(exam.endDate), 'MMM dd, yyyy')}</div>
+            <div><strong>Status:</strong> ${slot.isFinalised ? 'Saved' : 'Draft'}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Class</th>
+                ${examDates.map(date => `<th>${format(new Date(date), 'MMM dd')}<br/><small>${format(new Date(date), 'EEEE')}</small></th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${classes.map(classId => `
+                <tr>
+                  <td class="class-cell">${classId}</td>
+                  ${examDates.map(date => {
+                    const subject = slot.timetable[classId]?.[date] || '';
+                    return `<td class="${subject ? 'subject-cell' : 'empty-cell'}">${subject}</td>`;
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>Generated on ${format(new Date(), 'PPP')} at ${format(new Date(), 'p')}</p>
+            <p>Note: Empty cells indicate no exam scheduled for that subject on that date.</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              };
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
   };
 
   const renderTimetableMatrix = (slot: TimeSlot) => {
@@ -311,14 +590,24 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                     <td key={date} className="border border-gray-300 p-1">
                       {isEditing ? (
                         <Select
-                          value={subject}
-                          onValueChange={(value) => handleSubjectAssignment(slot.id, classId, date, value)}
+                          value={subject || undefined}
+                          onValueChange={(value) => {
+                            if (value === "clear") {
+                              handleSubjectAssignment(slot.id, classId, date, "");
+                            } else {
+                              handleSubjectAssignment(slot.id, classId, date, value);
+                            }
+                          }}
                         >
                           <SelectTrigger className="h-8">
                             <SelectValue placeholder="Select subject" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No Subject</SelectItem>
+                            {subject && (
+                              <SelectItem value="clear" className="text-red-600">
+                                Clear Subject
+                              </SelectItem>
+                            )}
                             {getAvailableSubjects(slot.id, classId, date).map(subj => (
                               <SelectItem key={subj} value={subj}>
                                 {subj}
@@ -328,18 +617,20 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                         </Select>
                       ) : (
                         <div
-                          className={`min-h-8 p-1 rounded cursor-pointer text-sm ${
+                          className={`min-h-8 p-1 rounded text-sm ${
                             subject 
                               ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                              : 'bg-gray-50 text-gray-400 border border-dashed border-gray-300'
-                          } ${slot.isFinalised ? 'cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                              : slot.isFinalised 
+                                ? 'bg-white border border-gray-200'
+                                : 'bg-gray-50 text-gray-400 border border-dashed border-gray-300 cursor-pointer hover:bg-gray-100'
+                          } ${slot.isFinalised ? '' : 'cursor-pointer'}`}
                           onClick={() => {
                             if (!slot.isFinalised) {
                               setEditingCell({ slotId: slot.id, classId, date });
                             }
                           }}
                         >
-                          {subject || 'Click to add'}
+                          {subject || (slot.isFinalised ? '' : 'Add Subject')}
                         </div>
                       )}
                     </td>
@@ -369,13 +660,9 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
             <div>
               <h3 className="text-lg font-semibold">Exam Schedule</h3>
               <p className="text-sm text-muted-foreground">
-                Create time slots and manage exam timetables
+                Manage exam timetables for each time slot
               </p>
             </div>
-            <Button onClick={() => setIsAddSlotDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Time Slot
-            </Button>
           </div>
 
       {/* Time Slots */}
@@ -391,7 +678,7 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                     {slot.isFinalised && (
                       <Badge variant="default" className="ml-2">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Finalised
+                        Saved
                       </Badge>
                     )}
                   </CardTitle>
@@ -404,18 +691,26 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => setFinaliseDialog({ slotId: slot.id, isOpen: true })}
+                      onClick={() => handleOpenSaveDialog(slot.id)}
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      Finalise
+                      Save
                     </Button>
                   ) : (
                     <>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEdit(slot.id)}
+                      >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handlePrint(slot)}
+                      >
                         <Printer className="h-4 w-4 mr-2" />
                         Print
                       </Button>
@@ -437,12 +732,8 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                 <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Time Slots</h3>
                 <p className="text-muted-foreground mb-4">
-                  Create time slots to start building your exam schedule
+                  Time slots need to be defined during exam creation to build the schedule
                 </p>
-                <Button onClick={() => setIsAddSlotDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Time Slot
-                </Button>
               </CardContent>
             </Card>
           )}
@@ -500,17 +791,17 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Finalise Confirmation Dialog */}
+      {/* Save Confirmation Dialog */}
       <AlertDialog 
         open={finaliseDialog.isOpen} 
         onOpenChange={(open) => setFinaliseDialog(prev => ({ ...prev, isOpen: open }))}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Finalise Timetable</AlertDialogTitle>
+            <AlertDialogTitle>Save Timetable</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to finalise this timetable? This action cannot be undone easily.
-              {checkMissingSubjects(finaliseDialog.slotId).length > 0 && (
+              Are you sure you want to save this timetable? The schedule will be locked and cells without subjects will appear as blank spaces.
+              {finaliseDialog.hasWarnings && (
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                   <div className="flex items-center text-yellow-800">
                     <AlertTriangle className="h-4 w-4 mr-2" />
@@ -521,14 +812,17 @@ const ExamScheduleTab: React.FC<ExamScheduleTabProps> = ({ examId }) => {
                       <li key={index}>• {missing}</li>
                     ))}
                   </ul>
+                  <p className="mt-2 text-sm text-yellow-700">
+                    You can still save the timetable with missing subjects and edit later if needed.
+                  </p>
                 </div>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleFinalise(finaliseDialog.slotId)}>
-              Finalise
+            <AlertDialogAction onClick={() => handleSave(finaliseDialog.slotId)}>
+              Save
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

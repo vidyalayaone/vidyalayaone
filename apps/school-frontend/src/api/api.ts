@@ -17,6 +17,15 @@ import {
   PaginationParams
 } from './types';
 
+// Import mock API for fallback
+import * as mockAPI from './mockAPI';
+
+// Helper function to check if we should use mock data
+const shouldUseMockData = () => {
+  // For now, always use mock data for dashboard stats since backend endpoints don't exist yet
+  return true;
+};
+
 // Helper function to handle API responses
 const handleResponse = <T>(response: any): APIResponse<T> => {
   return {
@@ -122,29 +131,50 @@ export const api = {
 
   // Dashboard stats endpoints
   getAdminStats: async (): Promise<APIResponse<AdminStats>> => {
+    // Use mock data for now since backend endpoints don't exist yet
+    if (shouldUseMockData()) {
+      return await mockAPI.getAdminStats();
+    }
+    
     try {
       const response = await httpClient.get('/dashboard/admin/stats');
       return handleResponse<AdminStats>(response);
     } catch (error) {
-      return handleError(error);
+      // Fallback to mock data if API fails
+      console.warn('API call failed, falling back to mock data:', error);
+      return await mockAPI.getAdminStats();
     }
   },
 
   getTeacherStats: async (): Promise<APIResponse<TeacherStats>> => {
+    // Use mock data for now since backend endpoints don't exist yet
+    if (shouldUseMockData()) {
+      return await mockAPI.getTeacherStats();
+    }
+    
     try {
       const response = await httpClient.get('/dashboard/teacher/stats');
       return handleResponse<TeacherStats>(response);
     } catch (error) {
-      return handleError(error);
+      // Fallback to mock data if API fails
+      console.warn('API call failed, falling back to mock data:', error);
+      return await mockAPI.getTeacherStats();
     }
   },
 
   getStudentStats: async (): Promise<APIResponse<StudentStats>> => {
+    // Use mock data for now since backend endpoints don't exist yet
+    if (shouldUseMockData()) {
+      return await mockAPI.getStudentStats();
+    }
+    
     try {
       const response = await httpClient.get('/dashboard/student/stats');
       return handleResponse<StudentStats>(response);
     } catch (error) {
-      return handleError(error);
+      // Fallback to mock data if API fails
+      console.warn('API call failed, falling back to mock data:', error);
+      return await mockAPI.getStudentStats();
     }
   },
 

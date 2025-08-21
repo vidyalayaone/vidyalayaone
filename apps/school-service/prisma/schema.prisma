@@ -69,13 +69,11 @@ model Section {
 
 model Subject {
   id          String   @id @default(uuid())
-  name        String   @db.VarChar(100)
-  code        String   @db.VarChar(10)
+  name        String   @unique @db.VarChar(100)
+  code        String   @unique @db.VarChar(10)
   description String?
   classes     Class[]  @relation("ClassSubjects")
   metaData    Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@unique([code])
 }

@@ -185,8 +185,29 @@ export const createSectionsSchema = z.object({
   })).optional()
 });
 
+// Global subjects schema
+export const createGlobalSubjectsSchema = z.object({
+  subjects: z.array(z.object({
+    name: z.string().min(1, 'Subject name cannot be empty').max(100, 'Subject name too long'),
+    code: z.string().min(1, 'Subject code cannot be empty').max(10, 'Subject code too long').regex(/^[A-Z0-9_-]+$/, 'Subject code can only contain uppercase letters, numbers, hyphens, and underscores'),
+    description: z.string().max(500, 'Description too long').optional()
+  })).min(1, 'At least one subject is required')
+});
+
+// Class subjects schema
+export const createClassSubjectsSchema = z.object({
+  schoolId: z.string().uuid('Invalid school ID format'),
+  academicYear: z.string().regex(/^\d{4}-\d{2}$/, 'Academic year must be in format YYYY-YY (e.g., 2024-25)'),
+  classSubjects: z.array(z.object({
+    className: z.string().min(1, 'Class name cannot be empty'),
+    subjectNames: z.array(z.string().min(1, 'Subject name cannot be empty')).min(1, 'At least one subject name is required')
+  })).min(1, 'At least one class with subjects is required')
+});
+
 // Type exports for TypeScript
 export type CreateSchoolInput = z.infer<typeof createSchoolSchema>;
 export type UpdateSchoolInput = z.infer<typeof updateSchoolSchema>;
 export type CreateClassesInput = z.infer<typeof createClassesSchema>;
 export type CreateSectionsInput = z.infer<typeof createSectionsSchema>;
+export type CreateGlobalSubjectsInput = z.infer<typeof createGlobalSubjectsSchema>;
+export type CreateClassSubjectsInput = z.infer<typeof createClassSubjectsSchema>;

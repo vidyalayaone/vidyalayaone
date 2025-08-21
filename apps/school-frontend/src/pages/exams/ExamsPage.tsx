@@ -28,13 +28,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import CreateExamDialog from '@/components/exams/CreateExamDialog';
 import { examAPI, type Exam } from '@/api/exams';
 
 const ExamsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,7 +113,7 @@ const ExamsPage: React.FC = () => {
               Manage examinations and assessments
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button onClick={() => navigate('/exams/create')}>
             <Plus className="h-4 w-4 mr-2" />
             Create Exam
           </Button>
@@ -145,42 +143,23 @@ const ExamsPage: React.FC = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-xl">{exam.name}</CardTitle>
+                    <div className="flex items-center space-x-3">
+                      <CardTitle className="text-xl">{exam.name}</CardTitle>
+                      {exam.academicYear && (
+                        <span className="text-xl font-bold text-muted-foreground">
+                          ({exam.academicYear})
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
                         {format(new Date(exam.startDate), 'MMM dd')} - {format(new Date(exam.endDate), 'MMM dd, yyyy')}
                       </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {exam.selectedSections.length} Sections
-                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     {getStatusBadge(exam)}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          handleExamClick(exam.id);
-                        }}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Exam
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>
@@ -217,7 +196,7 @@ const ExamsPage: React.FC = () => {
               {searchTerm ? 'No exams match your search.' : 'Get started by creating your first exam.'}
             </p>
             {!searchTerm && (
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Button onClick={() => navigate('/exams/create')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Exam
               </Button>
@@ -226,12 +205,7 @@ const ExamsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Create Exam Dialog */}
-      <CreateExamDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onExamCreated={handleExamCreated}
-      />
+      {/* Create Exam is now a separate page at /exams/create */}
     </DashboardLayout>
   );
 };

@@ -46,6 +46,8 @@ import AttendancePage from './pages/attendance/AttendancePage';
 // Exams Pages
 import ExamsPage from './pages/exams/ExamsPage';
 import ExamDetailPage from './pages/exams/ExamDetailPage';
+import CreateExamPage from './pages/exams/CreateExamPage';
+import EditExamPage from './pages/exams/EditExamPage';
 
 // Timetable Pages
 import TimetablePage from './pages/timetable/TimetablePage';
@@ -308,6 +310,22 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <ExamsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exams/create"
+              element={
+                <ProtectedRoute>
+                  <CreateExamPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exams/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditExamPage />
                 </ProtectedRoute>
               }
             />

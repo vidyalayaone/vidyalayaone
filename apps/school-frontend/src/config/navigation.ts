@@ -62,12 +62,12 @@ export const navigationConfig = {
           icon: BookOpen,
           description: 'Manage class schedules and sections'
         },
-        { 
-          path: '/subjects', 
-          label: 'Subjects', 
-          icon: Library,
-          description: 'Manage subjects, teachers, and curriculum'
-        },
+        // { 
+        //   path: '/subjects', 
+        //   label: 'Subjects', 
+        //   icon: Library,
+        //   description: 'Manage subjects, teachers, and curriculum'
+        // },
         { 
           path: '/admission', 
           label: 'Admission', 

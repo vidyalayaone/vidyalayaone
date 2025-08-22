@@ -32,6 +32,7 @@ services:
     environment:
       - AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
       - SCHOOL_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
+      - PROFILE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
     networks:
       - vidyalayaone-network
     restart: "no"
@@ -92,6 +93,34 @@ services:
       - vidyalayaone-network
     restart: unless-stopped
 
+  # Profile Service
+  profile-service:
+    build:
+      context: .
+      dockerfile: apps/profile-service/Dockerfile
+    container_name: vidyalayaone-profile
+    ports:
+      - "3003:3003"
+      - "5558:5558"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
+      - PORT=3003
+      - NODE_ENV=development
+    volumes:
+    - ./apps/profile-service:/app/apps/profile-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/profile-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/profile-service/src/generated
+    - /app/apps/profile-service/node_modules/.prisma
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
   # API Gateway
   api-gateway:
     build:
@@ -103,11 +132,13 @@ services:
     depends_on:
       - auth-service
       - school-service
+      - profile-service
     environment:
       - PORT=3000
       - NODE_ENV=development
       - AUTH_SERVICE_URL=http://auth-service:3001
       - SCHOOL_SERVICE_URL=http://school-service:3002
+      - PROFILE_SERVICE_URL=http://profile-service:3003
       - JWT_SECRET=your-jwt-secret-here
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
@@ -133,6 +164,7 @@ services:
       - VITE_API_URL=http://localhost:3000
       - VITE_AUTH_SERVICE_URL=http://localhost:3001
       - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
+      - VITE_PROFILE_SERVICE_URL=http://localhost:3003
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend
       - ./packages:/app/packages

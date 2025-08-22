@@ -179,6 +179,79 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
 
+  apps/profile-service:
+    dependencies:
+      '@prisma/client':
+        specifier: ^6.10.1
+        version: 6.10.1(prisma@6.10.1(typescript@5.8.3))(typescript@5.8.3)
+      '@vidyalayaone/common-middleware':
+        specifier: workspace:*
+        version: link:../../packages/common-middleware
+      '@vidyalayaone/common-utils':
+        specifier: workspace:*
+        version: link:../../packages/common-utils
+      '@vidyalayaone/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      axios:
+        specifier: ^1.10.0
+        version: 1.10.0
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.5
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
+      express-rate-limit:
+        specifier: ^7.5.1
+        version: 7.5.1(express@5.1.0)
+      helmet:
+        specifier: ^8.1.0
+        version: 8.1.0
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.0
+      zod:
+        specifier: ^4.0.5
+        version: 4.0.5
+    devDependencies:
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.3
+      '@types/morgan':
+        specifier: ^1.9.10
+        version: 1.9.10
+      '@types/node':
+        specifier: ^24.0.4
+        version: 24.0.4
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.35.0
+        version: 8.39.0(@typescript-eslint/parser@8.39.0(eslint@9.32.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.32.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.35.0
+        version: 8.39.0(eslint@9.32.0(jiti@2.4.2))(typescript@5.8.3)
+      eslint:
+        specifier: ^9.29.0
+        version: 9.32.0(jiti@2.4.2)
+      prettier:
+        specifier: ^3.6.1
+        version: 3.6.1
+      prisma:
+        specifier: ^6.10.1
+        version: 6.10.1(typescript@5.8.3)
+      ts-node-dev:
+        specifier: ^2.0.0
+        version: 2.0.0(@swc/core@1.13.3)(@types/node@24.0.4)(typescript@5.8.3)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+
   apps/school-frontend:
     dependencies:
       '@hookform/resolvers':

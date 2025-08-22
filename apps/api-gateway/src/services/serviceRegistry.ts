@@ -49,22 +49,28 @@ class ServiceRegistry {
     this.services.set('school', {
       name: 'school-service',
       url: config.services.school.url,
-      path: '/api/v1/school',
-      isProtected: false,
+      path: '/api/v1/schools',
+      isProtected: true,
       routes: [
-        { path: '/create', method: 'POST', isProtected: true },
-        { path: '/get-by-id/:schoolId', method: 'GET', isProtected: true },
-        { path: '/update/:schoolId', method: 'PUT', isProtected: true },
-        { path: '/get-by-subdomain/:subdomain', method: 'GET', isProtected: false },
-        { path: '/activate/:schoolId', method: 'GET', isProtected: true },
-        { path: '/classes', method: 'POST', isProtected: true },
-        { path: '/sections', method: 'POST', isProtected: true },
-        { path: '/classes-sections/:schoolId', method: 'GET', isProtected: true },
-        { path: '/subjects/global', method: 'POST', isProtected: true },
-        { path: '/subjects', method: 'POST', isProtected: true },
+        // Add specific route configurations if needed
+        // { path: '/public-info', method: 'GET', isProtected: false },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,
+    });
+
+    this.services.set('profile', {
+      name: 'profile-service',
+      url: config.services.profile.url,
+      path: '/api/v1/profiles',
+      isProtected: true,
+      routes: [
+        // Add specific route configurations if needed
+        // { path: '/teachers', method: 'GET', isProtected: true },
+        // { path: '/students', method: 'GET', isProtected: true },
+      ],
+      healthPath: '/health',
+      timeout: config.services.profile.timeout,
     });
 
     // Future services - fully protected at gateway

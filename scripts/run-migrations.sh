@@ -19,4 +19,10 @@ cd /app/apps/school-service
 pnpm db:generate
 pnpm db:migrate
 
+# Run profile service migrations
+echo "Running profile service migrations..."
+cd /app/apps/profile-service
+pnpm db:generate
+pnpm db:migrate --name init
+
 echo "All migrations completed successfully!"

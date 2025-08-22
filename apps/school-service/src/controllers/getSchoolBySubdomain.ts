@@ -7,8 +7,6 @@ export async function getSchoolBySubdomain(req: Request, res: Response): Promise
   try {
     const { subdomain } = req.params;
 
-    console.log('Subdomain:', subdomain); // Log the subdomain for debugging
-
     if (!subdomain || typeof subdomain !== 'string') {
       res.status(400).json({
         success: false,

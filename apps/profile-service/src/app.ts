@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
+import profileRoutes from './routes/profileRoutes';
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
@@ -50,7 +51,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // API routes will be added here
-// app.use(`${config.server.apiPrefix}/profiles`, profileRoutes);
+app.use(`${config.server.apiPrefix}/profile`, profileRoutes);
 
 // 404 handler
 app.use(notFound);

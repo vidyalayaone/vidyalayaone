@@ -70,12 +70,10 @@ class ServiceRegistry {
     this.services.set('profile', {
       name: 'profile-service',
       url: config.services.profile.url,
-      path: '/api/v1/profiles',
+      path: '/api/v1/profile',
       isProtected: true,
       routes: [
-        // Add specific route configurations if needed
-        // { path: '/teachers', method: 'GET', isProtected: true },
-        // { path: '/students', method: 'GET', isProtected: true },
+        { path: '/students', method: 'POST', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.profile.timeout,

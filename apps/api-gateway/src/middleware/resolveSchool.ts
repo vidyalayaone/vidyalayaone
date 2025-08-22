@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import config from '../config/config';
 
-interface schoolInfo {
+interface SchoolInfo {
   id: string;
-  isActive: string;
+  name: string;
+  subdomain: string;
+  isActive: boolean;
 }
 
 export async function resolveSchool(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -38,7 +40,39 @@ export async function resolveSchool(req: Request, res: Response, next: NextFunct
     req.headers['x-context'] = 'school';
     req.headers['x-subdomain'] = subdomain;
     
-    console.log(`✅ School resolved: ${subdomain}`);
+    // Fetch school ID from school service
+    try {
+      console.log(`🔍 Fetching school ID for subdomain: ${subdomain}`);
+      const schoolResponse = await axios.get(
+        `${config.services.school.url}/api/v1/school/get-by-subdomain/${subdomain}`,
+        {
+          timeout: config.services.school.timeout,
+        }
+      );
+
+      if (schoolResponse.data.success && schoolResponse.data.data.school.id) {
+        const schoolId = schoolResponse.data.data.school.id;
+        req.headers['x-school-id'] = schoolId;
+        console.log(`✅ School resolved: ${subdomain} (ID: ${schoolId})`);
+      } else {
+        console.log('❌ School not found or inactive:', subdomain);
+        res.status(404).json({
+          success: false,
+          error: { message: 'School not found or inactive' },
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+    } catch (schoolError) {
+      console.error('❌ Failed to fetch school information:', schoolError);
+      res.status(502).json({
+        success: false,
+        error: { message: 'Failed to resolve school information' },
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    
     next();
     
   } catch (error) {

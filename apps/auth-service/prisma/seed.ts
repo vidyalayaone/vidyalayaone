@@ -1,26 +1,45 @@
-import { PrismaClient } from '@prisma/client';
+import DatabaseService from '../src/services/database';
 import bcrypt from 'bcrypt';
+import config from '../src/config/config';
+import { Role } from '../src/generated/client';
 
-const prisma = new PrismaClient();
+const { prisma } = DatabaseService;
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
+  console.log('🌱 Starting auth database seeding...');
 
-  // Create a test user
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  // Create an admin user
+  const passwordHash = await bcrypt.hash('password123', config.security.bcryptSaltRounds);
   
-  const testUser = await prisma.user.upsert({
-    where: { email: 'test@onlyexams.com' },
+  const adminUser = await prisma.user.upsert({
+    where: { username: 'admin' },
     update: {},
     create: {
-      email: 'test@onlyexams.com',
-      password: hashedPassword,
-      isVerified: true,
+      username: 'admin',
+      phone: '6266032577',
+      passwordHash: passwordHash,
+      role: Role.ADMIN,
+      isActive: true,
+      isPhoneVerified: true,
+      phoneVerifiedAt: new Date(),
     },
   });
 
-  console.log('✅ Test user created:', testUser.email);
-  console.log('🌱 Database seeding completed!');
+  console.log('✅ Admin user created:', adminUser.username);
+
+  // Create an OTP for the admin user (optional)
+  const otp = await prisma.otp.create({
+    data: {
+      userId: adminUser.id,
+      otp: '123456',
+      purpose: 'registration',
+      isUsed: true,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
+    },
+  });
+
+  console.log('✅ OTP created for admin user:', otp.otp);
+  console.log('🌱 Auth database seeding completed!');
 }
 
 main()

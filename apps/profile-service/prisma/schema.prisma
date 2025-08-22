@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id") // Reference to auth service user
+  schoolId        String    @map("school_id") // Reference to school service
+  employeeId      String?   @unique @map("employee_id") @db.VarChar(50)
+  firstName       String    @map("first_name") @db.VarChar(100)
+  lastName        String    @map("last_name") @db.VarChar(100)
+  middleName      String?   @map("middle_name") @db.VarChar(100)
+  dateOfBirth     DateTime? @map("date_of_birth")
+  gender          Gender?
+  phone           String?   @db.VarChar(20)
+  email           String?   @db.VarChar(255)
+  address         String?   @db.Text
+  qualification   String?   @db.VarChar(255)
+  experience      Int?      // Years of experience
+  joiningDate     DateTime? @map("joining_date")
+  designation     String?   @db.VarChar(100)
+  department      String?   @db.VarChar(100)
+  salary          Decimal?  @db.Decimal(10, 2)
+  isActive        Boolean   @default(true) @map("is_active")
+  profilePicture  String?   @map("profile_picture") @db.VarChar(500)
+  emergencyContact String? @map("emergency_contact") @db.VarChar(20)
+  bloodGroup      String?   @map("blood_group") @db.VarChar(10)
+  maritalStatus   MaritalStatus? @map("marital_status")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("teachers")
+}
+
+model Student {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id") // Reference to auth service user
+  schoolId        String    @map("school_id") // Reference to school service
+  admissionNumber String?   @unique @map("admission_number") @db.VarChar(50)
+  rollNumber      String?   @map("roll_number") @db.VarChar(50)
+  firstName       String    @map("first_name") @db.VarChar(100)
+  lastName        String    @map("last_name") @db.VarChar(100)
+  middleName      String?   @map("middle_name") @db.VarChar(100)
+  dateOfBirth     DateTime? @map("date_of_birth")
+  gender          Gender?
+  phone           String?   @db.VarChar(20)
+  email           String?   @db.VarChar(255)
+  address         String?   @db.Text
+  class           String?   @db.VarChar(20)
+  section         String?   @db.VarChar(10)
+  academicYear    String?   @map("academic_year") @db.VarChar(20)
+  admissionDate   DateTime? @map("admission_date")
+  fatherName      String?   @map("father_name") @db.VarChar(100)
+  motherName      String?   @map("mother_name") @db.VarChar(100)
+  guardianName    String?   @map("guardian_name") @db.VarChar(100)
+  guardianPhone   String?   @map("guardian_phone") @db.VarChar(20)
+  guardianEmail   String?   @map("guardian_email") @db.VarChar(255)
+  guardianRelation String?  @map("guardian_relation") @db.VarChar(50)
+  isActive        Boolean   @default(true) @map("is_active")
+  profilePicture  String?   @map("profile_picture") @db.VarChar(500)
+  bloodGroup      String?   @map("blood_group") @db.VarChar(10)
+  medicalInfo     String?   @map("medical_info") @db.Text
+  transportInfo   String?   @map("transport_info") @db.VarChar(255)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("students")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}

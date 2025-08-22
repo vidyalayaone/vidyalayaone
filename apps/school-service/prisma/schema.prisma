@@ -56,13 +56,14 @@ model Class {
 }
 
 model Section {
-  id        String   @id @default(uuid())
-  class     Class    @relation(fields: [classId], references: [id])
-  classId   String
-  name      String   // e.g. "A", "B"
-  metaData  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(uuid())
+  class          Class    @relation(fields: [classId], references: [id])
+  classId        String
+  name           String   // e.g. "A", "B"
+  classTeacherId String?  @map("class_teacher_id") // References teacher from different service
+  metaData       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([classId, name])
 }

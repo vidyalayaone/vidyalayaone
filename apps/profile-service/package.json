@@ -1,0 +1,52 @@
+{
+  "name": "@vidyalayaone/profile-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only --clear --watch src --require tsconfig-paths/register src/server.ts",
+    "build": "tsc && cp -r src/generated dist/",
+    "start": "node dist/server.js",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "db:seed": "ts-node-dev --require tsconfig-paths/register prisma/seed.ts",
+    "db:studio": "prisma studio --port 5558",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.1",
+  "dependencies": {
+    "@prisma/client": "^6.10.1",
+    "@vidyalayaone/common-middleware": "workspace:*",
+    "@vidyalayaone/common-utils": "workspace:*",
+    "@vidyalayaone/logger": "workspace:*",
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.29.0",
+    "prettier": "^3.6.1",
+    "prisma": "^6.10.1",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

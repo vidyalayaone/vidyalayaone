@@ -50,15 +50,4 @@ router.get('/me', authLimiter, getMe);
 router.post('/logout', authLimiter, logout);
 router.post('/update-admin-with-subdomain', authLimiter, updateAdminWithSubdomain);
 
-// import { addTenantToAdmin } from "../controllers/addTenantToAdmin";
-// import { testEmail } from "../controllers/testEmail";
-// import { authenticate } from '../middleware/authMiddleware';
-
-
-
-
-
-//Internal routes
-// router.post('/add-tenant-to-admin', addTenantToAdmin)
-
 export default router;

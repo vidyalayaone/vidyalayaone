@@ -314,7 +314,7 @@ export const useAuthStore = create<AuthState>()(
     // Fetch school data
     fetchSchool: async (): Promise<void> => {
       try {
-        const subdomain = window.location.hostname.split('.')[0] || 'riverside';        
+        const subdomain = window.location.hostname.split('.')[0] || 'localhost';        
         
         const response = await api.getSchoolBySubdomain(subdomain);
         

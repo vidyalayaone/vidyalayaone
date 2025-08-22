@@ -27,6 +27,7 @@ model Student {
   metaData        Json?            @map("meta_data")
   enrollments     StudentEnrollment[]
   guardians       StudentGuardian[]   // Relation via join table
+  documents       Document[]           // Student documents
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
@@ -104,6 +105,7 @@ model Teacher {
   address         Json?
   subjectIds      String[]       @map("subject_ids") // List of subject IDs (external service)
   metaData        Json?          @map("meta_data")
+  documents       Document[]     // Teacher documents
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
@@ -114,6 +116,70 @@ model Teacher {
 enum Gender {
   MALE
   FEMALE
+  OTHER
+}
+
+model Document {
+  id          String       @id @default(uuid())
+  name        String       @db.VarChar(255) // Document name/title
+  description String?      @db.Text // Optional description
+  type        DocumentType // Type of document (ID card, certificate, etc.)
+  url         String       @db.VarChar(500) // Link to the actual document (e.g., Cloudinary URL)
+  mimeType    String       @map("mime_type") @db.VarChar(100) // e.g., "application/pdf", "image/jpeg"
+  fileSize    BigInt?      @map("file_size") // File size in bytes
+  
+  // Polymorphic relationship - document can belong to either student or teacher
+  studentId   String?      @map("student_id")
+  teacherId   String?      @map("teacher_id")
+  student     Student?     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher     Teacher?     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  // Additional metadata
+  uploadedBy  String?      @map("uploaded_by") // User ID who uploaded the document
+  isVerified  Boolean      @default(false) @map("is_verified") // Whether document is verified by admin
+  expiryDate  DateTime?    @map("expiry_date") // For documents that expire (e.g., ID cards)
+  metaData    Json?        @map("meta_data") // Additional flexible data
+  
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("documents")
+}
+
+enum DocumentType {
+  // Identity Documents
+  BIRTH_CERTIFICATE
+  AADHAAR_CARD
+  PAN_CARD
+  PASSPORT
+  VOTER_ID
+  DRIVING_LICENSE
+  
+  // Educational Documents
+  MARK_SHEET
+  DEGREE_CERTIFICATE
+  DIPLOMA_CERTIFICATE
+  TRANSFER_CERTIFICATE
+  CHARACTER_CERTIFICATE
+  EXPERIENCE_CERTIFICATE
+  
+  // Medical Documents
+  MEDICAL_CERTIFICATE
+  VACCINATION_RECORD
+  HEALTH_CHECKUP_REPORT
+  
+  // Financial Documents
+  INCOME_CERTIFICATE
+  FEE_RECEIPT
+  SALARY_SLIP
+  BANK_STATEMENT
+  
+  // Other Documents
+  PHOTO
+  SIGNATURE
+  CASTE_CERTIFICATE
+  DOMICILE_CERTIFICATE
+  RESIDENCE_PROOF
   OTHER
 }
 

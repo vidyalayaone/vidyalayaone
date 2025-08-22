@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createStudent } from '../controllers/createStudent';
+import { getStudent } from '../controllers/getStudent';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -16,5 +17,6 @@ const profileLimiter = rateLimit({
 
 // Student routes
 router.post('/students', profileLimiter, createStudent);
+router.get('/students/:id', profileLimiter, getStudent);
 
 export default router;

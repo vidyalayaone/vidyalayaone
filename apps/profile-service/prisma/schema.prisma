@@ -8,69 +8,107 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Teacher {
-  id              String    @id @default(uuid())
-  userId          String    @unique @map("user_id") // Reference to auth service user
-  schoolId        String    @map("school_id") // Reference to school service
-  employeeId      String?   @unique @map("employee_id") @db.VarChar(50)
-  firstName       String    @map("first_name") @db.VarChar(100)
-  lastName        String    @map("last_name") @db.VarChar(100)
-  middleName      String?   @map("middle_name") @db.VarChar(100)
-  dateOfBirth     DateTime? @map("date_of_birth")
+model Student {
+  id              String           @id @default(uuid())
+  userId          String           @unique @map("user_id") // Reference to auth service user
+  admissionNumber String           @map("admission_number") @db.VarChar(50) // Admission or roll number (unique per school)
+  schoolId        String           @map("school_id") // Reference to school-service school
+  firstName       String           @map("first_name") @db.VarChar(100)
+  lastName        String           @map("last_name") @db.VarChar(100)
+  bloodGroup      String?          @map("blood_group") @db.VarChar(10)
+  category        String?          @db.VarChar(50) // e.g., "General"
+  religion        String?          @db.VarChar(50) // e.g., "Christianity"
+  admissionDate   DateTime         @map("admission_date")
+  dateOfBirth     DateTime?        @map("date_of_birth")
   gender          Gender?
-  phone           String?   @db.VarChar(20)
-  email           String?   @db.VarChar(255)
-  address         String?   @db.Text
-  qualification   String?   @db.VarChar(255)
-  experience      Int?      // Years of experience
-  joiningDate     DateTime? @map("joining_date")
-  designation     String?   @db.VarChar(100)
-  department      String?   @db.VarChar(100)
-  salary          Decimal?  @db.Decimal(10, 2)
-  isActive        Boolean   @default(true) @map("is_active")
-  profilePicture  String?   @map("profile_picture") @db.VarChar(500)
-  emergencyContact String? @map("emergency_contact") @db.VarChar(20)
-  bloodGroup      String?   @map("blood_group") @db.VarChar(10)
-  maritalStatus   MaritalStatus? @map("marital_status")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  address         Json?
+  contactInfo     Json?            @map("contact_info")
+  profilePhoto    String?          @map("profile_photo") @db.VarChar(500)
+  metaData        Json?            @map("meta_data")
+  enrollments     StudentEnrollment[]
+  guardians       StudentGuardian[]   // Relation via join table
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
 
-  @@map("teachers")
+  @@unique([admissionNumber, schoolId])
+  @@map("students")
 }
 
-model Student {
-  id              String    @id @default(uuid())
-  userId          String    @unique @map("user_id") // Reference to auth service user
-  schoolId        String    @map("school_id") // Reference to school service
-  admissionNumber String?   @unique @map("admission_number") @db.VarChar(50)
-  rollNumber      String?   @map("roll_number") @db.VarChar(50)
-  firstName       String    @map("first_name") @db.VarChar(100)
-  lastName        String    @map("last_name") @db.VarChar(100)
-  middleName      String?   @map("middle_name") @db.VarChar(100)
-  dateOfBirth     DateTime? @map("date_of_birth")
-  gender          Gender?
-  phone           String?   @db.VarChar(20)
-  email           String?   @db.VarChar(255)
-  address         String?   @db.Text
-  class           String?   @db.VarChar(20)
-  section         String?   @db.VarChar(10)
-  academicYear    String?   @map("academic_year") @db.VarChar(20)
-  admissionDate   DateTime? @map("admission_date")
-  fatherName      String?   @map("father_name") @db.VarChar(100)
-  motherName      String?   @map("mother_name") @db.VarChar(100)
-  guardianName    String?   @map("guardian_name") @db.VarChar(100)
-  guardianPhone   String?   @map("guardian_phone") @db.VarChar(20)
-  guardianEmail   String?   @map("guardian_email") @db.VarChar(255)
-  guardianRelation String?  @map("guardian_relation") @db.VarChar(50)
-  isActive        Boolean   @default(true) @map("is_active")
-  profilePicture  String?   @map("profile_picture") @db.VarChar(500)
-  bloodGroup      String?   @map("blood_group") @db.VarChar(10)
-  medicalInfo     String?   @map("medical_info") @db.Text
-  transportInfo   String?   @map("transport_info") @db.VarChar(255)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+model StudentEnrollment {
+  id            String    @id @default(uuid())
+  student       Student   @relation(fields: [studentId], references: [id])
+  studentId     String    @map("student_id")
+  schoolId      String    @map("school_id") // Redundant but useful for quick access
+  classId       String    @map("class_id") // From school-service
+  sectionId     String    @map("section_id") // From school-service
+  academicYear  String    @map("academic_year") @db.VarChar(20) // e.g. "2025-26"
+  rollNumber    String?   @map("roll_number") @db.VarChar(50) // Roll number for this class/section/year
+  isCurrent     Boolean   @default(false) @map("is_current") // True if active this year
+  fromDate      DateTime? @map("from_date")
+  toDate        DateTime? @map("to_date")
+  metaData      Json?     @map("meta_data")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  @@map("students")
+  @@unique([studentId, classId, sectionId, academicYear])
+  @@map("student_enrollments")
+}
+
+model Guardian {
+  id            String        @id @default(uuid())
+  firstName     String        @map("first_name") @db.VarChar(100)
+  lastName      String        @map("last_name") @db.VarChar(100)
+  phone         String?       @db.VarChar(20)
+  email         String?       @db.VarChar(255)
+  address       Json?
+  metaData      Json?         @map("meta_data")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  studentGuardians StudentGuardian[] // Opposite relation field
+
+  @@map("guardians")
+}
+
+model StudentGuardian {
+  id          String    @id @default(uuid())
+  student     Student   @relation(fields: [studentId], references: [id])
+  studentId   String    @map("student_id")
+  guardian    Guardian  @relation(fields: [guardianId], references: [id])
+  guardianId  String    @map("guardian_id")
+  relation    String?   @db.VarChar(50) // e.g., "Mother", "Father", "Uncle", "Guardian"
+  metaData    Json?     @map("meta_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([studentId, guardianId])
+  @@map("student_guardians")
+}
+
+model Teacher {
+  id              String         @id @default(uuid())
+  userId          String         @unique @map("user_id") // Reference to auth service user
+  schoolId        String         @map("school_id") // Reference to school-service school
+  employeeId      String         @map("employee_id") @db.VarChar(50) // Unique per school
+  firstName       String         @map("first_name") @db.VarChar(100)
+  lastName        String         @map("last_name") @db.VarChar(100)
+  gender          Gender?
+  bloodGroup      String?        @map("blood_group") @db.VarChar(10)
+  maritalStatus   MaritalStatus? @map("marital_status")
+  dateOfBirth     DateTime?      @map("date_of_birth")
+  category        String?        @db.VarChar(50) // e.g., "General"
+  religion        String?        @db.VarChar(50) // e.g., "Christianity"
+  qualifications  String?        @db.VarChar(255) // e.g., "M.Sc. Mathematics, B.Ed. from State University"
+  experienceYears Int?           @map("experience_years") // e.g., 8
+  joiningDate     DateTime?      @map("joining_date")
+  salary          Decimal?       @db.Decimal(10, 2) // Annual salary
+  address         Json?
+  subjectIds      String[]       @map("subject_ids") // List of subject IDs (external service)
+  metaData        Json?          @map("meta_data")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@unique([employeeId, schoolId])
+  @@map("teachers")
 }
 
 enum Gender {

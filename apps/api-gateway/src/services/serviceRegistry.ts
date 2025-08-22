@@ -49,11 +49,19 @@ class ServiceRegistry {
     this.services.set('school', {
       name: 'school-service',
       url: config.services.school.url,
-      path: '/api/v1/schools',
-      isProtected: true,
+      path: '/api/v1/school',
+      isProtected: false,
       routes: [
-        // Add specific route configurations if needed
-        // { path: '/public-info', method: 'GET', isProtected: false },
+        { path: '/create', method: 'POST', isProtected: true },
+        { path: '/get-by-id/:schoolId', method: 'GET', isProtected: true },
+        { path: '/update/:schoolId', method: 'PUT', isProtected: true },
+        { path: '/get-by-subdomain/:subdomain', method: 'GET', isProtected: false },
+        { path: '/activate/:schoolId', method: 'GET', isProtected: true },
+        { path: '/classes', method: 'POST', isProtected: true },
+        { path: '/sections', method: 'POST', isProtected: true },
+        { path: '/classes-sections/:schoolId', method: 'GET', isProtected: true },
+        { path: '/subjects/global', method: 'POST', isProtected: true },
+        { path: '/subjects', method: 'POST', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,

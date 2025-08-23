@@ -29,8 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuthStore } from '@/store/authStore';
-import { api } from '@/api/api';
-import toast from 'react-hot-toast';
+import { useClassesStore } from '@/store/classesStore';
 
 // Types for class data
 export interface ClassSection {
@@ -79,20 +78,18 @@ interface BackendApiResponse {
   totalBoys?: number;     // Optional - will be added later
   totalGirls?: number;    // Optional - will be added later
 }
+
 const ClassesPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2025-26');
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [backendStats, setBackendStats] = useState({ 
-    totalClasses: 'N/A' as number | 'N/A', 
-    totalSections: 'N/A' as number | 'N/A',
-    totalStudents: 'N/A' as number | 'N/A',
-    totalBoys: 'N/A' as number | 'N/A',
-    totalGirls: 'N/A' as number | 'N/A'
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+
+  // Use shared classes store
+  const classes = useClassesStore(state => state.classes);
+  const stats = useClassesStore(state => state.stats);
+  const isLoading = useClassesStore(state => state.isLoading);
+  const error = useClassesStore(state => state.error);
+  const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
+
   const { school } = useAuthStore();
 
   // Academic year options - you can modify this list as needed
@@ -104,63 +101,15 @@ const ClassesPage: React.FC = () => {
     { value: '2021-22', label: '2021-22' },
   ];
 
-  // Transform backend data to frontend format
-  const transformBackendData = (backendData: BackendApiResponse): SchoolClass[] => {
-    return backendData.classes.map(backendClass => ({
-      id: backendClass.id,
-      grade: backendClass.name,
-      displayName: backendClass.name,
-      sections: backendClass.sections.map(backendSection => ({
-        id: backendSection.id,
-        name: backendSection.name,
-        classTeacher: null, // Backend doesn't provide this yet
-        classTeacherId: null, // Backend doesn't provide this yet
-        totalStudents: null, // Backend doesn't provide this yet
-        totalBoys: null, // Backend doesn't provide this yet
-        totalGirls: null, // Backend doesn't provide this yet
-      }))
-    }));
-  };
-
-  // Fetch classes and sections from API
+  // Fetch classes and sections from the shared store
   useEffect(() => {
-    const fetchClassesAndSections = async () => {
-      if (!school?.id) {
-        setError('School information not available');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const response = await api.getClassesAndSections(school.id, selectedAcademicYear);
-        
-        if (response.success && response.data) {
-          const transformedData = transformBackendData(response.data);
-          setClasses(transformedData);
-          setBackendStats({
-            totalClasses: response.data.totalClasses || 'N/A',
-            totalSections: response.data.totalSections || 'N/A',
-            totalStudents: response.data.totalStudents || 'N/A',
-            totalBoys: response.data.totalBoys || 'N/A',
-            totalGirls: response.data.totalGirls || 'N/A'
-          });
-        } else {
-          setError(response.message || 'Failed to fetch classes and sections');
-        }
-      } catch (err) {
-        console.error('Error fetching classes:', err);
-        setError('Failed to load classes and sections');
-        toast.error('Failed to load classes and sections');
-      } finally {
-        setLoading(false);
-      }
+    const run = async () => {
+      if (!school?.id) return;
+      await fetchClassesAndSections(school.id, selectedAcademicYear);
     };
 
-    fetchClassesAndSections();
-  }, [school?.id, selectedAcademicYear]);
+    run();
+  }, [school?.id, selectedAcademicYear, fetchClassesAndSections]);
 
   // Handle class click
   const handleClassClick = (schoolClass: SchoolClass) => {
@@ -210,7 +159,7 @@ const ClassesPage: React.FC = () => {
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {isLoading && (
           <Card>
             <CardContent className="text-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
@@ -223,7 +172,7 @@ const ClassesPage: React.FC = () => {
         )}
 
         {/* Error State */}
-        {error && !loading && (
+        {error && !isLoading && (
           <Card>
             <CardContent className="text-center py-12">
               <BookOpen className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -242,7 +191,7 @@ const ClassesPage: React.FC = () => {
         )}
 
         {/* Content - only show when not loading and no error */}
-        {!loading && !error && (
+        {!isLoading && !error && (
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -252,7 +201,7 @@ const ClassesPage: React.FC = () => {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{backendStats.totalClasses}</div>
+                  <div className="text-2xl font-bold">{stats.totalClasses}</div>
                   <p className="text-xs text-muted-foreground">
                     Across all grades
                   </p>
@@ -265,7 +214,7 @@ const ClassesPage: React.FC = () => {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{backendStats.totalSections}</div>
+                  <div className="text-2xl font-bold">{stats.totalSections}</div>
                   <p className="text-xs text-muted-foreground">
                     Across all classes
                   </p>
@@ -278,7 +227,7 @@ const ClassesPage: React.FC = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{backendStats.totalStudents}</div>
+                  <div className="text-2xl font-bold">{stats.totalStudents}</div>
                   <p className="text-xs text-muted-foreground">
                     All enrolled students
                   </p>
@@ -291,10 +240,10 @@ const ClassesPage: React.FC = () => {
                   <UserCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{backendStats.totalBoys}</div>
+                  <div className="text-2xl font-bold">{stats.totalBoys}</div>
                   <p className="text-xs text-muted-foreground">
-                    {typeof backendStats.totalStudents === 'number' && typeof backendStats.totalBoys === 'number' 
-                      ? `${Math.round((backendStats.totalBoys / backendStats.totalStudents) * 100)}% of total`
+                    {typeof stats.totalStudents === 'number' && typeof stats.totalBoys === 'number' 
+                      ? `${Math.round((stats.totalBoys / stats.totalStudents) * 100)}% of total`
                       : 'Percentage of total'
                     }
                   </p>
@@ -307,16 +256,17 @@ const ClassesPage: React.FC = () => {
                   <UserCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{backendStats.totalGirls}</div>
+                  <div className="text-2xl font-bold">{stats.totalGirls}</div>
                   <p className="text-xs text-muted-foreground">
-                    {typeof backendStats.totalStudents === 'number' && typeof backendStats.totalGirls === 'number' 
-                      ? `${Math.round((backendStats.totalGirls / backendStats.totalStudents) * 100)}% of total`
+                    {typeof stats.totalStudents === 'number' && typeof stats.totalGirls === 'number' 
+                      ? `${Math.round((stats.totalGirls / stats.totalStudents) * 100)}% of total`
                       : 'Percentage of total'
                     }
                   </p>
                 </CardContent>
               </Card>
             </div>
+
 
             {/* Classes Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

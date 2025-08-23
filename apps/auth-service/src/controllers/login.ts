@@ -57,6 +57,8 @@ export async function login(req: Request, res: Response) {
     const { username, password } = validation.data;
     const { context, subdomain } = getSchoolContext(req);
 
+    // console.log(subdomain, context);
+
     const user = await fetchUserByUsernameAndContext(prisma, username, context, subdomain);
     if (!user) {
       res.status(401).json({

@@ -32,16 +32,6 @@ export async function getClassesAndSections(req: Request, res: Response): Promis
     const role = adminData?.role;    
     const { context } = getSchoolContext(req);
 
-    // Only admin can view classes and sections and only from platform context
-    if (context !== 'platform') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Classes and sections can only be accessed from platform context' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
     if (!adminId || role?.toLowerCase() !== 'admin') {
       res.status(403).json({
         success: false,

@@ -52,7 +52,7 @@ const config: Config = {
     url: process.env.PROFILE_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/profile_db',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
   },
   services: {
     school: {

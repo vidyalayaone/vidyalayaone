@@ -215,14 +215,19 @@ export const api = {
     }
   },
 
-  // Students endpoints
-   getStudents: async (params?: PaginationParams): Promise<APIResponse<PaginatedResponse<User>>> => {
+  // Profile service: get all students for a school (admin only)
+  getStudentsBySchool: async (schoolId: string, options?: { academicYear?: string; category?: string; classId?: string; sectionId?: string }) : Promise<APIResponse> => {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.limit) queryParams.append('limit', params.limit.toString()); // Fix: Remove the extra .limit      
-      const response = await httpClient.get(`/users/students?${queryParams.toString()}`);
-      return handleResponse<PaginatedResponse<User>>(response);
+      if (options?.academicYear) queryParams.append('academicYear', options.academicYear);
+      if (options?.category) queryParams.append('category', options.category);
+      if (options?.classId) queryParams.append('classId', options.classId);
+      if (options?.sectionId) queryParams.append('sectionId', options.sectionId);
+
+      const queryString = queryParams.toString();
+      const url = `/profile/schools/${schoolId}/students${queryString ? `?${queryString}` : ''}`;
+      const response = await httpClient.get(url);
+      return handleResponse(response);
     } catch (error) {
       return handleError(error);
     }
@@ -245,5 +250,5 @@ export const {
   getClasses,
   getClassesAndSections,
   getTeachers,
-  getStudents
+  getStudentsBySchool
 } = api;

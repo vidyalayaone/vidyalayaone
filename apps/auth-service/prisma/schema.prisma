@@ -10,12 +10,10 @@ datasource db {
 
 model User {
   id                String    @id @default(uuid())
-  username          String    @unique @db.VarChar(50) // Now globally unique
-  email             String?   @db.VarChar(255) // Non-unique, nullable
-  phone             String?   @db.VarChar(20) // Non-unique, nullable
+  username          String    @unique @db.VarChar(50) // Globally unique
+  email             String?   @db.VarChar(255)        // Non-unique, nullable
+  phone             String?   @db.VarChar(20)         // Non-unique, nullable
   passwordHash      String    @map("password_hash") @db.VarChar(255)
-  subdomain         String?   @map("subdomain")
-  role              Role
   isActive          Boolean   @default(true) @map("is_active")
   isPhoneVerified   Boolean   @default(false) @map("is_phone_verified")
   isEmailVerified   Boolean   @default(false) @map("is_email_verified")
@@ -29,14 +27,32 @@ model User {
   // Relations
   refreshTokens     RefreshToken[]
   otps              Otp[]
+  role              Role?       @relation(fields: [roleId], references: [id])
+  roleId            String?
+  schoolId          String?     @map("school_id") // belongs to a school
 
   @@map("users")
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(50) // e.g., "Super Admin", "Exam Manager"
+  description String?   @db.Text
+  permissions String[]  @db.Text        // List of permissions can be imported from the common-utils package
+  schoolId    String    @map("school_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  users       User[]
+
+  @@map("roles")
 }
 
 model Otp {
   id        String     @id @default(uuid())
   userId    String     @map("user_id")
-  otp       String     @db.VarChar(6) // Renamed from 'value' to match plan
+  otp       String     @db.VarChar(6) // 6 digit OTP
   purpose   OtpPurpose
   isUsed    Boolean    @default(false) @map("is_used")
   expiresAt DateTime   @map("expires_at")
@@ -50,7 +66,7 @@ model Otp {
 model RefreshToken {
   id         String      @id @default(uuid())
   userId     String      @map("user_id")
-  token      String      @unique @db.Text // Renamed from 'value' to match plan
+  token      String      @unique @db.Text
   expiresAt  DateTime    @map("expires_at")
   isRevoked  Boolean     @default(false) @map("is_revoked")
   ipAddress  String?     @map("ip_address") @db.VarChar(45)
@@ -65,12 +81,6 @@ model RefreshToken {
 }
 
 // Enums
-enum Role {
-  ADMIN
-  TEACHER
-  STUDENT
-}
-
 enum DeviceType {
   desktop
   mobile

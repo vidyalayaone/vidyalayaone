@@ -214,7 +214,7 @@ export const useAuthStore = create<AuthState>()(
         
         if (response.success && response.data) {
 
-          console.log(response.data);
+          // console.log(response.data);
           set({
             isLoading: false,
             resetFlow: {
@@ -301,7 +301,7 @@ export const useAuthStore = create<AuthState>()(
       try {
         const response = await api.getMe();
 
-        console.log('Fetched user:', response);
+        // console.log('Fetched user:', response);
         
         if (response.success && response.data) {
           set({ user: response.data.user });
@@ -345,7 +345,7 @@ export const useAuthStore = create<AuthState>()(
       //   }
       // }
 
-      console.log(accessToken);
+      // console.log(accessToken);
 
       if (accessToken) {
         // If access token exists, fetch user data

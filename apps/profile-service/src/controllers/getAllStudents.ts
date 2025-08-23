@@ -176,6 +176,7 @@ export async function getAllStudents(req: Request, res: Response) {
         firstName: true,
         lastName: true,
         profilePhoto: true,
+        admissionDate: true,
         enrollments: {
           where: {
             isCurrent: true,
@@ -188,7 +189,7 @@ export async function getAllStudents(req: Request, res: Response) {
             classId: true,
             sectionId: true,
             rollNumber: true,
-            academicYear: true
+            academicYear: true,
           }
         }
       },
@@ -297,6 +298,8 @@ export async function getAllStudents(req: Request, res: Response) {
         firstName: student.firstName,
         lastName: student.lastName,
         profilePhoto: student.profilePhoto,
+        admissionDate: student.admissionDate,
+        isactive: true,
         currentClass: className,
         currentSection: sectionName,
         rollNumber: currentEnrollment?.rollNumber || null,

@@ -72,6 +72,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+import { api } from '@/api/api'; // <-- add API import to fetch real students
+import { useAuthStore } from '@/store/authStore';
+import { useClassesStore } from '@/store/classesStore';
+
 // Student type with enhanced fields
 type EnhancedStudent = {
   id: string;
@@ -88,7 +92,7 @@ type EnhancedStudent = {
   updatedAt: string;
   studentId: string;
   rollNo: string;
-  enrollmentDate: string;
+  admissionDate: string;
   currentClass: {
     id: string;
     grade: string;
@@ -131,577 +135,6 @@ type EnhancedStudent = {
   };
 };
 
-// Mock data
-const mockStudents: EnhancedStudent[] = [
-  {
-    id: '1',
-    username: 'emma.johnson',
-    email: 'emma.johnson@example.com',
-    firstName: 'Emma',
-    lastName: 'Johnson',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0201',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-01-15T08:00:00Z',
-    updatedAt: '2024-01-15T08:00:00Z',
-    studentId: 'STU001',
-    rollNo: '10A01',
-    enrollmentDate: '2024-01-15',
-    currentClass: {
-      id: 'class-10a',
-      grade: '10',
-      section: 'A',
-      className: 'Grade 10 Section A',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Michael Johnson',
-      fatherPhone: '+1-555-0202',
-      fatherEmail: 'michael.johnson@example.com',
-      fatherOccupation: 'Software Engineer',
-      motherName: 'Sarah Johnson',
-      motherPhone: '+1-555-0203',
-      motherEmail: 'sarah.johnson@example.com',
-      motherOccupation: 'Teacher'
-    },
-    address: {
-      street: '123 Oak Street',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62701',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Michael Johnson',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0202',
-      email: 'michael.johnson@example.com'
-    },
-    dateOfBirth: '2009-03-15',
-    gender: 'FEMALE',
-    bloodGroup: 'O+',
-    feeStatus: {
-      totalFee: 5000,
-      paidAmount: 3000,
-      pendingAmount: 2000,
-      dueDate: '2024-12-31',
-      status: 'PARTIAL'
-    }
-  },
-  {
-    id: '2',
-    username: 'alex.chen',
-    email: 'alex.chen@example.com',
-    firstName: 'Alex',
-    lastName: 'Chen',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0301',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-01-20T08:00:00Z',
-    updatedAt: '2024-01-20T08:00:00Z',
-    studentId: 'STU002',
-    rollNo: '10B01',
-    enrollmentDate: '2024-01-20',
-    currentClass: {
-      id: 'class-10b',
-      grade: '10',
-      section: 'B',
-      className: 'Grade 10 Section B',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'David Chen',
-      fatherPhone: '+1-555-0302',
-      fatherEmail: 'david.chen@example.com',
-      fatherOccupation: 'Doctor',
-      motherName: 'Linda Chen',
-      motherPhone: '+1-555-0303',
-      motherEmail: 'linda.chen@example.com',
-      motherOccupation: 'Nurse'
-    },
-    address: {
-      street: '456 Pine Avenue',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62702',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'David Chen',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0302',
-      email: 'david.chen@example.com'
-    },
-    dateOfBirth: '2009-07-22',
-    gender: 'MALE',
-    bloodGroup: 'A+',
-    feeStatus: {
-      totalFee: 5000,
-      paidAmount: 5000,
-      pendingAmount: 0,
-      status: 'PAID'
-    }
-  },
-  {
-    id: '3',
-    username: 'sophia.martinez',
-    email: 'sophia.martinez@example.com',
-    firstName: 'Sophia',
-    lastName: 'Martinez',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0401',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-08-01T08:00:00Z',
-    updatedAt: '2024-08-01T08:00:00Z',
-    studentId: 'STU003',
-    rollNo: '9A01',
-    enrollmentDate: '2024-08-01',
-    currentClass: {
-      id: 'class-9a',
-      grade: '9',
-      section: 'A',
-      className: 'Grade 9 Section A',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Carlos Martinez',
-      fatherPhone: '+1-555-0402',
-      fatherEmail: 'carlos.martinez@example.com',
-      fatherOccupation: 'Business Owner',
-      motherName: 'Maria Martinez',
-      motherPhone: '+1-555-0403',
-      motherEmail: 'maria.martinez@example.com',
-      motherOccupation: 'Accountant'
-    },
-    address: {
-      street: '789 Elm Street',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62703',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Carlos Martinez',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0402',
-      email: 'carlos.martinez@example.com'
-    },
-    dateOfBirth: '2010-11-08',
-    gender: 'FEMALE',
-    bloodGroup: 'B+',
-    feeStatus: {
-      totalFee: 4500,
-      paidAmount: 2000,
-      pendingAmount: 2500,
-      dueDate: '2024-11-30',
-      status: 'PENDING'
-    }
-  },
-  {
-    id: '4',
-    username: 'ryan.williams',
-    email: 'ryan.williams@example.com',
-    firstName: 'Ryan',
-    lastName: 'Williams',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0501',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-08-05T08:00:00Z',
-    updatedAt: '2024-08-05T08:00:00Z',
-    studentId: 'STU004',
-    rollNo: '11A01',
-    enrollmentDate: '2024-08-05',
-    currentClass: {
-      id: 'class-11a',
-      grade: '11',
-      section: 'A',
-      className: 'Grade 11 Section A',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'James Williams',
-      fatherPhone: '+1-555-0502',
-      fatherEmail: 'james.williams@example.com',
-      fatherOccupation: 'Engineer',
-      motherName: 'Jennifer Williams',
-      motherPhone: '+1-555-0503',
-      motherEmail: 'jennifer.williams@example.com',
-      motherOccupation: 'Lawyer'
-    },
-    address: {
-      street: '321 Maple Drive',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62704',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'James Williams',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0502',
-      email: 'james.williams@example.com'
-    },
-    dateOfBirth: '2008-04-12',
-    gender: 'MALE',
-    bloodGroup: 'AB+',
-    feeStatus: {
-      totalFee: 5500,
-      paidAmount: 1000,
-      pendingAmount: 4500,
-      dueDate: '2024-10-15',
-      status: 'OVERDUE'
-    }
-  },
-  {
-    id: '5',
-    username: 'maya.patel',
-    email: 'maya.patel@example.com',
-    firstName: 'Maya',
-    lastName: 'Patel',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0601',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-07-20T08:00:00Z',
-    updatedAt: '2024-07-20T08:00:00Z',
-    studentId: 'STU005',
-    rollNo: '12A01',
-    enrollmentDate: '2024-07-20',
-    currentClass: {
-      id: 'class-12a',
-      grade: '12',
-      section: 'A',
-      className: 'Grade 12 Section A',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Raj Patel',
-      fatherPhone: '+1-555-0602',
-      fatherEmail: 'raj.patel@example.com',
-      fatherOccupation: 'Doctor',
-      motherName: 'Priya Patel',
-      motherPhone: '+1-555-0603',
-      motherEmail: 'priya.patel@example.com',
-      motherOccupation: 'Professor'
-    },
-    address: {
-      street: '654 Cedar Lane',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62705',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Raj Patel',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0602',
-      email: 'raj.patel@example.com'
-    },
-    dateOfBirth: '2007-09-30',
-    gender: 'FEMALE',
-    bloodGroup: 'O-',
-    feeStatus: {
-      totalFee: 6000,
-      paidAmount: 6000,
-      pendingAmount: 0,
-      status: 'PAID'
-    }
-  },
-  {
-    id: '6',
-    username: 'liam.chen',
-    email: 'liam.chen@example.com',
-    firstName: 'Liam',
-    lastName: 'Chen',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0701',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-08-10T08:00:00Z',
-    updatedAt: '2024-08-10T08:00:00Z',
-    studentId: 'STU006',
-    rollNo: '10A02',
-    enrollmentDate: '2024-08-10',
-    currentClass: {
-      id: 'class-10a',
-      grade: '10',
-      section: 'A',
-      className: 'Grade 10 Section A',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Kevin Chen',
-      fatherPhone: '+1-555-0702',
-      fatherEmail: 'kevin.chen@example.com',
-      fatherOccupation: 'Manager',
-      motherName: 'Lisa Chen',
-      motherPhone: '+1-555-0703',
-      motherEmail: 'lisa.chen@example.com',
-      motherOccupation: 'Designer'
-    },
-    address: {
-      street: '789 Oak Ave',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62706',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Kevin Chen',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0702',
-      email: 'kevin.chen@example.com'
-    },
-    dateOfBirth: '2009-02-14',
-    gender: 'MALE',
-    bloodGroup: 'A+',
-    feeStatus: {
-      totalFee: 5000,
-      paidAmount: 2500,
-      pendingAmount: 2500,
-      dueDate: '2024-12-01',
-      status: 'PARTIAL'
-    }
-  },
-  {
-    id: '7',
-    username: 'olivia.brown',
-    email: 'olivia.brown@example.com',
-    firstName: 'Olivia',
-    lastName: 'Brown',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0801',
-    schoolId: 'school-1',
-    isActive: false,
-    createdAt: '2024-03-10T08:00:00Z',
-    updatedAt: '2024-03-10T08:00:00Z',
-    studentId: 'STU007',
-    rollNo: '9B01',
-    enrollmentDate: '2024-03-10',
-    currentClass: {
-      id: 'class-9b',
-      grade: '9',
-      section: 'B',
-      className: 'Grade 9 Section B',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Mark Brown',
-      fatherPhone: '+1-555-0802',
-      fatherEmail: 'mark.brown@example.com',
-      fatherOccupation: 'Architect',
-      motherName: 'Susan Brown',
-      motherPhone: '+1-555-0803',
-      motherEmail: 'susan.brown@example.com',
-      motherOccupation: 'Nurse'
-    },
-    address: {
-      street: '456 Pine St',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62707',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Mark Brown',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0802',
-      email: 'mark.brown@example.com'
-    },
-    dateOfBirth: '2010-06-25',
-    gender: 'FEMALE',
-    bloodGroup: 'B+',
-    feeStatus: {
-      totalFee: 4500,
-      paidAmount: 0,
-      pendingAmount: 4500,
-      dueDate: '2024-09-01',
-      status: 'OVERDUE'
-    }
-  },
-  {
-    id: '8',
-    username: 'noah.garcia',
-    email: 'noah.garcia@example.com',
-    firstName: 'Noah',
-    lastName: 'Garcia',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0901',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-08-15T08:00:00Z',
-    updatedAt: '2024-08-15T08:00:00Z',
-    studentId: 'STU008',
-    rollNo: '11B01',
-    enrollmentDate: '2024-08-15',
-    currentClass: {
-      id: 'class-11b',
-      grade: '11',
-      section: 'B',
-      className: 'Grade 11 Section B',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Miguel Garcia',
-      fatherPhone: '+1-555-0902',
-      fatherEmail: 'miguel.garcia@example.com',
-      fatherOccupation: 'Chef',
-      motherName: 'Rosa Garcia',
-      motherPhone: '+1-555-0903',
-      motherEmail: 'rosa.garcia@example.com',
-      motherOccupation: 'Administrator'
-    },
-    address: {
-      street: '987 Sunset Blvd',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62708',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Miguel Garcia',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0902',
-      email: 'miguel.garcia@example.com'
-    },
-    dateOfBirth: '2008-08-10',
-    gender: 'MALE',
-    bloodGroup: 'O+',
-    feeStatus: {
-      totalFee: 5500,
-      paidAmount: 5500,
-      pendingAmount: 0,
-      status: 'PAID'
-    }
-  },
-  {
-    id: '9',
-    username: 'isabella.taylor',
-    email: 'isabella.taylor@example.com',
-    firstName: 'Isabella',
-    lastName: 'Taylor',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-1001',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-07-25T08:00:00Z',
-    updatedAt: '2024-07-25T08:00:00Z',
-    studentId: 'STU009',
-    rollNo: '12B01',
-    enrollmentDate: '2024-07-25',
-    currentClass: {
-      id: 'class-12b',
-      grade: '12',
-      section: 'B',
-      className: 'Grade 12 Section B',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'Robert Taylor',
-      fatherPhone: '+1-555-1002',
-      fatherEmail: 'robert.taylor@example.com',
-      fatherOccupation: 'Lawyer',
-      motherName: 'Jessica Taylor',
-      motherPhone: '+1-555-1003',
-      motherEmail: 'jessica.taylor@example.com',
-      motherOccupation: 'Marketing Manager'
-    },
-    address: {
-      street: '555 Broadway St',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62709',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Robert Taylor',
-      relationship: 'Father',
-      phoneNumber: '+1-555-1002',
-      email: 'robert.taylor@example.com'
-    },
-    dateOfBirth: '2007-01-20',
-    gender: 'FEMALE',
-    bloodGroup: 'A-',
-    feeStatus: {
-      totalFee: 6000,
-      paidAmount: 3000,
-      pendingAmount: 3000,
-      dueDate: '2024-12-15',
-      status: 'PARTIAL'
-    }
-  },
-  {
-    id: '10',
-    username: 'ethan.davis',
-    email: 'ethan.davis@example.com',
-    firstName: 'Ethan',
-    lastName: 'Davis',
-    role: 'STUDENT',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-1101',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-08-12T08:00:00Z',
-    updatedAt: '2024-08-12T08:00:00Z',
-    studentId: 'STU010',
-    rollNo: '9C01',
-    enrollmentDate: '2024-08-12',
-    currentClass: {
-      id: 'class-9c',
-      grade: '9',
-      section: 'C',
-      className: 'Grade 9 Section C',
-      academicYear: '2024-25'
-    },
-    parentGuardian: {
-      fatherName: 'William Davis',
-      fatherPhone: '+1-555-1102',
-      fatherEmail: 'william.davis@example.com',
-      fatherOccupation: 'Electrician',
-      motherName: 'Amanda Davis',
-      motherPhone: '+1-555-1103',
-      motherEmail: 'amanda.davis@example.com',
-      motherOccupation: 'Teacher'
-    },
-    address: {
-      street: '333 River Road',
-      city: 'Springfield',
-      state: 'IL',
-      postalCode: '62710',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'William Davis',
-      relationship: 'Father',
-      phoneNumber: '+1-555-1102',
-      email: 'william.davis@example.com'
-    },
-    dateOfBirth: '2010-04-03',
-    gender: 'MALE',
-    bloodGroup: 'B-',
-    feeStatus: {
-      totalFee: 4500,
-      paidAmount: 1500,
-      pendingAmount: 3000,
-      dueDate: '2024-11-01',
-      status: 'PENDING'
-    }
-  }
-];
-
 // Sort types
 type SortField = 'name' | 'rollNo' | 'admissionDate' | 'feeStatus';
 type SortOrder = 'asc' | 'desc';
@@ -716,24 +149,125 @@ const StudentsPage: React.FC = () => {
   const [feeStatusFilter, setFeeStatusFilter] = useState<string>('all');
   const [quickFilter, setQuickFilter] = useState<string>('all');
 
+  // Students data fetched from backend (start with mock as fallback until fetch completes)
+  const [students, setStudents] = useState<EnhancedStudent[]>([]);
+  const [isFetchingStudents, setIsFetchingStudents] = useState<boolean>(false);
+  const [fetchStudentsError, setFetchStudentsError] = useState<string | null>(null);
+
+  const { school } = useAuthStore();
+  // Classes store (used for filter dropdowns)
+  const classesFromStore = useClassesStore(state => state.classes);
+  const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
+  const classesStoreLoading = useClassesStore(state => state.isLoading);
+
+  // Ensure classes are loaded for current school & academic year (used by filters)
+  React.useEffect(() => {
+    if (!school?.id) return;
+    // fire-and-forget; store will cache and avoid duplicate network calls
+    fetchClassesAndSections(school.id, '2025-26').catch(console.error);
+  }, [school?.id, fetchClassesAndSections]);
+
+  React.useEffect(() => {
+    const fetchStudents = async () => {
+      if (!school?.id) return;
+
+      setIsFetchingStudents(true);
+      setFetchStudentsError(null);
+
+      try {
+        const response = await api.getStudentsBySchool(school.id, { academicYear: '2025-26' });
+
+        if (response.success && response.data) {
+          const payload = response.data as any;
+          const users = Array.isArray(payload.students) ? payload.students : (payload.data || []);
+
+          const mapped: EnhancedStudent[] = (users || []).map((u: any) => ({
+            id: u.id,
+            username: u.userId || u.admissionNumber || '',
+            email: u.email || '',
+            firstName: u.firstName || '',
+            lastName: u.lastName || '',
+            role: 'STUDENT',
+            avatar: u.profilePhoto || '/placeholder.svg',
+            phoneNumber: '',
+            schoolId: response.data.schoolId || school.id,
+            isActive: u.isActive || true,
+            createdAt: '',
+            updatedAt: '',
+            studentId: u.admissionNumber || '',
+            rollNo: u.rollNumber || u.rollNumber || '',
+            admissionDate: u.admissionDate || '',
+            currentClass: {
+              id: u.classId || '',
+              grade: u.currentClass || 'N/A',
+              section: u.currentSection || 'N/A',
+              className: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
+              academicYear: u.academicYear || '2025-26'
+            },
+            parentGuardian: {
+              fatherName: '', fatherPhone: '', fatherEmail: '', fatherOccupation: '',
+              motherName: '', motherPhone: '', motherEmail: '', motherOccupation: ''
+            },
+            address: { street: '', city: '', state: '', postalCode: '', country: '' },
+            emergencyContact: { name: '', relationship: '', phoneNumber: '', email: '' },
+            dateOfBirth: '',
+            gender: 'OTHER',
+            bloodGroup: '',
+            feeStatus: { totalFee: 0, paidAmount: 0, pendingAmount: 0, status: 'N/A' }
+          }));
+
+          setStudents(mapped.length > 0 ? mapped : []);
+        } else {
+          setFetchStudentsError(response.message || 'Failed to fetch students');
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setFetchStudentsError('Failed to load students');
+      } finally {
+        setIsFetchingStudents(false);
+      }
+    };
+
+    fetchStudents();
+  }, [school?.id]);
+
   // Helper function to get available classes
   const availableClasses = useMemo(() => {
-    const classes = [...new Set(mockStudents.map(student => student.currentClass.grade))].sort();
+    // Prefer classes from the centralized classes store when available
+    if (classesFromStore && classesFromStore.length > 0) {
+      return classesFromStore.map(c => c.grade).sort();
+    }
+
+    // Fallback to inferring from fetched students
+    const classes = [...new Set(students.map(student => student.currentClass.grade))].sort();
     return classes;
-  }, []);
+  }, [classesFromStore, students]);
 
   // Helper function to get available sections for selected class
   const availableSections = useMemo(() => {
+    // If classes store is populated, use it to derive sections (more accurate)
+    if (classesFromStore && classesFromStore.length > 0) {
+      if (classFilter === 'all') {
+        const all = classesFromStore.flatMap(c => c.sections.map(s => s.name));
+        return [...new Set(all)].sort();
+      }
+
+      const cls = classesFromStore.find(c => c.grade === classFilter || c.displayName === classFilter || c.id === classFilter);
+      if (cls) return cls.sections.map(s => s.name).sort();
+      return [];
+    }
+
+    // Fallback to inferring from fetched students
     if (classFilter === 'all') {
-      return [...new Set(mockStudents.map(student => student.currentClass.section))].sort();
+      return [...new Set(students.map(student => student.currentClass.section))].sort();
     }
     const sections = [...new Set(
-      mockStudents
+      students
         .filter(student => student.currentClass.grade === classFilter)
         .map(student => student.currentClass.section)
     )].sort();
     return sections;
-  }, [classFilter]);
+  }, [classesFromStore, classFilter, students]);
 
   // Reset section filter when class changes
   React.useEffect(() => {
@@ -783,21 +317,21 @@ const StudentsPage: React.FC = () => {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const totalStudents = mockStudents.length;
-    const activeStudents = mockStudents.filter(s => s.isActive).length;
+    const totalStudents = students.length;
+    const activeStudents = students.filter(s => s.isActive).length;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const newAdmissions = mockStudents.filter(s => {
-      const admissionDate = new Date(s.enrollmentDate);
+    const newAdmissions = students.filter(s => {
+      const admissionDate = new Date(s.admissionDate);
       return admissionDate >= thirtyDaysAgo;
     }).length;
 
     return { totalStudents, activeStudents, newAdmissions };
-  }, []);
+  }, [students]);
 
   // Filter and sort students
   const filteredAndSortedStudents = useMemo(() => {
-    let filtered = mockStudents.filter(student => {
+    let filtered = students.filter(student => {
       // Search filter
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
@@ -844,13 +378,13 @@ const StudentsPage: React.FC = () => {
           bValue = b.rollNo;
           break;
         case 'admissionDate':
-          aValue = new Date(a.enrollmentDate);
-          bValue = new Date(b.enrollmentDate);
+          aValue = new Date(a.admissionDate);
+          bValue = new Date(b.admissionDate);
           break;
         case 'feeStatus':
           const statusOrder = { 'OVERDUE': 0, 'PENDING': 1, 'PARTIAL': 2, 'PAID': 3 };
-          aValue = statusOrder[a.feeStatus.status];
-          bValue = statusOrder[b.feeStatus.status];
+          aValue = statusOrder[a.feeStatus.status as keyof typeof statusOrder] ?? 99;
+          bValue = statusOrder[b.feeStatus.status as keyof typeof statusOrder] ?? 99;
           break;
         default:
           return 0;
@@ -862,7 +396,7 @@ const StudentsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
+  }, [students, searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedStudents.length / studentsPerPage);
@@ -930,12 +464,6 @@ const StudentsPage: React.FC = () => {
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
-  };
-
-  const handleQuickFilter = (filter: string) => {
-    setQuickFilter(filter);
-    setClassFilter('all');
-    setFeeStatusFilter('all');
   };
 
   // Update bulk actions visibility
@@ -1029,7 +557,7 @@ const StudentsPage: React.FC = () => {
         </div>
 
         {/* Quick Filter Chips */}
-        <div className="flex flex-wrap gap-2">
+        {/* <div className="flex flex-wrap gap-2">
           <Button
             variant={quickFilter === 'all' ? 'default' : 'outline'}
             size="sm"
@@ -1065,7 +593,7 @@ const StudentsPage: React.FC = () => {
               Class {grade}
             </Button>
           ))}
-        </div>
+        </div> */}
 
         {/* Search and Filters */}
         <Card>
@@ -1075,7 +603,7 @@ const StudentsPage: React.FC = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Search by name, email, student ID, or roll number..."
+                    placeholder="Search by name, email, admission number, or roll number..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -1241,9 +769,8 @@ const StudentsPage: React.FC = () => {
                         <ArrowUpDown className="h-4 w-4" />
                       </div>
                     </TableHead>
-                    <TableHead>Student ID</TableHead>
+                    <TableHead>Admission Number</TableHead>
                     <TableHead>Class & Section</TableHead>
-                    <TableHead>Contact</TableHead>
                     <TableHead 
                       className="cursor-pointer"
                       onClick={() => handleSort('feeStatus')}
@@ -1314,18 +841,6 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="flex items-center text-sm">
-                            <Phone className="mr-1 h-3 w-3" />
-                            <span>{student.phoneNumber}</span>
-                          </div>
-                          <div className="flex items-center text-sm">
-                            <Mail className="mr-1 h-3 w-3" />
-                            <span>{student.email}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
                           {getFeeStatusBadge(student.feeStatus.status)}
                           {student.feeStatus.pendingAmount > 0 && (
                             <div className="text-sm text-muted-foreground">
@@ -1336,7 +851,8 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {new Date(student.enrollmentDate).toLocaleDateString()}
+                          {/* {new Date(student.admissionDate).toLocaleDateString()} */}
+                          {student.admissionDate}
                         </div>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>

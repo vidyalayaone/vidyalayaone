@@ -58,6 +58,9 @@ import SubstituteTeacherPage from './pages/substitute-teacher/SubstituteTeacherP
 // Academic Calendar Pages
 import AcademicCalendarPage from './pages/academic-calendar/AcademicCalendarPage';
 
+// Fees Pages
+import FeesPage from './pages/fees/FeesPage';
+
 // Route Guards
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
@@ -204,6 +207,14 @@ const App: React.FC = () => {
             />
             <Route
               path="/students/:id"
+              element={
+                <ProtectedRoute>
+                  <StudentDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/students/:id/fees"
               element={
                 <ProtectedRoute>
                   <StudentDetailPage />
@@ -367,6 +378,16 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <AcademicCalendarPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Fees Routes - Admin only */}
+            <Route
+              path="/fees"
+              element={
+                <ProtectedRoute>
+                  <FeesPage />
                 </ProtectedRoute>
               }
             />

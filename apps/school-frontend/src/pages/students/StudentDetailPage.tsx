@@ -1,7 +1,7 @@
 // Student detail view page
 
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
   Edit, 
   Trash2, 
@@ -52,64 +52,85 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import StudentFeesTab from '@/components/students/StudentFeesTab';
+import { studentsAPI, type Student } from '@/api/mockStudentsAPI';
+import toast from 'react-hot-toast';
 
 // Mock student data according to the new JSON shape
-const mockStudent = {
-  id: "STU123",
-  rollNo: "23",
-  name: "John Doe",
-  class: "6",
-  section: "A",
-  admissionDate: "2022-04-10",
-  email: "john@example.com",
-  phone: "+91-9876543210",
-  address: "123 Main Street, City",
-  status: "Active",
-  feeStatus: "Pending",
-  avatar: "/placeholder.svg",
-  parentGuardian: {
-    fatherName: 'Mike Doe',
-    fatherPhone: '+91-9876500001',
-    fatherEmail: 'mike.doe@example.com',
-    fatherOccupation: 'Engineer',
-    motherName: 'Jane Doe',
-    motherPhone: '+91-9876500000',
-    motherEmail: 'jane.doe@example.com',
-    motherOccupation: 'Teacher'
-  },
-  transport: { route: 'Bus 5', pickup: 'Station Road' },
-  documents: [
-    { id: 1, name: "Birth Certificate", url: "#" },
-    { id: 2, name: "Previous School TC", url: "#" },
-    { id: 3, name: "Address Proof", url: "#" }
-  ],
-  fees: {
-    structure: "Annual: 40,000 INR",
-    nextDue: "2025-09-10",
-    totalAmount: 40000,
-    paidAmount: 30000,
-    pendingAmount: 10000,
-    history: [
-      { date: "2025-04-10", amount: 10000, status: "Paid", method: "Online" },
-      { date: "2025-06-10", amount: 10000, status: "Paid", method: "Cash" },
-      { date: "2025-08-10", amount: 10000, status: "Paid", method: "Bank Transfer" }
-    ]
-  },
-  activity: [
-    { date: "2025-08-10", event: "Fee paid" },
-    { date: "2025-08-15", event: "Document uploaded" },
-    { date: "2025-08-18", event: "Attendance marked" }
-  ]
-};
+// This is now replaced by API call
 
 const StudentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // In a real app, you would fetch the student data based on the ID
-  const student = mockStudent;
+  // Check if we came from fees page and should open fees tab
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    // Check if URL path ends with /fees
+    if (location.pathname.endsWith('/fees')) {
+      setActiveTab('fees');
+    }
+  }, [location]);
+
+  // Fetch student data based on ID
+  useEffect(() => {
+    const fetchStudent = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      try {
+        const studentData = await studentsAPI.getStudentById(id);
+        if (studentData) {
+          setStudent(studentData);
+        } else {
+          toast.error('Student not found');
+          navigate('/students');
+        }
+      } catch (error) {
+        toast.error('Failed to load student data');
+        navigate('/students');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudent();
+  }, [id, navigate]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading student details...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!student) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-muted-foreground">Student not found</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const handleDeactivateStudent = () => {
     console.log('Deactivating student:', id);
@@ -239,7 +260,7 @@ const StudentDetailPage: React.FC = () => {
         </Card>
 
         {/* Tab Navigation */}
-        <Tabs defaultValue="basic" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="basic">Basic Information</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -428,78 +449,7 @@ const StudentDetailPage: React.FC = () => {
 
           {/* Fees Tab */}
           <TabsContent value="fees" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <DollarSign className="mr-2 h-5 w-5" />
-                    Fee Status
-                  </div>
-                  <Button size="sm" onClick={handleMarkAsPaid}>
-                    Mark as Paid
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Fee Structure</p>
-                    <p className="text-lg font-bold">{student.fees.structure}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Paid Amount</p>
-                    <p className="text-lg font-bold text-green-600">₹{student.fees.paidAmount}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pending Amount</p>
-                    <p className="text-lg font-bold text-red-600">₹{student.fees.pendingAmount}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Status</p>
-                    <div className="mt-1">{getFeeStatusBadge()}</div>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Next Due Date</p>
-                  <p>{new Date(student.fees.nextDue).toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {student.fees.history.map((transaction, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                        <TableCell className="font-medium">₹{transaction.amount}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{transaction.method}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="default" className="bg-green-100 text-green-800">
-                            {transaction.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <StudentFeesTab studentId={student.id} />
           </TabsContent>
 
           {/* Attendance Tab */}

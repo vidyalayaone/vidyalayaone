@@ -5,6 +5,11 @@ dotenv.config({
   path: path.resolve(__dirname, '../../.env')
 });
 
+interface ServiceConfig {
+  url: string;
+  timeout: number;
+}
+
 interface Config {
   server: {
     port: number;
@@ -17,7 +22,25 @@ interface Config {
   cors: {
     origin: string;
   };
+  services: {
+    school: ServiceConfig;
+  };
 }
+
+// Determine the environment and appropriate service URLs
+const getSchoolServiceUrl = (): string => {
+  // If SCHOOL_SERVICE_URL is explicitly set, use it
+  if (process.env.SCHOOL_SERVICE_URL) {
+    return process.env.SCHOOL_SERVICE_URL;
+  }
+  
+  // Check if running in Docker environment
+  // In Docker, hostname is usually the container ID, not localhost
+  const isDockerEnvironment = process.env.DATABASE_URL?.includes('@postgres:') || 
+                             process.env.HOSTNAME !== 'localhost';
+  
+  return isDockerEnvironment ? 'http://school-service:3002' : 'http://localhost:3002';
+};
 
 const config: Config = {
   server: {
@@ -30,6 +53,12 @@ const config: Config = {
   },
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  },
+  services: {
+    school: {
+      url: getSchoolServiceUrl(),
+      timeout: parseInt(process.env.SCHOOL_SERVICE_TIMEOUT || '30000', 10),
+    },
   },
 };
 

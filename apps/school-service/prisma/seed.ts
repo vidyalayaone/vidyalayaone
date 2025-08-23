@@ -49,7 +49,7 @@ async function main() {
     'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'
   ];
   
-  const academicYear = '2024-25';
+  const academicYear = '2025-26';
   const createdClasses: { id: string; name: string; schoolId: string; academicYear: string }[] = [];
 
   for (const className of classNames) {

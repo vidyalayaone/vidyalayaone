@@ -60,6 +60,7 @@ class ServiceRegistry {
         { path: '/classes', method: 'POST', isProtected: true },
         { path: '/sections', method: 'POST', isProtected: true },
         { path: '/classes-sections/:schoolId', method: 'GET', isProtected: true },
+        { path: '/internal/classes-sections/:schoolId', method: 'GET', isProtected: false },
         { path: '/subjects/global', method: 'POST', isProtected: true },
         { path: '/subjects', method: 'POST', isProtected: true },
       ],
@@ -75,6 +76,7 @@ class ServiceRegistry {
       routes: [
         { path: '/students', method: 'POST', isProtected: true },
         { path: '/students/:id', method: 'GET', isProtected: true },
+        { path: '/schools/:schoolId/students', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.profile.timeout,

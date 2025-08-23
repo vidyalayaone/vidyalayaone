@@ -44,6 +44,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { AdmissionApplication, applicationAPI } from '@/api/mockAdmissionApplicationAPI';
 import { StudentData } from '@/api/mockAdmissionAPI';
@@ -64,6 +66,8 @@ const ApplicationDetailPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [docsVerified, setDocsVerified] = useState(false);
+  const [feeVerified, setFeeVerified] = useState(false);
 
   // Form for student data editing
   const studentForm = useForm<StudentData>({
@@ -193,38 +197,83 @@ const ApplicationDetailPage: React.FC = () => {
     }
   };
 
+  const moveToFeeVerification = async () => {
+    if (!application) return;
+    try {
+      const updatedApp = await applicationAPI.updateApplicationStatus(application.id, 'FEE_VERIFICATION');
+      setApplication(updatedApp);
+      toast.success('Moved to fee verification');
+    } catch (e) {
+      toast.error('Failed to move to fee verification');
+    }
+  };
+
+  const markFeeAsVerified = async () => {
+    if (!application) return;
+    try {
+      const updated = await applicationAPI.markFeeVerified(application.id);
+      setApplication(updated);
+      setFeeVerified(true);
+      toast.success('Fee verified');
+    } catch (e) {
+      toast.error('Failed to mark fee as verified');
+    }
+  };
+
+  const moveToDocumentVerification = async () => {
+    if (!application) return;
+    try {
+      const updatedApp = await applicationAPI.updateApplicationStatus(application.id, 'DOCUMENT_VERIFICATION');
+      setApplication(updatedApp);
+      toast.success('Moved to document verification');
+    } catch (e) {
+      toast.error('Failed to move to document verification');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
+    const Pill: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
+      <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${className || ''}`}>{children}</span>
+    );
     switch (status) {
       case 'PENDING':
         return (
-          <Badge variant="outline" className="border-orange-300 text-orange-800 bg-orange-50">
-            <Clock className="w-3 h-3 mr-1" />
-            Pending
-          </Badge>
+          <Pill className="border-orange-300 text-orange-800 bg-orange-50">
+            <Clock className="w-3 h-3 mr-1" /> Pending
+          </Pill>
         );
       case 'UNDER_REVIEW':
         return (
-          <Badge variant="outline" className="border-yellow-300 text-yellow-800 bg-yellow-50">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Under Review
-          </Badge>
+          <Pill className="border-yellow-300 text-yellow-800 bg-yellow-50">
+            <AlertTriangle className="w-3 h-3 mr-1" /> Under Review
+          </Pill>
+        );
+      case 'FEE_VERIFICATION':
+        return (
+          <Pill className="border-blue-300 text-blue-800 bg-blue-50">
+            <FileText className="w-3 h-3 mr-1" /> Fee Verification
+          </Pill>
+        );
+      case 'DOCUMENT_VERIFICATION':
+        return (
+          <Pill className="border-teal-300 text-teal-800 bg-teal-50">
+            <FileText className="w-3 h-3 mr-1" /> Document Verification
+          </Pill>
         );
       case 'APPROVED':
         return (
-          <Badge variant="outline" className="border-green-300 text-green-800 bg-green-50">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Approved
-          </Badge>
+          <Pill className="border-green-300 text-green-800 bg-green-50">
+            <CheckCircle className="w-3 h-3 mr-1" /> Approved
+          </Pill>
         );
       case 'REJECTED':
         return (
-          <Badge variant="outline" className="border-red-300 text-red-800 bg-red-50">
-            <XCircle className="w-3 h-3 mr-1" />
-            Rejected
-          </Badge>
+          <Pill className="border-red-300 text-red-800 bg-red-50">
+            <XCircle className="w-3 h-3 mr-1" /> Rejected
+          </Pill>
         );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Pill>{status}</Pill>;
     }
   };
 
@@ -296,35 +345,37 @@ const ApplicationDetailPage: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        {(application.status === 'PENDING' || application.status === 'UNDER_REVIEW') && (
+        {(application.status === 'PENDING' || application.status === 'UNDER_REVIEW' || application.status === 'FEE_VERIFICATION' || application.status === 'DOCUMENT_VERIFICATION') && (
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <h3 className="font-semibold">Review Actions</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Take action on this admission application
-                  </p>
+                  <p className="text-sm text-muted-foreground">Take action on this admission application</p>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   {application.status === 'PENDING' && (
-                    <Button 
-                      variant="outline" 
-                      onClick={handleStartReview}
-                      disabled={saving}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Start Review
+                    <Button variant="outline" onClick={handleStartReview} disabled={saving}>
+                      <Eye className="w-4 h-4 mr-2" /> Start Review
+                    </Button>
+                  )}
+                  {application.status === 'UNDER_REVIEW' && (
+                    <Button variant="outline" onClick={moveToFeeVerification} disabled={saving}>
+                      <FileText className="w-4 h-4 mr-2" /> Move to Fee Verification
+                    </Button>
+                  )}
+                  {application.status === 'FEE_VERIFICATION' && (
+                    <Button variant="outline" onClick={moveToDocumentVerification} disabled={!application.feeVerified}>
+                      <FileText className="w-4 h-4 mr-2" /> Move to Document Verification
                     </Button>
                   )}
                   <Button 
                     variant="outline" 
                     onClick={() => setApproveDialogOpen(true)}
-                    disabled={saving}
+                    disabled={saving || !docsVerified || !feeVerified || !(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'))}
                     className="border-green-300 text-green-800 hover:bg-green-50"
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
+                    <CheckCircle className="w-4 h-4 mr-2" /> Approve
                   </Button>
                   <Button 
                     variant="outline" 
@@ -332,8 +383,7 @@ const ApplicationDetailPage: React.FC = () => {
                     disabled={saving}
                     className="border-red-300 text-red-800 hover:bg-red-50"
                   >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
+                    <XCircle className="w-4 h-4 mr-2" /> Reject
                   </Button>
                 </div>
               </div>
@@ -607,51 +657,81 @@ const ApplicationDetailPage: React.FC = () => {
               <TabsContent value="review" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Review Notes</CardTitle>
+                    <CardTitle>Review</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="reviewNotes">Review Notes</Label>
-                      <Textarea
-                        id="reviewNotes"
-                        placeholder="Add notes about this application..."
-                        {...reviewForm.register('reviewNotes')}
-                        className="mt-1"
-                        rows={4}
-                      />
+                  <CardContent className="space-y-6">
+                    {/* Fee Status Widget */}
+                    <div className="rounded-lg border p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold">Fee Status</h4>
+                        {(() => {
+                          const pu = !!(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'));
+          return (
+                            <div className="flex gap-2">
+                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${application.feeVerified ? 'bg-muted text-foreground' : 'bg-background'}`}>
+            {application.feeVerified ? 'Paid' : 'Pending'}
+                              </span>
+                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${pu ? 'bg-muted text-foreground' : 'bg-background'}`}>
+                                {pu ? 'Proof Uploaded' : 'No Proof'}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="p-3 rounded bg-muted/30">
+                          <p className="text-xs text-muted-foreground">Total Fee</p>
+                          <p className="font-medium">₹{(application.feeTotalAmount ?? 42000).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="p-3 rounded bg-muted/30">
+                          <p className="text-xs text-muted-foreground">Admission Fee</p>
+                          <p className="font-medium">₹{(application.feeAdmissionAmount ?? 10000).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="p-3 rounded bg-muted/30">
+                          <p className="text-xs text-muted-foreground">Paid Amount</p>
+                          <p className="font-medium">₹{(application.feePaidAmount ?? 10000).toLocaleString('en-IN')}</p>
+                        </div>
+                      </div>
+            {!application.feeVerified && (
+                        <div className="flex gap-2">
+              <Button variant="outline" disabled={!(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'))} onClick={markFeeAsVerified}>
+                            <CheckCircle className="w-4 h-4 mr-2" /> Mark Fee Verified
+                          </Button>
+                        </div>
+                      )}
+                      {application.feeVerified && application.feeVerifiedBy && application.feeVerifiedAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Fee verified by <span className="font-medium">{application.feeVerifiedBy}</span> on {new Date(application.feeVerifiedAt).toLocaleString('en-IN')}
+                        </p>
+                      )}
                     </div>
 
-                    {application.status === 'REJECTED' && (
-                      <div>
-                        <Label htmlFor="rejectionReason">Rejection Reason</Label>
-                        <Textarea
-                          id="rejectionReason"
-                          placeholder="Reason for rejection..."
-                          {...reviewForm.register('rejectionReason')}
-                          className="mt-1"
-                          rows={3}
-                        />
+                    {/* Admin Verification Checklist */}
+                    <div className="rounded-lg border p-4 space-y-3">
+                      <h4 className="font-semibold">Admin Verification</h4>
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="docsVerified" checked={docsVerified} onCheckedChange={(v) => setDocsVerified(!!v)} />
+                        <Label htmlFor="docsVerified">Documents verified</Label>
                       </div>
-                    )}
+                      <div className="flex items-center gap-2">
+                        <Checkbox id="feeVerified" checked={application.feeVerified || feeVerified} onCheckedChange={(v) => setFeeVerified(!!v)} />
+                        <Label htmlFor="feeVerified">Fee proof verified</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Approve becomes available only after both are verified.</p>
+                    </div>
+
+                    {/* Review Notes */}
+                    <div>
+                      <Label htmlFor="reviewNotes">Review Notes</Label>
+                      <Textarea id="reviewNotes" placeholder="Add notes about this application..." {...reviewForm.register('reviewNotes')} className="mt-1" rows={4} />
+                    </div>
 
                     {application.reviewedAt && (
                       <div className="p-4 bg-muted rounded-lg">
-                        <p className="text-sm">
-                          <strong>Reviewed by:</strong> {application.reviewedBy}
-                        </p>
-                        <p className="text-sm">
-                          <strong>Reviewed on:</strong> {formatDate(application.reviewedAt)}
-                        </p>
-                        {application.reviewNotes && (
-                          <p className="text-sm mt-2">
-                            <strong>Notes:</strong> {application.reviewNotes}
-                          </p>
-                        )}
-                        {application.rejectionReason && (
-                          <p className="text-sm mt-2">
-                            <strong>Rejection Reason:</strong> {application.rejectionReason}
-                          </p>
-                        )}
+                        <p className="text-sm"><strong>Reviewed by:</strong> {application.reviewedBy}</p>
+                        <p className="text-sm"><strong>Reviewed on:</strong> {new Date(application.reviewedAt).toLocaleString('en-IN')}</p>
+                        {application.reviewNotes && (<p className="text-sm mt-2"><strong>Notes:</strong> {application.reviewNotes}</p>)}
+                        {application.rejectionReason && (<p className="text-sm mt-2"><strong>Rejection Reason:</strong> {application.rejectionReason}</p>)}
                       </div>
                     )}
                   </CardContent>
@@ -678,13 +758,15 @@ const ApplicationDetailPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Priority</p>
-                  <Badge variant={application.priority === 'HIGH' ? 'destructive' : 'secondary'}>
+                  <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${application.priority === 'HIGH' ? 'border-red-300 text-red-800 bg-red-50' : 'bg-muted text-foreground'}`}>
                     {application.priority}
-                  </Badge>
+                  </span>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Source</p>
-                  <Badge variant="outline">{application.source.replace('_', ' ')}</Badge>
+                  <span className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium">
+                    {application.source.replace('_', ' ')}
+                  </span>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Submitted By</p>

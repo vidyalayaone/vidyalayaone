@@ -4,7 +4,7 @@ import { StudentData } from './mockAdmissionAPI';
 export interface AdmissionApplication {
   id: string;
   applicationNumber: string;
-  status: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'UNDER_REVIEW' | 'FEE_VERIFICATION' | 'DOCUMENT_VERIFICATION' | 'APPROVED' | 'REJECTED';
   studentData: StudentData;
   submittedAt: string;
   submittedBy: {
@@ -26,6 +26,14 @@ export interface AdmissionApplication {
   }[];
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   source: 'ONLINE_PORTAL' | 'WALK_IN' | 'REFERRAL';
+  // Fee verification helpers (mock)
+  feeProofUploaded?: boolean;
+  feeVerified?: boolean;
+  feeVerifiedBy?: string;
+  feeVerifiedAt?: string;
+  feeTotalAmount?: number;
+  feeAdmissionAmount?: number;
+  feePaidAmount?: number;
 }
 
 // Mock admission applications data
@@ -97,7 +105,7 @@ const mockApplications: AdmissionApplication[] = [
   {
     id: 'app-002',
     applicationNumber: 'ADM2024002',
-    status: 'UNDER_REVIEW',
+  status: 'UNDER_REVIEW',
     studentData: {
       firstName: 'Ananya',
       lastName: 'Patel',
@@ -155,10 +163,22 @@ const mockApplications: AdmissionApplication[] = [
         type: 'MEDICAL_RECORD',
         url: '/documents/medical_records.pdf',
         uploadedAt: '2024-08-14T14:15:00Z'
+      },
+      {
+        id: 'doc-004-fee',
+        name: 'fee_proof.pdf',
+        type: 'FEE_PROOF',
+        url: '/documents/fee_proof.pdf',
+        uploadedAt: '2024-08-16T08:55:00Z'
       }
     ],
     priority: 'MEDIUM',
-    source: 'ONLINE_PORTAL'
+    source: 'ONLINE_PORTAL',
+    feeProofUploaded: true,
+    feeVerified: false,
+    feeTotalAmount: 42000,
+    feeAdmissionAmount: 10000,
+    feePaidAmount: 10000
   },
   {
     id: 'app-003',
@@ -293,7 +313,14 @@ const mockApplications: AdmissionApplication[] = [
       }
     ],
     priority: 'HIGH',
-    source: 'REFERRAL'
+  source: 'REFERRAL',
+  feeProofUploaded: true,
+  feeVerified: true,
+  feeVerifiedBy: 'Admin User',
+  feeVerifiedAt: '2024-08-13T15:30:00Z',
+  feeTotalAmount: 47000,
+  feeAdmissionAmount: 10000,
+  feePaidAmount: 47000
   }
 ];
 
@@ -375,7 +402,7 @@ class AdmissionApplicationAPI {
   // Update application status
   async updateApplicationStatus(
     id: string, 
-    status: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED',
+    status: 'UNDER_REVIEW' | 'FEE_VERIFICATION' | 'DOCUMENT_VERIFICATION' | 'APPROVED' | 'REJECTED',
     notes?: string,
     rejectionReason?: string
   ): Promise<AdmissionApplication> {
@@ -386,7 +413,7 @@ class AdmissionApplicationAPI {
       throw new Error('Application not found');
     }
     
-    mockApplications[applicationIndex] = {
+  mockApplications[applicationIndex] = {
       ...mockApplications[applicationIndex],
       status,
       reviewedAt: new Date().toISOString(),
@@ -401,6 +428,24 @@ class AdmissionApplicationAPI {
       mockApplications[applicationIndex].studentData.enrollmentDate = new Date().toISOString().split('T')[0];
     }
     
+    return mockApplications[applicationIndex];
+  }
+
+  // Mark fee as verified (and optionally set audit info)
+  async markFeeVerified(id: string, verifiedBy: string = 'Admin User'): Promise<AdmissionApplication> {
+    await this.delay(400);
+    const applicationIndex = mockApplications.findIndex(app => app.id === id);
+    if (applicationIndex === -1) {
+      throw new Error('Application not found');
+    }
+
+    mockApplications[applicationIndex] = {
+      ...mockApplications[applicationIndex],
+      feeVerified: true,
+      feeVerifiedBy: verifiedBy,
+      feeVerifiedAt: new Date().toISOString(),
+    };
+
     return mockApplications[applicationIndex];
   }
 

@@ -43,6 +43,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 import { admissionAPI, mockFormData, type StudentData } from '@/api/mockAdmissionAPI';
 
@@ -98,6 +102,13 @@ const singleAdmissionSchema = z.object({
   doctorName: z.string().optional(),
   doctorPhone: z.string().optional(),
   healthInsurance: z.string().optional(),
+  // Fees
+  feeProof: z
+    .any()
+    .refine((fileList) => fileList && fileList.length > 0, 'Fee proof is required'),
+  feeConfirmed: z.literal(true, {
+    errorMap: () => ({ message: 'You must confirm the fee has been deposited' }),
+  }),
 });
 
 type SingleAdmissionFormData = z.infer<typeof singleAdmissionSchema>;
@@ -105,6 +116,8 @@ type SingleAdmissionFormData = z.infer<typeof singleAdmissionSchema>;
 const SingleStudentAdmissionPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+  const [feePreviewUrl, setFeePreviewUrl] = useState<string | null>(null);
 
   const form = useForm<SingleAdmissionFormData>({
     resolver: zodResolver(singleAdmissionSchema as any),
@@ -114,6 +127,25 @@ const SingleStudentAdmissionPage: React.FC = () => {
       enrollmentDate: new Date().toISOString().split('T')[0],
     },
   });
+
+  const feeComponents = React.useMemo(() => {
+    // Simple mock mapping based on class/grade
+    const grade = form.watch('grade');
+    const baseTuition = grade ? 20000 + Number(grade) * 500 : 25000;
+    const examFee = 2000;
+    const transport = 5000; // optional
+    return [
+      { component: 'Tuition', amount: baseTuition, frequency: 'Annual', required: true },
+      { component: 'Exam Fee', amount: examFee, frequency: 'Annual', required: true },
+      { component: 'Transport', amount: transport, frequency: 'Optional', required: false },
+    ];
+  }, [form]);
+
+  const totalFee = feeComponents.reduce((sum, f) => sum + (f.required ? f.amount : 0), 0);
+  const admissionDueNow = 10000;
+  const balance = Math.max(totalFee - admissionDueNow, 0);
+  const installments = 3;
+  const perInstallment = Math.ceil(balance / installments);
 
   const onSubmit = async (data: SingleAdmissionFormData) => {
     setIsSubmitting(true);
@@ -136,6 +168,30 @@ const SingleStudentAdmissionPage: React.FC = () => {
 
   const handleBack = () => {
     navigate('/admission');
+  };
+
+  const onFeeProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files[0]) {
+      const file = files[0];
+      // accept only pdf/jpg/png
+      const ok = /(pdf|png|jpe?g)$/i.test(file.name);
+      if (!ok) {
+        toast.error('Only PDF, JPG, or PNG files are allowed');
+        e.target.value = '';
+        setFeePreviewUrl(null);
+        return;
+      }
+      form.setValue('feeProof', files, { shouldValidate: true });
+      if (file.type.startsWith('image/')) {
+        setFeePreviewUrl(URL.createObjectURL(file));
+      } else {
+        setFeePreviewUrl(null);
+      }
+    } else {
+      form.setValue('feeProof', undefined as any, { shouldValidate: true });
+      setFeePreviewUrl(null);
+    }
   };
 
   return (
@@ -165,7 +221,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   Basic Info
@@ -185,6 +241,10 @@ const SingleStudentAdmissionPage: React.FC = () => {
                 <TabsTrigger value="medical" className="flex items-center gap-2">
                   <Heart className="w-4 h-4" />
                   Medical Info
+                </TabsTrigger>
+                <TabsTrigger value="fees" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Fees
                 </TabsTrigger>
               </TabsList>
 
@@ -938,6 +998,101 @@ const SingleStudentAdmissionPage: React.FC = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {/* Fees Tab */}
+              <TabsContent value="fees">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Fee Structure</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Fee Table */}
+                    <div className="rounded-md border">
+                      <div className="grid grid-cols-3 px-4 py-2 text-sm font-medium bg-muted/50">
+                        <div>Component</div>
+                        <div className="text-right">Amount</div>
+                        <div className="text-right">Frequency</div>
+                      </div>
+                      {feeComponents.map((row) => (
+                        <div key={row.component} className="grid grid-cols-3 px-4 py-2 border-t">
+                          <div className="flex items-center gap-2">
+                            <span>{row.component}</span>
+                            {!row.required && (
+                              <span className="inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-medium bg-muted/50">Optional</span>
+                            )}
+                          </div>
+                          <div className="text-right">₹{row.amount.toLocaleString('en-IN')}</div>
+                          <div className="text-right">{row.frequency}</div>
+                        </div>
+                      ))}
+                      <div className="grid grid-cols-3 px-4 py-3 border-t bg-muted/30">
+                        <div className="font-semibold">Total (required)</div>
+                        <div className="text-right font-semibold">₹{totalFee.toLocaleString('en-IN')}</div>
+                        <div></div>
+                      </div>
+                    </div>
+
+                    {/* Payment Schedule */}
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold">Installments / Payment Schedule</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Admission Fee at submission: <span className="font-medium">₹{admissionDueNow.toLocaleString('en-IN')}</span>. Balance payable in {installments} installments (~₹{perInstallment.toLocaleString('en-IN')} each).
+                      </p>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Due now</span>
+                          <span>₹{admissionDueNow.toLocaleString('en-IN')} / ₹{totalFee.toLocaleString('en-IN')}</span>
+                        </div>
+                        <Progress value={Math.min(100, Math.round((admissionDueNow / totalFee) * 100))} />
+                      </div>
+                    </div>
+
+                    {/* Upload Proof */}
+                    <FormField
+                      control={form.control}
+                      name="feeProof"
+                      render={() => (
+                        <FormItem>
+                          <h3 className="text-lg font-semibold">Upload Proof of Payment (Required)</h3>
+                          <FormDescription>Accepted formats: PDF, JPG, PNG</FormDescription>
+                          <div className="flex items-center gap-3 mt-2">
+                            <Input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={onFeeProofChange} />
+                            <Button type="button" variant="outline" onClick={() => setFeePreviewUrl(null)}>
+                              <X className="w-4 h-4 mr-2" />Clear
+                            </Button>
+                          </div>
+                          {feePreviewUrl ? (
+                            <div className="mt-2">
+                              <img src={feePreviewUrl} alt="Fee proof preview" className="max-h-48 rounded border" />
+                            </div>
+                          ) : (
+                            <div className="text-xs text-muted-foreground">PDFs won't preview here but will be attached to submission.</div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Confirmation */}
+                    <FormField
+                      control={form.control}
+                      name="feeConfirmed"
+                      render={({ field }) => (
+                        <FormItem className="flex items-start gap-3">
+                          <FormControl>
+                            <Checkbox checked={!!field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>I confirm that the above fee has been deposited.</FormLabel>
+                            <FormDescription className="text-xs">This confirmation is required before submitting the admission form.</FormDescription>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
 
             {/* Action Buttons */}
@@ -952,7 +1107,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting}
+                disabled={isSubmitting || !form.getValues('feeConfirmed') || !form.getValues('feeProof')}
                 className="flex items-center gap-2"
               >
                 {isSubmitting ? (

@@ -192,6 +192,15 @@ export const api = {
     }
   },
 
+  getClassesAndSections: async (schoolId: string, academicYear: string = '2025-26'): Promise<APIResponse> => {
+    try {
+      const response = await httpClient.get(`/school/classes-sections/${schoolId}?academicYear=${academicYear}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Teachers endpoints
   getTeachers: async (params?: PaginationParams): Promise<APIResponse<PaginatedResponse<User>>> => {
     try {
@@ -234,6 +243,7 @@ export const {
   getTeacherStats,
   getStudentStats,
   getClasses,
+  getClassesAndSections,
   getTeachers,
   getStudents
 } = api;

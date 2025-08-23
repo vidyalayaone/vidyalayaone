@@ -7,6 +7,7 @@ import { activateSchool } from "../controllers/activateSchool";
 import { createClasses } from "../controllers/createClasses";
 import { createSections } from "../controllers/createSections";
 import { getClassesAndSections } from "../controllers/getClassesAndSections";
+import { getClassesAndSectionsInternal } from "../controllers/getClassesAndSectionsInternal";
 import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
 import { createClassSubjects } from "../controllers/createClassSubjects";
 
@@ -22,6 +23,9 @@ router.get('/activate/:schoolId', activateSchool);
 router.post('/classes', createClasses);
 router.post('/sections', createSections);
 router.get('/classes-sections/:schoolId', getClassesAndSections);
+
+// Internal route for other services (no auth required)
+router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal);
 
 // Subject management routes (admin only, platform context)
 router.post('/subjects/global', createGlobalSubjects);

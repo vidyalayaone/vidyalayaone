@@ -9,7 +9,7 @@ import { forgotPassword } from '../controllers/forgotPassword';
 import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
 import { resetPassword } from '../controllers/resetPassword';
 import { logout } from '../controllers/logout';
-import { updateAdminWithSubdomain } from '../controllers/updateAdminWithSubdomain';
+import { updateAdminWithSchoolId } from '../controllers/updateAdminWithSchoolId';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -48,6 +48,6 @@ router.post('/reset-password', strictLimiter, resetPassword); // needs to be upd
 // protected = true
 router.get('/me', authLimiter, getMe);
 router.post('/logout', authLimiter, logout);
-router.post('/update-admin-with-subdomain', authLimiter, updateAdminWithSubdomain); // needs to be updated
+router.post('/update-admin-with-schoolId', updateAdminWithSchoolId);
 
 export default router;

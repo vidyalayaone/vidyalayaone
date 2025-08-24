@@ -30,6 +30,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     req.headers['x-user-id'] = decoded.id;
     req.headers['x-user-role-id'] = decoded.roleId;
     req.headers['x-user-role-name'] = decoded.roleName;
+    req.headers['x-user-permissions'] = JSON.stringify(decoded.permissions);
 
     next();
   } catch (error) {

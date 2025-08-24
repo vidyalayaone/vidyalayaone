@@ -45,13 +45,22 @@ export async function refreshToken(req: Request, res: Response) {
       return;
     }
 
+    if (!user.role) {
+      res.status(500).json({
+        success: false,
+        error: { message: 'User role not found. Please contact support.' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     // Validate school context
     if (schoolContext.context === 'platform'){
-          const hasLoginPermission = hasPermission(prisma, PERMISSIONS.PLATFORM.LOGIN, user.roleId);
+          const hasLoginPermission = await hasPermission(PERMISSIONS.PLATFORM.LOGIN, {permissions: user.role.permissions});
           if (!hasLoginPermission) {
             res.status(403).json({
               success: false,
-              error: { message: 'User does not have permission to login on platform' },
+              error: { message: 'User does not have permission to refresh token on platform' },
               timestamp: new Date().toISOString()
             });
             return;
@@ -111,7 +120,8 @@ export async function refreshToken(req: Request, res: Response) {
     const newAccessToken = generateAccessToken({
       id: payload.id,
       roleId: payload.roleId,
-      roleName: payload.roleName
+      roleName: payload.roleName,
+      permissions: payload.permissions || []
     });
 
     let newRefreshToken = refreshToken; // Keep existing by default
@@ -121,7 +131,8 @@ export async function refreshToken(req: Request, res: Response) {
       newRefreshToken = generateRefreshToken({
         id: payload.id,
         roleId: payload.roleId,
-        roleName: payload.roleName
+        roleName: payload.roleName,
+        permissions: payload.permissions || []
       });
 
       // Update refresh token in database

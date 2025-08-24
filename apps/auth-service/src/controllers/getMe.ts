@@ -10,7 +10,6 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     const { context, subdomain } = getSchoolContext(req);
     const userData = getUser(req);
     const userId = userData?.id;
-    const roleId = userData?.roleId;
 
     if (!userId) {
       res.status(401).json({
@@ -22,7 +21,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     }
 
     if (context == 'platform') {
-      const hasGetMePermission = await hasPermission(prisma, PERMISSIONS.PLATFORM.GET_ME, roleId);
+      const hasGetMePermission = await hasPermission(PERMISSIONS.PLATFORM.GET_ME, userData);
       if (!hasGetMePermission) {
         res.status(403).json({
           success: false,

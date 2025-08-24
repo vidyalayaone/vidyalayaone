@@ -33,7 +33,7 @@ const config: Config = {
   database: {
     url: process.env.DATABASE_URL || '',
   },
-  authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+  authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
   authServiceTimeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
 };
 

@@ -44,6 +44,7 @@ export const logoutSchema = z.object({
   refreshToken: z.string()
 });
 
-export const updateAdminWithSubdomainSchema = z.object({
-  subdomain: z.string().min(3, 'Subdomain must be at least 3 characters').max(30, 'Subdomain must not exceed 30 characters')
+export const updateAdminWithSchoolIdSchema = z.object({
+  schoolId: z.string().uuid('Invalid school ID format').optional(),
+  userId: z.string().uuid('Invalid user ID format')
 });

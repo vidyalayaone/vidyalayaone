@@ -39,7 +39,13 @@ interface Config {
   sms: {
     fast2smsApiKey: string,
     testNumbers: string
-  }
+  };
+  services: {
+    school: {
+      url: string;
+      timeout: number;
+    };
+  };
 }
 
 const config: Config = {
@@ -76,6 +82,12 @@ const config: Config = {
   sms: {
     fast2smsApiKey: process.env.FAST2SMS_API_KEY || '',
     testNumbers: process.env.SMS_TEST_NUMBERS || '',
+  },
+  services: {
+    school: {
+      url: process.env.SCHOOL_SERVICE_URL || 'http://school-service:3002',
+      timeout: parseInt(process.env.SCHOOL_SERVICE_TIMEOUT || '30000', 10),
+    },
   }
 };
 

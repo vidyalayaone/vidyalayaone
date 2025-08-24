@@ -10,6 +10,7 @@ import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordRe
 import { resetPassword } from '../controllers/resetPassword';
 import { logout } from '../controllers/logout';
 import { updateAdminWithSchoolId } from '../controllers/updateAdminWithSchoolId';
+import { seedRoles } from '../controllers/seedRoles';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -49,5 +50,8 @@ router.post('/reset-password', strictLimiter, resetPassword); // needs to be upd
 router.get('/me', authLimiter, getMe);
 router.post('/logout', authLimiter, logout);
 router.post('/update-admin-with-schoolId', updateAdminWithSchoolId);
+
+// Additional protected routes can be added here
+router.post('/seed-roles', authLimiter, seedRoles);
 
 export default router;

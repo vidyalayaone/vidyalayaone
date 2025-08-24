@@ -48,3 +48,12 @@ export const updateAdminWithSchoolIdSchema = z.object({
   schoolId: z.string().uuid('Invalid school ID format').optional(),
   userId: z.string().uuid('Invalid user ID format')
 });
+
+export const seedRolesSchema = z.object({
+  schoolId: z.string().uuid('Invalid school ID format'),
+  roles: z.array(z.object({
+    name: z.string().min(1, 'Role name is required').max(50, 'Role name must not exceed 50 characters'),
+    description: z.string().optional(),
+    permissions: z.array(z.string()).min(1, 'At least one permission is required')
+  })).min(1, 'At least one role is required')
+});

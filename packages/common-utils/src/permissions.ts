@@ -17,6 +17,9 @@ export const PERMISSIONS = {
   },
   SCHOOL: {
     CREATE: "school.create",
+    SEED_ROLES: "school.seed_roles",
+    GET: "school.get",
+    APPROVE: "school.approve",
   },
   PLATFORM: {
     LOGIN: "platform.login",

@@ -1,28 +1,30 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
-export async function activateSchool(req: Request, res: Response): Promise<void> {
+export async function approveSchool(req: Request, res: Response): Promise<void> {
   try {
     const { schoolId } = req.params;
 
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;
+    
+    const userData = getUser(req);
+    console.log(userData);
+    const userId = userData?.id;
     const { context } = getSchoolContext(req);
 
     if (context !== 'platform') {
       res.status(400).json({
         success: false,
-        error: { message: 'Provided context must be platform' },
+        error: { message: 'School can only be approved in platform context' },
         timestamp: new Date().toISOString()
       });
       return;
     }
 
-    if (!adminId) {
+    if (!userId) {
       res.status(401).json({
         success: false,
         error: { message: 'User authentication required' },
@@ -31,10 +33,10 @@ export async function activateSchool(req: Request, res: Response): Promise<void>
       return;
     }
 
-    if (role !== 'ADMIN') {
-      res.status(400).json({
+    if(!await hasPermission(PERMISSIONS.SCHOOL.APPROVE, userData)) {
+      res.status(403).json({
         success: false,
-        error: { message: 'Only ADMIN can activate school' },
+        error: { message: 'You do not have permission to approve schools' },
         timestamp: new Date().toISOString()
       });
       return;

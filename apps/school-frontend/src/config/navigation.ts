@@ -94,39 +94,39 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'Manage class schedules and assignments',
         requiredPermissions: [PERMISSIONS.CLASS.VIEW]
       },
-      { 
-        path: '/timetable', 
-        label: 'Timetable', 
-        icon: Calendar,
-        description: 'View and manage class schedules',
-        requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
-      }
     ]
   },
   {
     label: 'Academic',
     items: [
       { 
-        path: '/subjects', 
-        label: 'Subjects', 
-        icon: BookOpen,
-        description: 'Manage curriculum subjects',
-        requiredPermissions: [PERMISSIONS.SUBJECT.VIEW]
+        path: '/timetable', 
+        label: 'Timetable', 
+        icon: Calendar,
+        description: 'View and manage class schedules',
+        requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
       },
-      { 
-        path: '/assignments', 
-        label: 'Assignments', 
-        icon: ClipboardList,
-        description: 'Create and manage assignments',
-        requiredPermissions: [PERMISSIONS.EXAM.CREATE] // Using exam permissions as proxy
-      },
-      { 
-        path: '/grades', 
-        label: 'Grades', 
-        icon: Award,
-        description: 'View and manage student grades',
-        requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
-      },
+      // { 
+      //   path: '/subjects', 
+      //   label: 'Subjects', 
+      //   icon: BookOpen,
+      //   description: 'Manage curriculum subjects',
+      //   requiredPermissions: [PERMISSIONS.SUBJECT.VIEW]
+      // },
+      // {
+      //   path: '/assignments', 
+      //   label: 'Assignments', 
+      //   icon: ClipboardList,
+      //   description: 'Create and manage assignments',
+      //   requiredPermissions: [PERMISSIONS.EXAM.CREATE] // Using exam permissions as proxy
+      // },
+      // { 
+      //   path: '/grades', 
+      //   label: 'Grades', 
+      //   icon: Award,
+      //   description: 'View and manage student grades',
+      //   requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
+      // },
       { 
         path: '/attendance', 
         label: 'Attendance', 

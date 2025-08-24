@@ -101,7 +101,6 @@ async function main() {
     
     // Class management
     'class.view',
-    'class.create',
     'class.update',
     'class.delete',
     'class.manage_sections',

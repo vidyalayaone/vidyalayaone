@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { createSectionsSchema } from '../validations/validationSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -11,9 +12,8 @@ export async function createSections(req: Request, res: Response): Promise<void>
     if (!validation.success) return;
 
     const { schoolId, academicYear, sections } = validation.data;
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;    
+    const userData = getUser(req);
+    const userId = userData?.id;
     const { context } = getSchoolContext(req);
 
     // Only admin can create sections and only from platform context
@@ -26,10 +26,10 @@ export async function createSections(req: Request, res: Response): Promise<void>
       return;
     }
 
-    if (!adminId || role?.toLowerCase() !== 'admin') {
+    if (!await hasPermission(PERMISSIONS.SECTION.CREATE, userData)) {
       res.status(403).json({
         success: false,
-        error: { message: 'Only admins can create sections' },
+        error: { message: 'Insufficient permissions to create sections' },
         timestamp: new Date().toISOString()
       });
       return;

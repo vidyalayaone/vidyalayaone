@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { createClassesSchema } from '../validations/validationSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -11,9 +12,8 @@ export async function createClasses(req: Request, res: Response): Promise<void> 
     if (!validation.success) return;
 
     const { schoolId, classes, academicYear } = validation.data;
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;    
+    const user = getUser(req);
+    const userId = user?.id;
     const { context } = getSchoolContext(req);
 
     // Only admin can create classes and only from platform context
@@ -26,10 +26,10 @@ export async function createClasses(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (!adminId || role?.toLowerCase() !== 'admin') {
+    if (!await hasPermission(PERMISSIONS.CLASS.CREATE, user)) {
       res.status(403).json({
         success: false,
-        error: { message: 'Only admins can create classes' },
+        error: { message: 'Insufficient permissions to create classes' },
         timestamp: new Date().toISOString()
       });
       return;

@@ -25,6 +25,14 @@ export const PERMISSIONS = {
     VIEW_TIMETABLE: "class.view_timetable",
     MANAGE_TIMETABLE: "class.manage_timetable",
   },
+  SECTION: {
+    CREATE: "section.create",
+    UPDATE: "section.update",
+    DELETE: "section.delete",
+    VIEW: "section.view",
+    ASSIGN_CLASS: "section.assign_class",
+    MANAGE_STUDENTS: "section.manage_students",
+  },
   SUBJECT: {
     VIEW: "subject.view",
     CREATE: "subject.create",

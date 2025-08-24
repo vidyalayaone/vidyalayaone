@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -27,19 +28,9 @@ export async function getClassesAndSections(req: Request, res: Response): Promis
       return;
     }
 
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;    
+    const userData = getUser(req);
+    const userId = userData?.id;
     const { context } = getSchoolContext(req);
-
-    if (!adminId || role?.toLowerCase() !== 'admin') {
-      res.status(403).json({
-        success: false,
-        error: { message: 'Only admins can view classes and sections' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
 
     // Verify school exists
     const school = await prisma.school.findUnique({
@@ -51,6 +42,15 @@ export async function getClassesAndSections(req: Request, res: Response): Promis
       res.status(404).json({
         success: false,
         error: { message: 'School not found' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if(!await hasPermission(PERMISSIONS.CLASS.VIEW, userData)) {
+      res.status(403).json({
+        success: false,
+        error: { message: 'Forbidden: You do not have permission to view classes' },
         timestamp: new Date().toISOString()
       });
       return;

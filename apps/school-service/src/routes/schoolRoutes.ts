@@ -20,9 +20,9 @@ router.put('/update/:schoolId', updateSchool); // needs to be updated
 router.get('/approve/:schoolId', approveSchool);
 
 // Class and Section management routes
-router.post('/classes', createClasses); // needs to be updated
-router.post('/sections', createSections); // needs to be updated
-router.get('/classes-sections/:schoolId', getClassesAndSections); // needs to be updated
+router.post('/classes', createClasses);
+router.post('/sections', createSections);
+router.get('/classes-sections/:schoolId', getClassesAndSections);
 
 // Internal route for other services
 router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal); // needs to be updated

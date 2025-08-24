@@ -1,4 +1,4 @@
-// Sidebar navigation component with role-based menu items
+// Sidebar navigation component with permission-based menu items
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
-import { getNavigationForRole } from '@/config/navigation';
+import { getNavigationForUser } from '@/config/navigation';
 import { getUserInitials, getUserFullName, getRoleDisplayName } from '@/utils/auth';
 import { ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
 
@@ -31,10 +31,10 @@ const AppSidebar: React.FC = () => {
   const collapsed = !open;
   const location = useLocation();
   
-  const navigation = user ? getNavigationForRole(user.role) : [];
+  const navigation = user ? getNavigationForUser(user.permissions || []) : [];
   const userInitials = getUserInitials(user);
   const userFullName = getUserFullName(user);
-  const roleDisplay = user ? getRoleDisplayName(user.role) : '';
+  const roleDisplay = user ? getRoleDisplayName(user) : '';
 
   // Check if a path is active
   const isActivePath = (path: string): boolean => {

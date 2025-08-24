@@ -6,18 +6,28 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  role: {
+    id: string;
+    name: string;
+    permissions: string[];
+  };
+  roleName?: string; // For backwards compatibility with JWT
   avatar?: string;
   phoneNumber?: string;
   schoolId: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  permissions?: string[]; // JWT permissions array
 }
 
 // Teacher-specific interfaces
-export interface Teacher extends User {
-  role: 'TEACHER';
+export interface Teacher extends Omit<User, 'role'> {
+  role: {
+    id: string;
+    name: string;
+    permissions: string[];
+  };
   employeeId: string;
   joiningDate: string;
   qualification: string;
@@ -34,8 +44,12 @@ export interface Teacher extends User {
 }
 
 // Student-specific interfaces
-export interface Student extends User {
-  role: 'STUDENT';
+export interface Student extends Omit<User, 'role'> {
+  role: {
+    id: string;
+    name: string;
+    permissions: string[];
+  };
   studentId: string;
   enrollmentDate: string;
   currentClass: StudentClass;

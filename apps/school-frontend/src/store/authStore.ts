@@ -5,6 +5,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { User, School, APIResponse, AuthResponse } from '../api/types';
 import { api } from '../api/api';
 import { tokenManager } from '../api/config';
+import { getPermissionsFromToken, getUserFromToken } from '../utils/jwt';
 import toast from 'react-hot-toast';
 
 interface PasswordResetFlow {
@@ -74,9 +75,26 @@ export const useAuthStore = create<AuthState>()(
 
           tokenManager.setTokens(accessToken, refreshToken);
 
+          // Extract permissions from JWT token and role info
+          const permissions = getPermissionsFromToken(accessToken);
+          const jwtPayload = getUserFromToken(accessToken);
+          
+          // Update user with JWT-based role and permissions
+          const userWithPermissions = {
+            ...user,
+            permissions,
+            roleName: jwtPayload?.roleName, // Add roleName from JWT for backwards compatibility
+            // If user.role is not populated as an object, create it from JWT
+            role: user.role || {
+              id: jwtPayload?.roleId || '',
+              name: jwtPayload?.roleName || '',
+              permissions: permissions
+            }
+          };
+
           // Update state
           set({
-            user,
+            user: userWithPermissions,
             isAuthenticated: true,
             isLoading: false,
             resetFlow: {
@@ -304,7 +322,25 @@ export const useAuthStore = create<AuthState>()(
         // console.log('Fetched user:', response);
         
         if (response.success && response.data) {
-          set({ user: response.data.user });
+          // Extract permissions from current access token
+          const accessToken = tokenManager.getAccessToken();
+          const permissions = accessToken ? getPermissionsFromToken(accessToken) : [];
+          const jwtPayload = accessToken ? getUserFromToken(accessToken) : null;
+          
+          // Update user with permissions and role info
+          const userWithPermissions = {
+            ...response.data.user,
+            permissions,
+            roleName: jwtPayload?.roleName, // Add roleName from JWT for backwards compatibility
+            // Ensure role is properly structured
+            role: response.data.user.role || {
+              id: jwtPayload?.roleId || '',
+              name: jwtPayload?.roleName || '',
+              permissions: permissions
+            }
+          };
+          
+          set({ user: userWithPermissions });
         }
       } catch (error) {
         console.error('Fetch user error:', error);

@@ -1,4 +1,4 @@
-// Navigation configuration for different user roles
+// Navigation configuration for permission-based access
 
 import { 
   LayoutDashboard, 
@@ -23,15 +23,32 @@ import {
   MessageCircle,
   DollarSign,
   Library,
-  Clock
+  Clock,
+  type LucideIcon
 } from 'lucide-react';
+
+import { PERMISSIONS } from '@/utils/permissions';
+
+export function checkNavigationAccess(
+  requiredPermissions?: string[],
+  userPermissions: string[] = []
+): boolean {
+  // If no required permissions specified, allow access
+  if (!requiredPermissions || requiredPermissions.length === 0) {
+    return true;
+  }
+  
+  // Check if user has any of the required permissions
+  return requiredPermissions.some(permission => userPermissions.includes(permission));
+}
 
 export interface NavigationItem {
   path: string;
   label: string;
-  icon: any; // Lucide icon component
+  icon: LucideIcon;
   description?: string;
-  badge?: string | number;
+  requiredPermissions?: string[];
+  excludedPermissions?: string[];
   children?: NavigationItem[];
 }
 
@@ -40,263 +57,227 @@ export interface NavigationGroup {
   items: NavigationItem[];
 }
 
-export const navigationConfig = {
-  ADMIN: [
-    {
-      label: 'Main',
-      items: [
-        { 
-          path: '/dashboard', 
-          label: 'Dashboard', 
-          icon: LayoutDashboard,
-          description: 'Overview and quick actions'
-        },
-        { 
-          path: '/students', 
-          label: 'Students', 
-          icon: GraduationCap,
-          description: 'Manage student records and enrollment'
-        },
-        { 
-          path: '/teachers', 
-          label: 'Teachers', 
-          icon: Users,
-          description: 'Manage teaching staff and faculty'
-        },
-        { 
-          path: '/classes', 
-          label: 'Classes', 
-          icon: BookOpen,
-          description: 'Manage class schedules and sections'
-        },
-        // { 
-        //   path: '/subjects', 
-        //   label: 'Subjects', 
-        //   icon: Library,
-        //   description: 'Manage subjects, teachers, and curriculum'
-        // },
-        { 
-          path: '/admission', 
-          label: 'Admission', 
-          icon: UserPlus,
-          description: 'Handle new student admissions'
-        }
-      ]
-    },
-    {
-      label: 'Academic',
-      items: [
-        { 
-          path: '/attendance', 
-          label: 'Attendance', 
-          icon: CalendarCheck,
-          description: 'Track and manage student attendance'
-        },
-        { 
-          path: '/exams', 
-          label: 'Exams', 
-          icon: PenTool,
-          description: 'Manage examinations and assessments'
-        },
-        { 
-          path: '/timetable', 
-          label: 'Time Table', 
-          icon: Calendar,
-          description: 'Manage class schedules and timetables'
-        },
-        { 
-          path: '/substitute-teacher', 
-          label: 'Substitute Teacher', 
-          icon: Clock,
-          description: 'Manage substitute teacher assignments and timetable'
-        },
-        { 
-          path: '/academic-calendar', 
-          label: 'Academic Calendar', 
-          icon: CalendarDays,
-          description: 'Manage academic year calendar'
-        }
-      ]
-    },
-    {
-      label: 'Operations',
-      items: [
-        { 
-          path: '/communication', 
-          label: 'Communication', 
-          icon: MessageCircle,
-          description: 'Send announcements and messages'
-        },
-        { 
-          path: '/fees', 
-          label: 'Fees', 
-          icon: DollarSign,
-          description: 'Manage student fees and payments'
-        }
-      ]
-    }
-  ] as NavigationGroup[],
+// Universal navigation configuration (all possible items)
+export const allNavigationItems: NavigationGroup[] = [
+  {
+    label: 'Main',
+    items: [
+      { 
+        path: '/dashboard', 
+        label: 'Dashboard', 
+        icon: LayoutDashboard,
+        description: 'Overview of school activities and statistics',
+        requiredPermissions: [
+          PERMISSIONS.DASHBOARD.VIEW_ADMIN,
+          PERMISSIONS.DASHBOARD.VIEW_TEACHER,
+          PERMISSIONS.DASHBOARD.VIEW_STUDENT
+        ]
+      },
+      {
+        path: '/students', 
+        label: 'Students', 
+        icon: Users,
+        description: 'Manage student records and enrollment',
+        requiredPermissions: [PERMISSIONS.STUDENT.VIEW]
+      },
+      { 
+        path: '/teachers', 
+        label: 'Teachers', 
+        icon: UserCog,
+        description: 'Manage teaching staff and assignments',
+        requiredPermissions: [PERMISSIONS.TEACHER.VIEW]
+      },
+      { 
+        path: '/classes', 
+        label: 'Classes', 
+        icon: BookOpen,
+        description: 'Manage class schedules and assignments',
+        requiredPermissions: [PERMISSIONS.CLASS.VIEW]
+      },
+      { 
+        path: '/timetable', 
+        label: 'Timetable', 
+        icon: Calendar,
+        description: 'View and manage class schedules',
+        requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
+      }
+    ]
+  },
+  {
+    label: 'Academic',
+    items: [
+      { 
+        path: '/subjects', 
+        label: 'Subjects', 
+        icon: BookOpen,
+        description: 'Manage curriculum subjects',
+        requiredPermissions: [PERMISSIONS.SUBJECT.VIEW]
+      },
+      { 
+        path: '/assignments', 
+        label: 'Assignments', 
+        icon: ClipboardList,
+        description: 'Create and manage assignments',
+        requiredPermissions: [PERMISSIONS.EXAM.CREATE] // Using exam permissions as proxy
+      },
+      { 
+        path: '/grades', 
+        label: 'Grades', 
+        icon: Award,
+        description: 'View and manage student grades',
+        requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
+      },
+      { 
+        path: '/attendance', 
+        label: 'Attendance', 
+        icon: UserCheck,
+        description: 'Track and manage student attendance',
+        requiredPermissions: [PERMISSIONS.ATTENDANCE.VIEW]
+      },
+      { 
+        path: '/exams', 
+        label: 'Exams', 
+        icon: PenTool,
+        description: 'Schedule and manage examinations',
+        requiredPermissions: [PERMISSIONS.EXAM.VIEW]
+      }
+    ]
+  },
+  {
+    label: 'Administrative',
+    items: [
+      { 
+        path: '/admissions', 
+        label: 'Admissions', 
+        icon: UserPlus,
+        description: 'Handle new student admissions',
+        requiredPermissions: [PERMISSIONS.ADMISSION.VIEW]
+      },
+      { 
+        path: '/fees', 
+        label: 'Fee Management', 
+        icon: DollarSign,
+        description: 'Manage student fees and payments',
+        requiredPermissions: [PERMISSIONS.FEE.VIEW]
+      },
+      { 
+        path: '/library', 
+        label: 'Library', 
+        icon: Library,
+        description: 'Manage library books and resources',
+        requiredPermissions: [PERMISSIONS.SCHOOL.VIEW] // Using school permissions as proxy
+      },
+      { 
+        path: '/events', 
+        label: 'Events', 
+        icon: CalendarDays,
+        description: 'Schedule and manage school events',
+        requiredPermissions: [PERMISSIONS.ACADEMIC_CALENDAR.VIEW]
+      },
+      { 
+        path: '/substitute-teacher', 
+        label: 'Substitute Teacher', 
+        icon: Clock,
+        description: 'Manage substitute teacher assignments',
+        requiredPermissions: [PERMISSIONS.SUBSTITUTE_TEACHER.VIEW]
+      }
+    ]
+  },
+  {
+    label: 'Reports & Analytics',
+    items: [
+      { 
+        path: '/reports', 
+        label: 'Reports', 
+        icon: FileText,
+        description: 'Generate and view various reports',
+        requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN, PERMISSIONS.REPORT.VIEW_TEACHER, PERMISSIONS.REPORT.VIEW_STUDENT]
+      },
+      { 
+        path: '/analytics', 
+        label: 'Analytics', 
+        icon: TrendingUp,
+        description: 'View performance analytics and insights',
+        requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN] // Using report admin as proxy for analytics
+      }
+    ]
+  },
+  {
+    label: 'Communication',
+    items: [
+      { 
+        path: '/messages', 
+        label: 'Messages', 
+        icon: MessageSquare,
+        description: 'Internal messaging system',
+        requiredPermissions: [PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
+      },
+      { 
+        path: '/announcements', 
+        label: 'Announcements', 
+        icon: Bell,
+        description: 'School and class announcements',
+        requiredPermissions: [PERMISSIONS.COMMUNICATION.SEND_ANNOUNCEMENT, PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
+      },
+      { 
+        path: '/notifications', 
+        label: 'Notifications', 
+        icon: Bell,
+        description: 'System notifications and alerts',
+        requiredPermissions: [PERMISSIONS.COMMUNICATION.MANAGE_NOTIFICATIONS]
+      }
+    ]
+  },
+  {
+    label: 'Settings',
+    items: [
+      { 
+        path: '/settings', 
+        label: 'Settings', 
+        icon: Settings,
+        description: 'System and user settings',
+        requiredPermissions: [PERMISSIONS.SCHOOL.UPDATE] // Using school update as proxy for settings
+      },
+      { 
+        path: '/user-management', 
+        label: 'User Management', 
+        icon: UserCog,
+        description: 'Manage users and their roles',
+        requiredPermissions: [PERMISSIONS.TEACHER.VIEW, PERMISSIONS.STUDENT.VIEW] // Can see users if can view teachers/students
+      }
+    ]
+  }
+];
 
-  TEACHER: [
-    {
-      label: 'Overview',
-      items: [
-        { 
-          path: '/dashboard', 
-          label: 'Dashboard', 
-          icon: LayoutDashboard,
-          description: 'Teaching overview'
-        }
-      ]
-    },
-    {
-      label: 'Teaching',
-      items: [
-        { 
-          path: '/my-classes', 
-          label: 'My Classes', 
-          icon: BookOpen,
-          description: 'Classes you teach'
-        },
-        { 
-          path: '/students', 
-          label: 'My Students', 
-          icon: GraduationCap,
-          description: 'Students in your classes'
-        },
-        { 
-          path: '/assignments', 
-          label: 'Assignments', 
-          icon: FileText,
-          description: 'Create and manage assignments'
-        },
-        { 
-          path: '/grading', 
-          label: 'Grading', 
-          icon: Award,
-          description: 'Grade student work'
-        }
-      ]
-    },
-    {
-      label: 'Administration',
-      items: [
-        { 
-          path: '/attendance', 
-          label: 'Attendance', 
-          icon: CheckSquare,
-          description: 'Mark and view attendance'
-        },
-        { 
-          path: '/reports', 
-          label: 'Reports', 
-          icon: ClipboardList,
-          description: 'Student progress reports'
-        }
-      ]
-    },
-    {
-      label: 'Communication',
-      items: [
-        { 
-          path: '/messages', 
-          label: 'Messages', 
-          icon: MessageSquare,
-          description: 'Communicate with students and parents'
-        },
-        { 
-          path: '/announcements', 
-          label: 'Announcements', 
-          icon: Bell,
-          description: 'Class announcements'
-        }
-      ]
-    }
-  ] as NavigationGroup[],
+// Helper function to filter navigation items based on permissions only
+export function filterNavigationByPermissions(
+  groups: NavigationGroup[], 
+  userPermissions: string[] = []
+): NavigationGroup[] {
+  return groups.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      checkNavigationAccess(
+        item.requiredPermissions,
+        userPermissions
+      )
+    )
+  })).filter(group => group.items.length > 0); // Remove empty groups
+}
 
-  STUDENT: [
-    {
-      label: 'Overview',
-      items: [
-        { 
-          path: '/dashboard', 
-          label: 'Dashboard', 
-          icon: LayoutDashboard,
-          description: 'Your academic overview'
-        }
-      ]
-    },
-    {
-      label: 'Academics',
-      items: [
-        { 
-          path: '/classes', 
-          label: 'My Classes', 
-          icon: BookOpen,
-          description: 'Your enrolled classes'
-        },
-        { 
-          path: '/assignments', 
-          label: 'Assignments', 
-          icon: FileText,
-          description: 'View and submit assignments'
-        },
-        { 
-          path: '/grades', 
-          label: 'Grades', 
-          icon: Award,
-          description: 'View your grades and progress'
-        }
-      ]
-    },
-    {
-      label: 'Records',
-      items: [
-        { 
-          path: '/attendance', 
-          label: 'Attendance', 
-          icon: Calendar,
-          description: 'View your attendance record'
-        },
-        { 
-          path: '/schedule', 
-          label: 'Schedule', 
-          icon: Calendar,
-          description: 'Your class schedule'
-        }
-      ]
-    },
-    {
-      label: 'Communication',
-      items: [
-        { 
-          path: '/messages', 
-          label: 'Messages', 
-          icon: MessageSquare,
-          description: 'Messages from teachers'
-        },
-        { 
-          path: '/announcements', 
-          label: 'Announcements', 
-          icon: Bell,
-          description: 'School and class announcements'
-        }
-      ]
-    }
-  ] as NavigationGroup[]
-};
-
-// Helper function to get navigation for a specific role
-export const getNavigationForRole = (role: 'ADMIN' | 'TEACHER' | 'STUDENT'): NavigationGroup[] => {
-  return navigationConfig[role] || [];
-};
+// Primary navigation function - permission-based only
+export function getNavigationForUser(
+  userPermissions: string[] = []
+): NavigationGroup[] {
+  return filterNavigationByPermissions(allNavigationItems, userPermissions);
+}
 
 // Helper function to find a navigation item by path
 export const findNavigationItem = (
-  role: 'ADMIN' | 'TEACHER' | 'STUDENT', 
+  userPermissions: string[], 
   path: string
 ): NavigationItem | null => {
-  const navigation = getNavigationForRole(role);
+  const navigation = getNavigationForUser(userPermissions);
   
   for (const group of navigation) {
     for (const item of group.items) {
@@ -318,9 +299,9 @@ export const findNavigationItem = (
   return null;
 };
 
-// Helper function to get all paths for a role (useful for route protection)
-export const getAllPathsForRole = (role: 'ADMIN' | 'TEACHER' | 'STUDENT'): string[] => {
-  const navigation = getNavigationForRole(role);
+// Helper function to get all paths accessible by user permissions
+export const getAllPathsForUser = (userPermissions: string[]): string[] => {
+  const navigation = getNavigationForUser(userPermissions);
   const paths: string[] = [];
   
   for (const group of navigation) {
@@ -341,9 +322,9 @@ export const getAllPathsForRole = (role: 'ADMIN' | 'TEACHER' | 'STUDENT'): strin
 
 // Helper function to check if a user has access to a specific path
 export const hasAccessToPath = (
-  userRole: 'ADMIN' | 'TEACHER' | 'STUDENT', 
+  userPermissions: string[], 
   path: string
 ): boolean => {
-  const allowedPaths = getAllPathsForRole(userRole);
+  const allowedPaths = getAllPathsForUser(userPermissions);
   return allowedPaths.includes(path);
 };

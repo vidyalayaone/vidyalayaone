@@ -68,25 +68,136 @@ async function main() {
   console.log(`   • role assigned: PLATFORM_ADMIN (roleId=${platformRoleFinal.id})`);
   console.log('   • credentials -> username:', username, 'password: password123');
 
-  // --- New: create DEFAULT role with only school.create permission ---
+  // --- New: create DEFAULT role with important admin permissions (excluding platform admin) ---
   const defaultRoleName = 'DEFAULT';
   let defaultRole = await prisma.role.findFirst({ where: { name: defaultRoleName, schoolId: PLATFORM_SCHOOL_ID } });
+
+  // Define important admin permissions (excluding platform-level permissions)
+  const defaultAdminPermissions = [
+    // Essential permissions
+    'platform.login',
+    'platform.get_me',
+    'school.create',
+    
+    // Dashboard access
+    'dashboard.view_admin',
+    
+    // Student management
+    'student.create',
+    'student.update',
+    'student.delete',
+    'student.view',
+    'student.view_details',
+    'student.manage_enrollment',
+    
+    // Teacher management  
+    'teacher.create',
+    'teacher.update',
+    'teacher.delete',
+    'teacher.view',
+    'teacher.view_details',
+    'teacher.assign_class',
+    'teacher.manage_schedule',
+    
+    // Class management
+    'class.view',
+    'class.create',
+    'class.update',
+    'class.delete',
+    'class.manage_sections',
+    'class.view_timetable',
+    'class.manage_timetable',
+    
+    // Subject management
+    'subject.view',
+    'subject.create',
+    'subject.update',
+    'subject.delete',
+    'subject.assign_teacher',
+    
+    // Attendance management
+    'attendance.view',
+    'attendance.mark',
+    'attendance.edit',
+    'attendance.view_reports',
+    
+    // Exam management
+    'exam.create',
+    'exam.update',
+    'exam.delete',
+    'exam.schedule',
+    'exam.view',
+    'exam.grade',
+    'exam.view_results',
+    
+    // Academic calendar
+    'academic_calendar.view',
+    'academic_calendar.create',
+    'academic_calendar.update',
+    'academic_calendar.delete',
+    
+    // Admissions
+    'admission.view',
+    'admission.create',
+    'admission.update',
+    'admission.delete',
+    'admission.approve',
+    'admission.reject',
+    'admission.bulk_import',
+    
+    // Fee management
+    'fee.view',
+    'fee.create',
+    'fee.update',
+    'fee.delete',
+    'fee.collect',
+    'fee.view_reports',
+    
+    // Communication
+    'communication.send_announcement',
+    'communication.send_message',
+    'communication.view_messages',
+    'communication.manage_notifications',
+    
+    // Substitute teacher management
+    'substitute_teacher.view',
+    'substitute_teacher.assign',
+    'substitute_teacher.manage',
+    
+    // Reports (admin level)
+    'report.view_admin',
+    'report.generate',
+    'report.export',
+    
+    // School management (but not platform-level school operations)
+    'school.get',
+    'school.view',
+    'school.update',
+    'school.manage_settings',
+    'school.view_analytics'
+  ];
 
   if (!defaultRole) {
     defaultRole = await prisma.role.create({
       data: {
         name: defaultRoleName,
-        description: 'Default role with minimal school create permission',
-        permissions: ['school.create', 'platform.login', 'platform.get_me'],
+        description: 'Default role with comprehensive school administration permissions',
+        permissions: defaultAdminPermissions,
         schoolId: PLATFORM_SCHOOL_ID,
       },
     });
-    console.log('✅ Created role DEFAULT with school.create permission');
+    console.log('✅ Created role DEFAULT with comprehensive admin permissions');
   } else {
-    // Ensure it has only the school.create permission
-    await prisma.role.update({ where: { id: defaultRole.id }, data: { permissions: ['school.create', 'platform.login', 'platform.get_me'] } });
+    // Update existing role with new permissions
+    await prisma.role.update({ 
+      where: { id: defaultRole.id }, 
+      data: { 
+        permissions: defaultAdminPermissions,
+        description: 'Default role with comprehensive school administration permissions'
+      } 
+    });
     defaultRole = await prisma.role.findUnique({ where: { id: defaultRole.id } }) as any;
-    console.log('✅ Ensured DEFAULT role exists and permissions set to school.create');
+    console.log('✅ Updated DEFAULT role with comprehensive admin permissions');
   }
 
   // Re-fetch DEFAULT role to ensure non-null

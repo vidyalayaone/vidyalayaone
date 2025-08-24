@@ -1,30 +1,76 @@
 // Authentication utility functions
 
 import { User } from '../api/types';
+import { hasAnyPermission } from './permissions';
 
-// Check if user has specific role
-export const hasRole = (user: User | null, role: 'ADMIN' | 'TEACHER' | 'STUDENT'): boolean => {
-  return user?.role === role;
+// Check if user has a specific role by name (dynamic role names)
+export const hasRoleName = (user: User | null, roleName: string): boolean => {
+  return user?.role?.name === roleName || user?.roleName === roleName;
 };
 
-// Check if user has any of the specified roles
-export const hasAnyRole = (user: User | null, roles: ('ADMIN' | 'TEACHER' | 'STUDENT')[]): boolean => {
-  return user ? roles.includes(user.role) : false;
+// Check if user has any of the specified role names
+export const hasAnyRoleName = (user: User | null, roleNames: string[]): boolean => {
+  if (!user) return false;
+  const userRoleName = user.role?.name || user.roleName;
+  return roleNames.includes(userRoleName || '');
 };
 
-// Check if user is admin
+// Permission-based checks (preferred approach)
+export const canManageUsers = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, ['USER.CREATE', 'USER.UPDATE', 'USER.DELETE']);
+};
+
+export const canViewDashboard = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, [
+    'DASHBOARD.VIEW_ADMIN',
+    'DASHBOARD.VIEW_TEACHER', 
+    'DASHBOARD.VIEW_STUDENT'
+  ]);
+};
+
+export const canManageStudents = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, ['STUDENT.CREATE', 'STUDENT.UPDATE', 'STUDENT.VIEW']);
+};
+
+export const canManageTeachers = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, ['TEACHER.CREATE', 'TEACHER.UPDATE', 'TEACHER.VIEW']);
+};
+
+export const canManageClasses = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, ['CLASS.CREATE', 'CLASS.UPDATE', 'CLASS.VIEW']);
+};
+
+export const canViewReports = (user: User | null): boolean => {
+  const userPermissions = user?.permissions || user?.role?.permissions || [];
+  return hasAnyPermission(userPermissions, ['REPORT.VIEW', 'ANALYTICS.VIEW']);
+};
+
+// Legacy compatibility functions - kept for backward compatibility
+// These should be gradually replaced with permission-based checks
+export const hasRole = (user: User | null, roleName: string): boolean => {
+  return hasRoleName(user, roleName);
+};
+
+export const hasAnyRole = (user: User | null, roleNames: string[]): boolean => {
+  return hasAnyRoleName(user, roleNames);
+};
+
+// Legacy role checks - deprecated, use permission-based checks instead
 export const isAdmin = (user: User | null): boolean => {
-  return hasRole(user, 'ADMIN');
+  return hasRoleName(user, 'Admin') || hasRoleName(user, 'ADMIN') || hasRoleName(user, 'Super Admin');
 };
 
-// Check if user is teacher
 export const isTeacher = (user: User | null): boolean => {
-  return hasRole(user, 'TEACHER');
+  return hasRoleName(user, 'Teacher') || hasRoleName(user, 'TEACHER');
 };
 
-// Check if user is student
 export const isStudent = (user: User | null): boolean => {
-  return hasRole(user, 'STUDENT');
+  return hasRoleName(user, 'Student') || hasRoleName(user, 'STUDENT');
 };
 
 // Get user's full name
@@ -43,26 +89,28 @@ export const getUserInitials = (user: User | null): string => {
   return (firstName + lastName) || user.username?.charAt(0).toUpperCase() || 'U';
 };
 
-// Get role display name
-export const getRoleDisplayName = (role: 'ADMIN' | 'TEACHER' | 'STUDENT'): string => {
-  const roleNames = {
-    ADMIN: 'Administrator',
-    TEACHER: 'Teacher',
-    STUDENT: 'Student'
-  };
-  
-  return roleNames[role] || role;
+// Get role display name (dynamic)
+export const getRoleDisplayName = (user: User | null): string => {
+  if (!user) return 'Unknown';
+  return user.role?.name || user.roleName || 'Unknown Role';
 };
 
-// Get role color for badges/indicators
-export const getRoleColor = (role: 'ADMIN' | 'TEACHER' | 'STUDENT'): string => {
-  const roleColors = {
-    ADMIN: 'bg-destructive text-destructive-foreground',
-    TEACHER: 'bg-primary text-primary-foreground',
-    STUDENT: 'bg-accent text-accent-foreground'
-  };
+// Get role color for badges/indicators (dynamic based on role name)
+export const getRoleColor = (user: User | null): string => {
+  if (!user) return 'bg-muted text-muted-foreground';
   
-  return roleColors[role] || 'bg-muted text-muted-foreground';
+  const roleName = user.role?.name || user.roleName || '';
+  
+  // Map common role names to colors
+  if (roleName.toLowerCase().includes('admin')) {
+    return 'bg-destructive text-destructive-foreground';
+  } else if (roleName.toLowerCase().includes('teacher')) {
+    return 'bg-primary text-primary-foreground';
+  } else if (roleName.toLowerCase().includes('student')) {
+    return 'bg-accent text-accent-foreground';
+  } else {
+    return 'bg-secondary text-secondary-foreground';
+  }
 };
 
 // Format user data for display
@@ -71,75 +119,32 @@ export const formatUserForDisplay = (user: User) => {
     ...user,
     fullName: getUserFullName(user),
     initials: getUserInitials(user),
-    roleDisplay: getRoleDisplayName(user.role),
-    roleColor: getRoleColor(user.role)
+    roleDisplay: getRoleDisplayName(user),
+    roleColor: getRoleColor(user)
   };
 };
 
 // Validate user permissions for specific actions
 export const canPerformAction = (
   user: User | null, 
-  action: string, 
-  resource?: string
+  permission: string
 ): boolean => {
   if (!user) return false;
   
-  // Admin can do everything
-  if (isAdmin(user)) return true;
-  
-  // Define role-based permissions
-  const permissions = {
-    TEACHER: {
-      'view:students': true,
-      'view:classes': true,
-      'create:assignments': true,
-      'grade:assignments': true,
-      'mark:attendance': true,
-      'view:reports': true,
-      'send:messages': true,
-    },
-    STUDENT: {
-      'view:own_grades': true,
-      'view:own_classes': true,
-      'submit:assignments': true,
-      'view:own_attendance': true,
-      'receive:messages': true,
-    }
-  };
-  
-  const userPermissions = permissions[user.role as keyof typeof permissions] || {};
-  return userPermissions[action as keyof typeof userPermissions] || false;
+  // Check if user has the specific permission
+  const userPermissions = user.permissions || user.role?.permissions || [];
+  return userPermissions.includes(permission);
 };
 
-// Check if user can access a specific resource
+// Check if user can access a specific resource based on permissions
 export const canAccessResource = (
   user: User | null,
-  resourceType: string,
-  resourceId?: string
+  requiredPermissions: string[]
 ): boolean => {
   if (!user) return false;
   
-  // Admin can access everything
-  if (isAdmin(user)) return true;
-  
-  // Add resource-specific access logic here
-  switch (resourceType) {
-    case 'user_profile':
-      // Users can access their own profile
-      return resourceId === user.id;
-    
-    case 'class':
-      // Teachers can access their classes, students can access their enrolled classes
-      // This would need to check against actual class enrollment/assignment data
-      return true; // Simplified for now
-    
-    case 'assignment':
-      // Similar logic for assignments
-      return true; // Simplified for now
-    
-    default:
-      return false;
-  }
+  const userPermissions = user.permissions || user.role?.permissions || [];
+  return hasAnyPermission(userPermissions, requiredPermissions);
 };
 
 // Generate default avatar URL based on user initials
@@ -152,44 +157,6 @@ export const getDefaultAvatarUrl = (user: User | null): string => {
   const backgroundColor = colors[colorIndex];
   
   return `https://ui-avatars.com/api/?name=${initials}&background=${backgroundColor}&color=fff&size=128&font-size=0.5`;
-};
-
-// Check if user session is valid (based on token expiry, etc.)
-export const isSessionValid = (user: User | null, accessToken: string | null): boolean => {
-  if (!user || !accessToken) return false;
-  
-  // In a real app, you would check token expiry, etc.
-  // For now, just check if both exist
-  return true;
-};
-
-// Get user's timezone (for date/time formatting)
-export const getUserTimezone = (user: User | null): string => {
-  // In a real app, this might come from user preferences
-  // For now, use browser timezone as fallback
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-};
-
-// Format date/time for user's timezone
-export const formatDateForUser = (
-  date: string | Date, 
-  user: User | null,
-  options?: Intl.DateTimeFormatOptions
-): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const timezone = getUserTimezone(user);
-  
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: timezone,
-    ...options
-  };
-  
-  return dateObj.toLocaleDateString('en-US', defaultOptions);
 };
 
 // Validate password strength
@@ -233,4 +200,42 @@ export const validatePasswordStrength = (password: string): {
     errors,
     strength
   };
+};
+
+// Check if user session is valid (based on token expiry, etc.)
+export const isSessionValid = (user: User | null, accessToken: string | null): boolean => {
+  if (!user || !accessToken) return false;
+  
+  // In a real app, you would check token expiry, etc.
+  // For now, just check if both exist
+  return true;
+};
+
+// Get user's timezone (for date/time formatting)
+export const getUserTimezone = (user: User | null): string => {
+  // In a real app, this might come from user preferences
+  // For now, use browser timezone as fallback
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
+// Format date/time for user's timezone
+export const formatDateForUser = (
+  date: string | Date, 
+  user: User | null,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const timezone = getUserTimezone(user);
+  
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: timezone,
+    ...options
+  };
+  
+  return dateObj.toLocaleDateString('en-US', defaultOptions);
 };

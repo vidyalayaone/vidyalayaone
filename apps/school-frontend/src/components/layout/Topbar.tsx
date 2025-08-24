@@ -26,7 +26,7 @@ const Topbar: React.FC = () => {
   
   const userFullName = getUserFullName(user);
   const userInitials = getUserInitials(user);
-  const roleDisplay = user ? getRoleDisplayName(user.role) : '';
+  const roleDisplay = user ? getRoleDisplayName(user) : '';
   
   const unreadNotifications = notifications.filter(n => !n.id).length;
 

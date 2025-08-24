@@ -1,11 +1,12 @@
-// Main dashboard page with role-based content
+// Main dashboard page with permission-based content
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/api/api';
 import { AdminStats, TeacherStats, StudentStats } from '@/api/types';
-import { isAdmin, isTeacher, isStudent } from '@/utils/auth';
+import { canPerformAction } from '@/utils/auth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 // Dashboard Components
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
@@ -25,11 +26,12 @@ const DashboardPage: React.FC = () => {
         setLoading(true);
         
         let response;
-        if (isAdmin(user)) {
+        // Check permissions to determine dashboard type
+        if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_ADMIN)) {
           response = await api.getAdminStats();
-        } else if (isTeacher(user)) {
+        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_TEACHER)) {
           response = await api.getTeacherStats();
-        } else if (isStudent(user)) {
+        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_STUDENT)) {
           response = await api.getStudentStats();
         }
 
@@ -66,11 +68,12 @@ const DashboardPage: React.FC = () => {
       );
     }
 
-    if (isAdmin(user)) {
+    // Check permissions to determine dashboard component
+    if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_ADMIN)) {
       return <AdminDashboard stats={stats as AdminStats} user={user} />;
-    } else if (isTeacher(user)) {
+    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_TEACHER)) {
       return <TeacherDashboard stats={stats as TeacherStats} user={user} />;
-    } else if (isStudent(user)) {
+    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_STUDENT)) {
       return <StudentDashboard stats={stats as StudentStats} user={user} />;
     }
 

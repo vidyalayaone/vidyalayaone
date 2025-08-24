@@ -341,6 +341,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.83.0
         version: 5.84.1(react@18.3.1)
+      '@vidyalayaone/common-utils':
+        specifier: workspace:*
+        version: link:../../packages/common-utils
       axios:
         specifier: ^1.10.0
         version: 1.10.0

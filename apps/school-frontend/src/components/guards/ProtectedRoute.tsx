@@ -1,17 +1,20 @@
-// Protected route component - requires authentication
+// Protected route component - requires authentication and optionally permissions
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { checkNavigationAccess } from '@/config/navigation';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'ADMIN' | 'TEACHER' | 'STUDENT';
+  requiredPermissions?: string[]; // Requires ANY of these permissions
+  excludedPermissions?: string[]; // User cannot have any of these permissions
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole 
+  requiredPermissions,
+  excludedPermissions
 }) => {
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
@@ -21,13 +24,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check role-based access if required
-  if (requiredRole && user.role !== requiredRole) {
-    // User doesn't have required role - redirect to their dashboard
+  // Check permission-based access
+  const hasAccess = checkNavigationAccess(
+    requiredPermissions,
+    user.permissions || []
+  );
+
+  // Check excluded permissions
+  if (excludedPermissions && excludedPermissions.length > 0) {
+    const hasExcludedPermission = excludedPermissions.some(permission => 
+      (user.permissions || []).includes(permission)
+    );
+    if (hasExcludedPermission) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  if (!hasAccess) {
+    // User doesn't have required permissions - redirect to their dashboard
     return <Navigate to="/dashboard" replace />;
   }
 
-  // User is authenticated and has required role (if specified)
+  // User is authenticated and has required permissions
   return <>{children}</>;
 };
 

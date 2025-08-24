@@ -121,57 +121,6 @@ export const ALL_PERMISSIONS = Object.values(PERMISSIONS).reduce((acc, permissio
   return [...acc, ...Object.values(permissionGroup)];
 }, [] as string[]);
 
-// Permission groups for easier management
-export const PERMISSION_GROUPS = {
-  ADMIN_PERMISSIONS: [
-    ...Object.values(PERMISSIONS.STUDENT),
-    ...Object.values(PERMISSIONS.TEACHER),
-    ...Object.values(PERMISSIONS.CLASS),
-    ...Object.values(PERMISSIONS.SUBJECT),
-    ...Object.values(PERMISSIONS.ATTENDANCE),
-    ...Object.values(PERMISSIONS.EXAM),
-    ...Object.values(PERMISSIONS.ACADEMIC_CALENDAR),
-    ...Object.values(PERMISSIONS.ADMISSION),
-    ...Object.values(PERMISSIONS.FEE),
-    ...Object.values(PERMISSIONS.COMMUNICATION),
-    ...Object.values(PERMISSIONS.SUBSTITUTE_TEACHER),
-    ...Object.values(PERMISSIONS.REPORT),
-    PERMISSIONS.DASHBOARD.VIEW_ADMIN,
-    ...Object.values(PERMISSIONS.SCHOOL),
-  ],
-  
-  TEACHER_PERMISSIONS: [
-    PERMISSIONS.STUDENT.VIEW,
-    PERMISSIONS.STUDENT.VIEW_DETAILS,
-    PERMISSIONS.CLASS.VIEW,
-    PERMISSIONS.CLASS.VIEW_TIMETABLE,
-    PERMISSIONS.SUBJECT.VIEW,
-    PERMISSIONS.ATTENDANCE.VIEW,
-    PERMISSIONS.ATTENDANCE.MARK,
-    PERMISSIONS.EXAM.VIEW,
-    PERMISSIONS.EXAM.GRADE,
-    PERMISSIONS.EXAM.VIEW_RESULTS,
-    PERMISSIONS.ACADEMIC_CALENDAR.VIEW,
-    PERMISSIONS.COMMUNICATION.SEND_MESSAGE,
-    PERMISSIONS.COMMUNICATION.VIEW_MESSAGES,
-    PERMISSIONS.REPORT.VIEW_TEACHER,
-    PERMISSIONS.DASHBOARD.VIEW_TEACHER,
-  ],
-  
-  STUDENT_PERMISSIONS: [
-    PERMISSIONS.CLASS.VIEW,
-    PERMISSIONS.CLASS.VIEW_TIMETABLE,
-    PERMISSIONS.SUBJECT.VIEW,
-    PERMISSIONS.ATTENDANCE.VIEW_OWN,
-    PERMISSIONS.EXAM.VIEW_OWN_RESULTS,
-    PERMISSIONS.ACADEMIC_CALENDAR.VIEW,
-    PERMISSIONS.FEE.VIEW_OWN,
-    PERMISSIONS.COMMUNICATION.VIEW_MESSAGES,
-    PERMISSIONS.REPORT.VIEW_STUDENT,
-    PERMISSIONS.DASHBOARD.VIEW_STUDENT,
-  ],
-} as const;
-
 export async function hasPermission(
   permission: string,
   user: any
@@ -199,34 +148,13 @@ export function hasAllPermissions(
 
 export function checkNavigationAccess(
   requiredPermissions?: string[],
-  requiredAllPermissions?: string[],
-  userPermissions: string[] = [],
-  userRole?: 'ADMIN' | 'TEACHER' | 'STUDENT',
-  requiredRole?: 'ADMIN' | 'TEACHER' | 'STUDENT',
-  excludedRoles?: ('ADMIN' | 'TEACHER' | 'STUDENT')[]
+  userPermissions: string[] = []
 ): boolean {
-  // Check excluded roles first
-  if (excludedRoles && userRole && excludedRoles.includes(userRole)) {
-    return false;
+  // If no required permissions specified, allow access
+  if (!requiredPermissions || requiredPermissions.length === 0) {
+    return true;
   }
 
-  // Check permission-based access (preferred)
-  if (requiredPermissions && requiredPermissions.length > 0) {
-    if (!hasAnyPermission(requiredPermissions, userPermissions)) {
-      return false;
-    }
-  }
-
-  if (requiredAllPermissions && requiredAllPermissions.length > 0) {
-    if (!hasAllPermissions(requiredAllPermissions, userPermissions)) {
-      return false;
-    }
-  }
-
-  // Fallback to role-based access if no permissions specified
-  if (!requiredPermissions && !requiredAllPermissions && requiredRole) {
-    return userRole === requiredRole;
-  }
-
-  return true;
+  // Check if user has any of the required permissions
+  return hasAnyPermission(requiredPermissions, userPermissions);
 }

@@ -7,6 +7,7 @@ import { loginSchema } from '../validations/validationSchemas';
 import { DeviceType } from '../generated/client';
 import config from '../config/config';
 import { fetchUserByUsernameAndContext } from '../utils/fetchUserBasedOnContext';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -55,11 +56,11 @@ export async function login(req: Request, res: Response) {
     if (!validation.success) return;
 
     const { username, password } = validation.data;
-    const { context, subdomain } = getSchoolContext(req);
+    const { context, schoolId } = getSchoolContext(req);
 
     // console.log(subdomain, context);
 
-    const user = await fetchUserByUsernameAndContext(prisma, username, context, subdomain);
+    const user = await fetchUserByUsernameAndContext(res, prisma, username, context, schoolId);
     if (!user) {
       res.status(401).json({
         success: false,
@@ -67,6 +68,18 @@ export async function login(req: Request, res: Response) {
         timestamp: new Date().toISOString()
       });
       return;
+    }
+    
+    if (context === 'platform'){
+      const hasLoginPermission = hasPermission(prisma, PERMISSIONS.PLATFORM.LOGIN, user);
+      if (!hasLoginPermission) {
+        res.status(403).json({
+          success: false,
+          error: { message: 'User does not have permission to login on platform' },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
     }
     
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);

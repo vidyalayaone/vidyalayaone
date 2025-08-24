@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -8,9 +9,7 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
   try {
     const { schoolId } = req.params;
 
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;
+    const userData = getUser(req);
 
     if (!schoolId) {
       res.status(400).json({
@@ -21,14 +20,14 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (!adminId) {
-      res.status(401).json({
+    if (!await hasPermission(PERMISSIONS.SCHOOL.GET, userData)) {
+      res.status(403).json({
         success: false,
-        error: { message: 'User authentication required' },
+        error: { message: 'You do not have permission to view school details' },
         timestamp: new Date().toISOString()
       });
       return;
-    } 
+    }
 
     // Use the new school table instead of tenant
     const school = await prisma.school.findUnique({
@@ -44,16 +43,16 @@ export async function getSchoolById(req: Request, res: Response): Promise<void> 
         timestamp: new Date().toISOString()
       });
       return;
-    } 
-
-    if (!school.isActive) {
-      res.status(404).json({
-        success: false,
-        error: { message: 'School is not active' },
-        timestamp: new Date().toISOString()
-      });
-      return;
     }
+
+    // if (!school.isActive) {
+    //   res.status(404).json({
+    //     success: false,
+    //     error: { message: 'School is not active' },
+    //     timestamp: new Date().toISOString()
+    //   });
+    //   return;
+    // }
 
     res.status(200).json({
       success: true,

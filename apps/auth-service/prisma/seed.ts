@@ -47,9 +47,7 @@ async function main() {
       passwordHash,
       isActive: true,
       isPhoneVerified: true,
-      isEmailVerified: true,
       phoneVerifiedAt: new Date(),
-      emailVerifiedAt: new Date(),
       roleId: platformRoleFinal.id,
       schoolId: PLATFORM_SCHOOL_ID,
       updatedAt: new Date(),
@@ -60,9 +58,7 @@ async function main() {
       passwordHash,
       isActive: true,
       isPhoneVerified: true,
-      isEmailVerified: true,
       phoneVerifiedAt: new Date(),
-      emailVerifiedAt: new Date(),
       roleId: platformRoleFinal.id,
       schoolId: PLATFORM_SCHOOL_ID,
     },
@@ -74,7 +70,6 @@ async function main() {
 
   // --- New: create DEFAULT role with only school.create permission ---
   const defaultRoleName = 'DEFAULT';
-  const schoolCreatePermission = 'school.create';
   let defaultRole = await prisma.role.findFirst({ where: { name: defaultRoleName, schoolId: PLATFORM_SCHOOL_ID } });
 
   if (!defaultRole) {
@@ -82,14 +77,14 @@ async function main() {
       data: {
         name: defaultRoleName,
         description: 'Default role with minimal school create permission',
-        permissions: [schoolCreatePermission],
+        permissions: ['school.create', 'platform.login'],
         schoolId: PLATFORM_SCHOOL_ID,
       },
     });
     console.log('✅ Created role DEFAULT with school.create permission');
   } else {
     // Ensure it has only the school.create permission
-    await prisma.role.update({ where: { id: defaultRole.id }, data: { permissions: [schoolCreatePermission] } });
+    await prisma.role.update({ where: { id: defaultRole.id }, data: { permissions: ['school.create', 'platform.login'] } });
     defaultRole = await prisma.role.findUnique({ where: { id: defaultRole.id } }) as any;
     console.log('✅ Ensured DEFAULT role exists and permissions set to school.create');
   }
@@ -97,6 +92,37 @@ async function main() {
   // Re-fetch DEFAULT role to ensure non-null
   const defaultRoleFinal = await prisma.role.findFirst({ where: { name: defaultRoleName, schoolId: PLATFORM_SCHOOL_ID } });
   if (!defaultRoleFinal) throw new Error('Failed to create or find DEFAULT role');
+  
+  // --- Create a sample user assigned to DEFAULT role (mirrors register flow) ---
+  const defaultUsername = 'first_user';
+  const defaultRawPassword = 'password123';
+  const defaultPasswordHash = await bcrypt.hash(defaultRawPassword, config.security.bcryptSaltRounds);
+
+  const defaultUser = await prisma.user.upsert({
+    where: { username: defaultUsername },
+    update: {
+      passwordHash: defaultPasswordHash,
+      phone: '1111111111',
+      isActive: true,
+      isPhoneVerified: true,
+      phoneVerifiedAt: new Date(),
+      roleId: defaultRoleFinal.id,
+      updatedAt: new Date(),
+    },
+    create: {
+      username: defaultUsername,
+      phone: '1111111111',
+      passwordHash: defaultPasswordHash,
+      isActive: true,
+      isPhoneVerified: true,
+      phoneVerifiedAt: new Date(),
+      roleId: defaultRoleFinal.id,
+    },
+  });
+
+  console.log('✅ Created or updated default user:', defaultUser.username);
+  console.log(`   • role assigned: DEFAULT (roleId=${defaultRoleFinal.id})`);
+  console.log('   • credentials -> username:', defaultUsername, 'password:', defaultRawPassword);
   
   console.log('🌱 Auth database seeding (platform role + default role) completed!');
 }

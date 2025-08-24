@@ -4,7 +4,6 @@ import DatabaseService from '../services/database';
 import { createAndSendOtpToPhone } from '../services/otpService';
 import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
-import { Role } from '../generated/client';
 import config from '../config/config';
 import { maskPhoneNumber } from '../utils/maskPhoneNumber';
 
@@ -27,6 +26,19 @@ export async function register(req: Request, res: Response) {
       return;
     }
 
+    // Ensure a role named "DEFAULT" exists in the platform school scope and fetch it so we can attach it to the user
+    const defaultRoleName = 'DEFAULT';
+    let defaultRole = await prisma.role.findFirst({ where: { name: defaultRoleName } });
+    if (!defaultRole) {
+      // give an error if DEFAULT role is missing
+      res.status(500).json({
+        success: false,
+        error: { message: 'System misconfiguration: DEFAULT role is missing. Please contact support.' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     // Check if user exists (username is globally unique now)
     const existingUser = await prisma.user.findUnique({ where: { username } });
     
@@ -41,6 +53,9 @@ export async function register(req: Request, res: Response) {
             passwordHash,
             isActive: true,
             updatedAt: new Date(),
+            schoolId: defaultRole.schoolId,
+            // Attach DEFAULT role via relation connect
+            role: { connect: { id: defaultRole.id } },
           },
         });
 
@@ -79,10 +94,10 @@ export async function register(req: Request, res: Response) {
           username,
           phone,
           passwordHash,
-          role: Role.ADMIN,
+          // Attach DEFAULT role via relation connect
+          role: { connect: { id: defaultRole.id } },
+          schoolId: defaultRole.schoolId,
           isActive: true,
-          isPhoneVerified: false,
-          isEmailVerified: false,
         },
       });
 

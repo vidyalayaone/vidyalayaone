@@ -19,9 +19,26 @@ export const PERMISSIONS = {
   },
   SCHOOL: {
     CREATE: "school.create",
+  },
+  PLATFORM: {
+    LOGIN: "platform.login",
   }
 } as const;
 
 // A flat type of all permission strings
 export type Permission =
   typeof PERMISSIONS[keyof typeof PERMISSIONS][keyof typeof PERMISSIONS[keyof typeof PERMISSIONS]];
+
+export async function hasPermission(
+  prisma: any,
+  permission: string,
+  user: any
+): Promise<boolean> {
+  if (!user) return false;
+
+  const role = await prisma.role.findUnique({ where: { id: user.roleId } });
+  if (!role) return false;
+  
+  const permissions: string[] = role.permissions || [];
+  return permissions.includes(permission);
+}

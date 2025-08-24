@@ -1,4 +1,6 @@
-export async function fetchUserByUsernameAndContext(prisma: any, username: string, context: string, subdomain?: string) {
+import { Response } from 'express';
+
+export async function fetchUserByUsernameAndContext(res: Response, prisma: any, username: string, context: string, schoolId?: string) {
   let user;
 
   if (context === 'platform') {
@@ -6,33 +8,50 @@ export async function fetchUserByUsernameAndContext(prisma: any, username: strin
       where: { username },
     });
     if (!user) {
-      throw new Error('User not found');
-    }
-    if (user.role !== 'ADMIN') {
-      throw new Error('The role must be ADMIN for platform context');
+      res.status(404).json({
+        success: false,
+        error: { message: 'User not found' },
+        timestamp: new Date().toISOString()
+      });
+      return;
     }
   } else if (context === 'school') {
     user = await prisma.user.findFirst({
-      where: { username, subdomain },
+      where: { username, schoolId },
     });
     if (!user) {
-      const usernameWithSubdomain = `${username}@${subdomain}`;
-      user = await prisma.user.findFirst({
-        where: { username: usernameWithSubdomain },
+      res.status(404).json({
+        success: false,
+        error: { message: 'User not found' },
+        timestamp: new Date().toISOString()
       });
-      if (!user) {
-        throw new Error('User not found');
-      }
+      return;
     }
   } else {
-    throw new Error('Invalid context');
+    res.status(400).json({
+      success: false,
+      error: { message: 'Invalid context' },
+      timestamp: new Date().toISOString()
+    });
+    return;
   }
 
   if (!user.isActive) {
-    throw new Error('User is not active');
+    res.status(403).json({
+      success: false,
+      error: { message: 'User is not active' },
+      timestamp: new Date().toISOString()
+    });
+    return;
   }
+
   if (!user.isPhoneVerified) {
-    throw new Error('Phone number not verified');
+    res.status(403).json({
+      success: false,
+      error: { message: 'Phone number not verified' },
+      timestamp: new Date().toISOString()
+    });
+    return;
   }
 
   return user;

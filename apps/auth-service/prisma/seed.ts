@@ -77,14 +77,14 @@ async function main() {
       data: {
         name: defaultRoleName,
         description: 'Default role with minimal school create permission',
-        permissions: ['school.create', 'platform.login'],
+        permissions: ['school.create', 'platform.login', 'platform.get_me'],
         schoolId: PLATFORM_SCHOOL_ID,
       },
     });
     console.log('✅ Created role DEFAULT with school.create permission');
   } else {
     // Ensure it has only the school.create permission
-    await prisma.role.update({ where: { id: defaultRole.id }, data: { permissions: ['school.create', 'platform.login'] } });
+    await prisma.role.update({ where: { id: defaultRole.id }, data: { permissions: ['school.create', 'platform.login', 'platform.get_me'] } });
     defaultRole = await prisma.role.findUnique({ where: { id: defaultRole.id } }) as any;
     console.log('✅ Ensured DEFAULT role exists and permissions set to school.create');
   }

@@ -41,13 +41,13 @@ router.post('/resend-otp', strictLimiter, resendOtp);
 router.post('/verify-otp/registration', strictLimiter, verifyOtpForRegistration);
 router.post('/login', strictLimiter, login);
 router.post('/refresh-token', strictLimiter, refreshToken);
-router.post('/forgot-password', strictLimiter, forgotPassword);
-router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset);
-router.post('/reset-password', strictLimiter, resetPassword);
+router.post('/forgot-password', strictLimiter, forgotPassword); // needs to be updated
+router.post('/verify-otp/password-reset', strictLimiter, verifyOtpForPasswordReset); // needs to be updated
+router.post('/reset-password', strictLimiter, resetPassword); // needs to be updated
 
 // protected = true
 router.get('/me', authLimiter, getMe);
 router.post('/logout', authLimiter, logout);
-router.post('/update-admin-with-subdomain', authLimiter, updateAdminWithSubdomain);
+router.post('/update-admin-with-subdomain', authLimiter, updateAdminWithSubdomain); // needs to be updated
 
 export default router;

@@ -22,6 +22,7 @@ export const PERMISSIONS = {
   },
   PLATFORM: {
     LOGIN: "platform.login",
+    GET_ME: "platform.get_me",
   }
 } as const;
 
@@ -32,13 +33,13 @@ export type Permission =
 export async function hasPermission(
   prisma: any,
   permission: string,
-  user: any
+  roleId: any
 ): Promise<boolean> {
-  if (!user) return false;
+  if (!roleId) return false;
 
-  const role = await prisma.role.findUnique({ where: { id: user.roleId } });
+  const role = await prisma.role.findUnique({ where: { id: roleId } });
   if (!role) return false;
-  
+
   const permissions: string[] = role.permissions || [];
   return permissions.includes(permission);
 }

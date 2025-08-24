@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -9,7 +10,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
     const { context, subdomain } = getSchoolContext(req);
     const userData = getUser(req);
     const userId = userData?.id;
-    const role = userData?.role;
+    const roleId = userData?.roleId;
 
     if (!userId) {
       res.status(401).json({
@@ -20,27 +21,31 @@ export async function getMe(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (context == 'platform' && role!='ADMIN') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Only admin can use getMe on platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
+    if (context == 'platform') {
+      const hasGetMePermission = await hasPermission(prisma, PERMISSIONS.PLATFORM.GET_ME, roleId);
+      if (!hasGetMePermission) {
+        res.status(403).json({
+          success: false,
+          error: { message: 'Forbidden' },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
     }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { 
         id: true,
-        email: true,
+        phone: true,
         username: true,
         role: true,
-        subdomain: true,
+        schoolId: true,
         isPhoneVerified: true,
         createdAt: true,
         updatedAt: true,
-        phone: true
+        email: true,
+        
       }
     });
     res.status(200).json({

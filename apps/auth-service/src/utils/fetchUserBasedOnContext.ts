@@ -16,6 +16,15 @@ export async function fetchUserByUsernameAndContext(res: Response, prisma: any, 
       return;
     }
   } else if (context === 'school') {
+
+    console.log('Fetching user for school context:', { username, schoolId });
+
+    const tempUser = await prisma.user.findUnique({
+      where: { username },
+    });
+    
+    console.log('User fetched by username:', tempUser);
+    
     user = await prisma.user.findFirst({
       where: { username, schoolId },
     });

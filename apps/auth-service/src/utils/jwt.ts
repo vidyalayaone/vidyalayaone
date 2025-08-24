@@ -3,7 +3,8 @@ import config from '../config/config';
 
 export interface JwtPayload {
   id: string;
-  role: string;
+  roleId: string;
+  roleName: string;
 }
 
 export function generateAccessToken(payload: JwtPayload): string {

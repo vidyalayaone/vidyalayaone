@@ -2,11 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
-interface JwtPayload {
-  id: string;
-  role: string;
-}
-
 function verifyAccessToken(token: string): jwt.JwtPayload | string {
   return jwt.verify(token, config.jwt.accessSecret);
 }
@@ -33,7 +28,8 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     // req.user = decoded;
 
     req.headers['x-user-id'] = decoded.id;
-    req.headers['x-user-role'] = decoded.role;
+    req.headers['x-user-role-id'] = decoded.roleId;
+    req.headers['x-user-role-name'] = decoded.roleName;
 
     next();
   } catch (error) {

@@ -61,17 +61,10 @@ export async function login(req: Request, res: Response) {
     // console.log(subdomain, context);
 
     const user = await fetchUserByUsernameAndContext(res, prisma, username, context, schoolId);
-    if (!user) {
-      res.status(401).json({
-        success: false,
-        error: { message: 'User not found' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    if (!user) return;
     
     if (context === 'platform'){
-      const hasLoginPermission = hasPermission(prisma, PERMISSIONS.PLATFORM.LOGIN, user);
+      const hasLoginPermission = hasPermission(prisma, PERMISSIONS.PLATFORM.LOGIN, user.roleId);
       if (!hasLoginPermission) {
         res.status(403).json({
           success: false,
@@ -91,13 +84,26 @@ export async function login(req: Request, res: Response) {
       });
       return;
     }
+
+    const role = await prisma.role.findUnique({ where: { id: user.roleId } });
+    if (!role) {
+      res.status(500).json({
+        success: false,
+        error: { message: 'User role not found. Please contact support.' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     const accessToken = generateAccessToken({
       id: user.id,
-      role: user.role
+      roleId: user.roleId,
+      roleName: role.name
     });
     const refreshToken = generateRefreshToken({
       id: user.id,
-      role: user.role
+      roleId: user.roleId,
+      roleName: role.name
     });
 
     // Get client information
@@ -142,7 +148,8 @@ export async function login(req: Request, res: Response) {
         refreshToken,
         user: {
           id: user.id,
-          role: user.role
+          roleId: user.roleId,
+          roleName: role.name,
         }
       },
       timestamp: new Date().toISOString()

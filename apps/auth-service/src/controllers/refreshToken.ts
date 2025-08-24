@@ -4,6 +4,7 @@ import DatabaseService from '../services/database';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { getSchoolContext, getUser, validateInput } from '@vidyalayaone/common-utils';
 import { refreshTokenSchema } from '../validations/validationSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -15,6 +16,7 @@ export async function refreshToken(req: Request, res: Response) {
     const { refreshToken } = validation.data;
     const rotateToken = true; // Optional token rotation
     const schoolContext = getSchoolContext(req);
+    // const user = getUser(req);
 
     // Verify refresh token
     const payload = verifyRefreshToken(refreshToken);
@@ -28,8 +30,53 @@ export async function refreshToken(req: Request, res: Response) {
       });
       return;
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      include: { role: true }
+    });
+
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        error: { message: 'User not found' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Validate school context
+    if (schoolContext.context === 'platform'){
+          const hasLoginPermission = hasPermission(prisma, PERMISSIONS.PLATFORM.LOGIN, user.roleId);
+          if (!hasLoginPermission) {
+            res.status(403).json({
+              success: false,
+              error: { message: 'User does not have permission to login on platform' },
+              timestamp: new Date().toISOString()
+            });
+            return;
+          }
+        }
+    else if (schoolContext.context === 'school'){
+      if (user.schoolId !== schoolContext.schoolId) {
+        res.status(401).json({
+          success: false, 
+          error: { message: 'User does not belong to the specified school', schoolContext },
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+    }
+    else {
+      res.status(400).json({
+        success: false,
+        error: { message: 'Invalid school context' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
     
-    // Check if refresh token exists in database
+    // Check if refresh token exists in databases === '
     const tokenRecord = await prisma.refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: true }
@@ -60,20 +107,11 @@ export async function refreshToken(req: Request, res: Response) {
       return;
     }
 
-    // Validate school context
-    if (schoolContext?.context === 'platform' && tokenRecord.user.role !== 'ADMIN') {
-      res.status(403).json({
-        success: false,
-        error: { message: 'Only admin can refresh token on platform' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
     // Generate new access token
     const newAccessToken = generateAccessToken({
       id: payload.id,
-      role: payload.role
+      roleId: payload.roleId,
+      roleName: payload.roleName
     });
 
     let newRefreshToken = refreshToken; // Keep existing by default
@@ -82,7 +120,8 @@ export async function refreshToken(req: Request, res: Response) {
     if (rotateToken) {
       newRefreshToken = generateRefreshToken({
         id: payload.id,
-        role: payload.role
+        roleId: payload.roleId,
+        roleName: payload.roleName
       });
 
       // Update refresh token in database

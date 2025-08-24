@@ -1,5 +1,3 @@
-// permissions.ts
-
 export const PERMISSIONS = {
   STUDENT: {
     CREATE: "student.create",
@@ -31,15 +29,10 @@ export type Permission =
   typeof PERMISSIONS[keyof typeof PERMISSIONS][keyof typeof PERMISSIONS[keyof typeof PERMISSIONS]];
 
 export async function hasPermission(
-  prisma: any,
   permission: string,
-  roleId: any
+  user: any
 ): Promise<boolean> {
-  if (!roleId) return false;
-
-  const role = await prisma.role.findUnique({ where: { id: roleId } });
-  if (!role) return false;
-
-  const permissions: string[] = role.permissions || [];
+  if (!user) return false;
+  const permissions: string[] = user.permissions || [];
   return permissions.includes(permission);
 }

@@ -39,5 +39,5 @@ docker compose exec profile-service sh -c "pnpm db:clean --yes"
 Run the automation script from the frontend application to seed the remaining data. This script needs to be run from its own directory.
 
 ```bash
-(cd apps/school-frontend && pnpm automate)
+cd apps/school-frontend && pnpm automate
 ```

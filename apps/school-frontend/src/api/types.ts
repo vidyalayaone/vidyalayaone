@@ -115,6 +115,74 @@ export interface Teacher extends Omit<User, 'role'> {
   maritalStatus: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
 }
 
+// Profile Service Teacher interface (matches backend response)
+export interface ProfileServiceTeacher {
+  id: string;
+  userId: string;
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+  dateOfBirth?: string;
+  category?: string;
+  religion?: string;
+  qualifications?: string;
+  experienceYears?: number;
+  joiningDate?: string;
+  salary?: number;
+  address?: any;
+  subjectIds: string[];
+  subjects: {
+    id: string;
+    name: string;
+    code: string;
+  }[];
+  documentCount: number;
+  verifiedDocumentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Teachers response from profile service
+export interface ProfileServiceTeachersResponse {
+  teachers: ProfileServiceTeacher[];
+  summary: {
+    totalTeachers: number;
+    genderDistribution: {
+      male: number;
+      female: number;
+      other: number;
+      unspecified: number;
+    };
+    maritalStatusDistribution: {
+      single: number;
+      married: number;
+      divorced: number;
+      widowed: number;
+      unspecified: number;
+    };
+    subjectAssignment: {
+      withSubjects: number;
+      withoutSubjects: number;
+    };
+    experienceDistribution: {
+      fresher: number;
+      experienced: number;
+      senior: number;
+      expert: number;
+    };
+  };
+  filters: {
+    category: string;
+    gender: string;
+    maritalStatus: string;
+    hasSubjects: string;
+  };
+}
+
 // Student-specific interfaces
 export interface Student extends Omit<User, 'role'> {
   role: {

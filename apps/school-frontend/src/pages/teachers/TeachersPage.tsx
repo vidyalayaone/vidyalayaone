@@ -1,6 +1,6 @@
 // Teachers management page for admin users
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -17,7 +17,8 @@ import {
   Phone,
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -60,506 +61,52 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { Teacher, Subject } from '@/api/types';
-
-// Mock data for teachers
-const mockTeachers: Teacher[] = [
-  {
-    id: '1',
-    username: 'john.smith',
-    email: 'john.smith@school.edu',
-    firstName: 'John',
-    lastName: 'Smith',
-    role: 'TEACHER',
-    avatar: '/placeholder.svg',
-    phoneNumber: '+1-555-0101',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-01-15T08:00:00Z',
-    updatedAt: '2024-01-15T08:00:00Z',
-    employeeId: 'EMP001',
-    joiningDate: '2024-01-15',
-    qualification: 'M.Sc. Mathematics, B.Ed.',
-    experience: 8,
-    subjects: [
-      { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-      { id: 'physics-1', name: 'Physics', code: 'PHY', description: 'General Physics', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-1',
-        classId: '10-A',
-        className: 'Grade 10 Section A',
-        grade: '10',
-        section: 'A',
-        subject: { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-        isClassTeacher: true
-      },
-      {
-        id: 'class-2',
-        classId: '10-B',
-        className: 'Grade 10 Section B',
-        grade: '10',
-        section: 'B',
-        subject: { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-        isClassTeacher: false
-      }
-    ],
-    address: {
-      street: '123 Teacher Lane',
-      city: 'Education City',
-      state: 'Academic State',
-      postalCode: '12345',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Jane Smith',
-      relationship: 'Spouse',
-      phoneNumber: '+1-555-0102',
-      email: 'jane.smith@email.com'
-    },
-    salary: 75000,
-    dateOfBirth: '1985-03-20',
-    gender: 'MALE',
-    bloodGroup: 'A+',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '2',
-    username: 'sarah.johnson',
-    email: 'sarah.johnson@school.edu',
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0201',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-02-01T08:00:00Z',
-    updatedAt: '2024-02-01T08:00:00Z',
-    employeeId: 'EMP002',
-    joiningDate: '2024-02-01',
-    qualification: 'M.A. English Literature, B.Ed.',
-    experience: 5,
-    subjects: [
-      { id: 'english-1', name: 'English', code: 'ENG', description: 'English Literature', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-3',
-        classId: '9-A',
-        className: 'Grade 9 Section A',
-        grade: '9',
-        section: 'A',
-        subject: { id: 'english-1', name: 'English', code: 'ENG', description: 'English Literature', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '456 Academic Ave',
-      city: 'Learning Town',
-      state: 'Knowledge State',
-      postalCode: '54321',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Robert Johnson',
-      relationship: 'Father',
-      phoneNumber: '+1-555-0202'
-    },
-    salary: 68000,
-    dateOfBirth: '1988-07-15',
-    gender: 'FEMALE',
-    bloodGroup: 'B+',
-    maritalStatus: 'SINGLE'
-  },
-  {
-    id: '3',
-    username: 'michael.brown',
-    email: 'michael.brown@school.edu',
-    firstName: 'Michael',
-    lastName: 'Brown',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0301',
-    schoolId: 'school-1',
-    isActive: false,
-    createdAt: '2023-09-01T08:00:00Z',
-    updatedAt: '2024-08-01T08:00:00Z',
-    employeeId: 'EMP003',
-    joiningDate: '2023-09-01',
-    qualification: 'M.Sc. Chemistry, B.Ed.',
-    experience: 12,
-    subjects: [
-      { id: 'chemistry-1', name: 'Chemistry', code: 'CHEM', description: 'Organic Chemistry', isActive: true },
-      { id: 'biology-1', name: 'Biology', code: 'BIO', description: 'General Biology', isActive: true }
-    ],
-    classes: [],
-    address: {
-      street: '789 Science St',
-      city: 'Research City',
-      state: 'Innovation State',
-      postalCode: '98765',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Lisa Brown',
-      relationship: 'Wife',
-      phoneNumber: '+1-555-0302',
-      email: 'lisa.brown@email.com'
-    },
-    salary: 82000,
-    dateOfBirth: '1980-11-10',
-    gender: 'MALE',
-    bloodGroup: 'O+',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '4',
-    username: 'emily.davis',
-    email: 'emily.davis@school.edu',
-    firstName: 'Emily',
-    lastName: 'Davis',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0401',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-03-01T08:00:00Z',
-    updatedAt: '2024-03-01T08:00:00Z',
-    employeeId: 'EMP004',
-    joiningDate: '2024-03-01',
-    qualification: 'M.A. History, B.Ed.',
-    experience: 6,
-    subjects: [
-      { id: 'history-1', name: 'History', code: 'HIST', description: 'World History', isActive: true },
-      { id: 'geography-1', name: 'Geography', code: 'GEO', description: 'Physical Geography', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-4',
-        classId: '11-A',
-        className: 'Grade 11 Section A',
-        grade: '11',
-        section: 'A',
-        subject: { id: 'history-1', name: 'History', code: 'HIST', description: 'World History', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '321 Scholar Street',
-      city: 'History Town',
-      state: 'Cultural State',
-      postalCode: '11223',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'David Davis',
-      relationship: 'Husband',
-      phoneNumber: '+1-555-0402',
-      email: 'david.davis@email.com'
-    },
-    salary: 72000,
-    dateOfBirth: '1987-09-12',
-    gender: 'FEMALE',
-    bloodGroup: 'AB+',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '5',
-    username: 'robert.wilson',
-    email: 'robert.wilson@school.edu',
-    firstName: 'Robert',
-    lastName: 'Wilson',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0501',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-01-20T08:00:00Z',
-    updatedAt: '2024-01-20T08:00:00Z',
-    employeeId: 'EMP005',
-    joiningDate: '2024-01-20',
-    qualification: 'M.P.E., B.Ed.',
-    experience: 4,
-    subjects: [
-      { id: 'pe-1', name: 'Physical Education', code: 'PE', description: 'Sports and Fitness', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-5',
-        classId: '9-B',
-        className: 'Grade 9 Section B',
-        grade: '9',
-        section: 'B',
-        subject: { id: 'pe-1', name: 'Physical Education', code: 'PE', description: 'Sports and Fitness', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '654 Sports Avenue',
-      city: 'Athletic City',
-      state: 'Fitness State',
-      postalCode: '33445',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Maria Wilson',
-      relationship: 'Wife',
-      phoneNumber: '+1-555-0502',
-      email: 'maria.wilson@email.com'
-    },
-    salary: 65000,
-    dateOfBirth: '1989-05-25',
-    gender: 'MALE',
-    bloodGroup: 'O-',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '6',
-    username: 'lisa.anderson',
-    email: 'lisa.anderson@school.edu',
-    firstName: 'Lisa',
-    lastName: 'Anderson',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0601',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-02-15T08:00:00Z',
-    updatedAt: '2024-02-15T08:00:00Z',
-    employeeId: 'EMP006',
-    joiningDate: '2024-02-15',
-    qualification: 'M.F.A. Art, B.Ed.',
-    experience: 7,
-    subjects: [
-      { id: 'art-1', name: 'Art', code: 'ART', description: 'Fine Arts', isActive: true },
-      { id: 'craft-1', name: 'Craft', code: 'CRAFT', description: 'Arts and Crafts', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-6',
-        classId: '12-A',
-        className: 'Grade 12 Section A',
-        grade: '12',
-        section: 'A',
-        subject: { id: 'art-1', name: 'Art', code: 'ART', description: 'Fine Arts', isActive: true },
-        isClassTeacher: false
-      }
-    ],
-    address: {
-      street: '987 Creative Lane',
-      city: 'Art City',
-      state: 'Creative State',
-      postalCode: '55667',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'James Anderson',
-      relationship: 'Brother',
-      phoneNumber: '+1-555-0602',
-      email: 'james.anderson@email.com'
-    },
-    salary: 70000,
-    dateOfBirth: '1986-11-30',
-    gender: 'FEMALE',
-    bloodGroup: 'A-',
-    maritalStatus: 'SINGLE'
-  },
-  {
-    id: '7',
-    username: 'david.martinez',
-    email: 'david.martinez@school.edu',
-    firstName: 'David',
-    lastName: 'Martinez',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0701',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-03-10T08:00:00Z',
-    updatedAt: '2024-03-10T08:00:00Z',
-    employeeId: 'EMP007',
-    joiningDate: '2024-03-10',
-    qualification: 'M.Mus., B.Ed.',
-    experience: 9,
-    subjects: [
-      { id: 'music-1', name: 'Music', code: 'MUS', description: 'Music Theory and Practice', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-7',
-        classId: '10-C',
-        className: 'Grade 10 Section C',
-        grade: '10',
-        section: 'C',
-        subject: { id: 'music-1', name: 'Music', code: 'MUS', description: 'Music Theory and Practice', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '147 Melody Street',
-      city: 'Music Town',
-      state: 'Harmony State',
-      postalCode: '77889',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Carmen Martinez',
-      relationship: 'Wife',
-      phoneNumber: '+1-555-0702',
-      email: 'carmen.martinez@email.com'
-    },
-    salary: 73000,
-    dateOfBirth: '1984-08-18',
-    gender: 'MALE',
-    bloodGroup: 'B-',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '8',
-    username: 'jennifer.taylor',
-    email: 'jennifer.taylor@school.edu',
-    firstName: 'Jennifer',
-    lastName: 'Taylor',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0801',
-    schoolId: 'school-1',
-    isActive: false,
-    createdAt: '2023-11-01T08:00:00Z',
-    updatedAt: '2024-07-01T08:00:00Z',
-    employeeId: 'EMP008',
-    joiningDate: '2023-11-01',
-    qualification: 'M.Sc. Computer Science, B.Ed.',
-    experience: 10,
-    subjects: [
-      { id: 'computer-1', name: 'Computer Science', code: 'CS', description: 'Programming and Software', isActive: true },
-      { id: 'it-1', name: 'Information Technology', code: 'IT', description: 'IT Systems', isActive: true }
-    ],
-    classes: [],
-    address: {
-      street: '258 Tech Avenue',
-      city: 'Silicon Valley',
-      state: 'Tech State',
-      postalCode: '99001',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Michael Taylor',
-      relationship: 'Husband',
-      phoneNumber: '+1-555-0802',
-      email: 'michael.taylor@email.com'
-    },
-    salary: 85000,
-    dateOfBirth: '1982-04-22',
-    gender: 'FEMALE',
-    bloodGroup: 'AB-',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '9',
-    username: 'william.garcia',
-    email: 'william.garcia@school.edu',
-    firstName: 'William',
-    lastName: 'Garcia',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-0901',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-01-05T08:00:00Z',
-    updatedAt: '2024-01-05T08:00:00Z',
-    employeeId: 'EMP009',
-    joiningDate: '2024-01-05',
-    qualification: 'M.A. Spanish Literature, B.Ed.',
-    experience: 11,
-    subjects: [
-      { id: 'spanish-1', name: 'Spanish', code: 'SPA', description: 'Spanish Language and Literature', isActive: true },
-      { id: 'french-1', name: 'French', code: 'FR', description: 'French Language', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-8',
-        classId: '11-B',
-        className: 'Grade 11 Section B',
-        grade: '11',
-        section: 'B',
-        subject: { id: 'spanish-1', name: 'Spanish', code: 'SPA', description: 'Spanish Language and Literature', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '369 Language Lane',
-      city: 'Multilingual City',
-      state: 'Language State',
-      postalCode: '44556',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Rosa Garcia',
-      relationship: 'Wife',
-      phoneNumber: '+1-555-0902',
-      email: 'rosa.garcia@email.com'
-    },
-    salary: 78000,
-    dateOfBirth: '1981-12-07',
-    gender: 'MALE',
-    bloodGroup: 'O+',
-    maritalStatus: 'MARRIED'
-  },
-  {
-    id: '10',
-    username: 'amanda.rodriguez',
-    email: 'amanda.rodriguez@school.edu',
-    firstName: 'Amanda',
-    lastName: 'Rodriguez',
-    role: 'TEACHER',
-    phoneNumber: '+1-555-1001',
-    schoolId: 'school-1',
-    isActive: true,
-    createdAt: '2024-02-28T08:00:00Z',
-    updatedAt: '2024-02-28T08:00:00Z',
-    employeeId: 'EMP010',
-    joiningDate: '2024-02-28',
-    qualification: 'M.Ed. Special Education, B.Ed.',
-    experience: 3,
-    subjects: [
-      { id: 'special-ed-1', name: 'Special Education', code: 'SPED', description: 'Special Needs Education', isActive: true }
-    ],
-    classes: [
-      {
-        id: 'class-9',
-        classId: '12-B',
-        className: 'Grade 12 Section B',
-        grade: '12',
-        section: 'B',
-        subject: { id: 'special-ed-1', name: 'Special Education', code: 'SPED', description: 'Special Needs Education', isActive: true },
-        isClassTeacher: true
-      }
-    ],
-    address: {
-      street: '741 Care Street',
-      city: 'Support Town',
-      state: 'Helping State',
-      postalCode: '66778',
-      country: 'USA'
-    },
-    emergencyContact: {
-      name: 'Carlos Rodriguez',
-      relationship: 'Father',
-      phoneNumber: '+1-555-1002',
-      email: 'carlos.rodriguez@email.com'
-    },
-    salary: 67000,
-    dateOfBirth: '1990-01-14',
-    gender: 'FEMALE',
-    bloodGroup: 'A+',
-    maritalStatus: 'SINGLE'
-  }
-];
+import { Teacher } from '@/api/types';
+import { getTeachersBySchool } from '@/api/api';
+import { transformProfileTeachersToTeachers } from '@/utils/teacherTransform';
 
 const TeachersPage: React.FC = () => {
   const navigate = useNavigate();
-  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
+  const [genderFilter, setGenderFilter] = useState<string>('all');
+  const [maritalStatusFilter, setMaritalStatusFilter] = useState<string>('all');
   const [deleteTeacherId, setDeleteTeacherId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const teachersPerPage = 10;
+
+  // Fetch teachers from API
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await getTeachersBySchool({
+          gender: genderFilter !== 'all' ? genderFilter : undefined,
+          maritalStatus: maritalStatusFilter !== 'all' ? maritalStatusFilter : undefined,
+        });
+
+        if (response.success && response.data) {
+          const transformedTeachers = transformProfileTeachersToTeachers(response.data.teachers);
+          setTeachers(transformedTeachers);
+        } else {
+          setError(response.message || 'Failed to fetch teachers');
+        }
+      } catch (err) {
+        setError('Failed to fetch teachers. Please try again.');
+        console.error('Error fetching teachers:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  }, [genderFilter, maritalStatusFilter]);
 
   // Get unique subjects for filter
   const allSubjects = useMemo(() => {
@@ -581,9 +128,9 @@ const TeachersPage: React.FC = () => {
         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         teacher.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && teacher.isActive) ||
-        (statusFilter === 'inactive' && !teacher.isActive);
+      // Note: Since backend doesn't provide active/inactive status from profile service,
+      // we assume all returned teachers are active for now
+      const matchesStatus = statusFilter === 'all' || statusFilter === 'active';
 
       const matchesSubject = subjectFilter === 'all' ||
         teacher.subjects.some(subject => subject.name === subjectFilter);
@@ -601,7 +148,7 @@ const TeachersPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, subjectFilter]);
+  }, [searchTerm, statusFilter, subjectFilter, genderFilter, maritalStatusFilter]);
 
   const handleDeleteTeacher = (teacherId: string) => {
     setTeachers(prev => prev.filter(t => t.id !== teacherId));
@@ -644,10 +191,48 @@ const TeachersPage: React.FC = () => {
 
   const stats = {
     total: teachers.length,
-    active: teachers.filter(t => t.isActive).length,
-    inactive: teachers.filter(t => !t.isActive).length,
+    active: teachers.filter(t => t.isActive).length, // All teachers from API are considered active
+    inactive: 0, // Backend doesn't provide inactive teachers in this endpoint
     subjects: allSubjects.length
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">Loading teachers...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 text-destructive">
+              <Users className="h-12 w-12" />
+            </div>
+            <h3 className="mt-2 text-sm font-semibold text-foreground">Error loading teachers</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -691,7 +276,7 @@ const TeachersPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Status" />
@@ -700,6 +285,29 @@ const TeachersPage: React.FC = () => {
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={genderFilter} onValueChange={setGenderFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={maritalStatusFilter} onValueChange={setMaritalStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Marital Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="single">Single</SelectItem>
+                    <SelectItem value="married">Married</SelectItem>
+                    <SelectItem value="divorced">Divorced</SelectItem>
+                    <SelectItem value="widowed">Widowed</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={subjectFilter} onValueChange={setSubjectFilter}>
@@ -797,9 +405,9 @@ const TeachersPage: React.FC = () => {
                         <div className="space-y-1">
                           <div className="flex items-center gap-1 text-sm">
                             <Mail className="w-3 h-3" />
-                            {teacher.email}
+                            {teacher.email !== 'N/A' ? teacher.email : 'Not available'}
                           </div>
-                          {teacher.phoneNumber && (
+                          {teacher.phoneNumber && teacher.phoneNumber !== 'N/A' && (
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Phone className="w-3 h-3" />
                               {teacher.phoneNumber}
@@ -831,8 +439,8 @@ const TeachersPage: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={teacher.isActive ? "default" : "secondary"}>
-                          {teacher.isActive ? "Active" : "Inactive"}
+                        <Badge variant="default">
+                          Active
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

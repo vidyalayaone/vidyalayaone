@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { createGlobalSubjectsSchema } from '../validations/validationSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -11,9 +12,8 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
     if (!validation.success) return;
 
     const { subjects } = validation.data;
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;    
+    const userData = getUser(req);
+    const userId = userData?.id; 
     const { context } = getSchoolContext(req);
 
     // Only admin can create global subjects and only from platform context
@@ -26,10 +26,10 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
       return;
     }
 
-    if (!adminId || role?.toLowerCase() !== 'admin') {
+    if(!hasPermission(PERMISSIONS.SUBJECT.CREATE, userData)){
       res.status(403).json({
         success: false,
-        error: { message: 'Only admins can create global subjects' },
+        error: { message: 'You do not have permission to create global subjects' },
         timestamp: new Date().toISOString()
       });
       return;

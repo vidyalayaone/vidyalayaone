@@ -18,7 +18,10 @@ import {
   ProfileServiceStudent,
   CreateStudentRequest,
   ProfileServiceTeachersResponse,
-  ProfileServiceTeacherDetail
+  ProfileServiceTeacherDetail,
+  SchoolSubjectsResponse,
+  CreateTeacherRequest,
+  CreateTeacherResponse
 } from './types';
 
 // Import mock API for fallback
@@ -289,6 +292,26 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // School service: get subjects for a school
+  getSchoolSubjects: async (): Promise<APIResponse<SchoolSubjectsResponse>> => {
+    try {
+      const response = await httpClient.get('/school/subjects');
+      return handleResponse<SchoolSubjectsResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: create a new teacher
+  createTeacher: async (data: CreateTeacherRequest): Promise<APIResponse<CreateTeacherResponse>> => {
+    try {
+      const response = await httpClient.post('/profile/teachers', data);
+      return handleResponse<CreateTeacherResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -311,5 +334,7 @@ export const {
   getTeacherById,
   getStudentsBySchool,
   getStudentById,
-  createStudent
+  createStudent,
+  getSchoolSubjects,
+  createTeacher
 } = api;

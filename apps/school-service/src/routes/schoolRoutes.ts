@@ -11,6 +11,7 @@ import { getClassesAndSectionsInternal } from "../controllers/getClassesAndSecti
 import { getClassByIdInternal } from "../controllers/getClassByIdInternal";
 import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
 import { createClassSubjects } from "../controllers/createClassSubjects";
+import { getSubjects } from "../controllers/getSubjects";
 
 const router: Router = Router();
 
@@ -30,6 +31,7 @@ router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal
 router.get('/internal/class/:classId', getClassByIdInternal);
 
 // Subject management routes
+router.get('/subjects', getSubjects);
 router.post('/subjects/global', createGlobalSubjects); // needs to be updated
 router.post('/subjects', createClassSubjects); // needs to be updated
 

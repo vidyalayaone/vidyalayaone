@@ -694,3 +694,40 @@ export interface PaginatedResponse<T> {
     hasPreviousPage: boolean;
   };
 }
+
+// School Service: Get subjects response
+export interface SchoolSubjectsResponse {
+  school: {
+    id: string;
+    name: string;
+  };
+  subjects: Subject[];
+  totalSubjects: number;
+}
+
+// Profile Service: Create teacher request and response
+export interface CreateTeacherRequest {
+  firstName: string;
+  lastName: string;
+  employeeId: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  bloodGroup?: string;
+  maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+  dateOfBirth?: string;
+  category?: string;
+  religion?: string;
+  qualifications?: string;
+  experienceYears?: number;
+  joiningDate?: string;
+  salary?: number;
+  address?: any;
+  subjectIds?: string[];
+}
+
+export interface CreateTeacherResponse {
+  teacher: ProfileServiceTeacherDetail;
+  credentials: {
+    username: string;
+    temporaryPassword: string;
+  };
+}

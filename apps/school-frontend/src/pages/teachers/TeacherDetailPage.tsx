@@ -1,6 +1,6 @@
 // Teacher detail view page
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -16,7 +16,8 @@ import {
   Shield,
   Download,
   RotateCcw,
-  Trash2
+  Trash2,
+  Loader2
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -47,80 +48,11 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { Teacher, TeacherActivity } from '@/api/types';
+import { getTeacherById } from '@/api/api';
+import { transformProfileTeacherDetailToTeacher } from '@/utils/teacherTransform';
 import { toast } from 'react-hot-toast';
 
-// Mock teacher data - in real app this would come from API
-const mockTeacher: Teacher = {
-  id: '1',
-  username: 'john.smith',
-  email: 'john.smith@school.edu',
-  firstName: 'John',
-  lastName: 'Smith',
-  role: 'TEACHER',
-  avatar: '/placeholder.svg',
-  phoneNumber: '+1-555-0101',
-  schoolId: 'school-1',
-  isActive: true,
-  createdAt: '2024-01-15T08:00:00Z',
-  updatedAt: '2024-01-15T08:00:00Z',
-  employeeId: 'EMP001',
-  joiningDate: '2024-01-15',
-  qualification: 'M.Sc. Mathematics, B.Ed. from State University',
-  experience: 8,
-  subjects: [
-    { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-    { id: 'physics-1', name: 'Physics', code: 'PHY', description: 'General Physics', isActive: true }
-  ],
-  classes: [
-    {
-      id: 'class-1',
-      classId: '10-A',
-      className: 'Grade 10 Section A',
-      grade: '10',
-      section: 'A',
-      subject: { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-      isClassTeacher: true
-    },
-    {
-      id: 'class-2',
-      classId: '10-B',
-      className: 'Grade 10 Section B',
-      grade: '10',
-      section: 'B',
-      subject: { id: 'math-1', name: 'Mathematics', code: 'MATH', description: 'Advanced Mathematics', isActive: true },
-      isClassTeacher: false
-    },
-    {
-      id: 'class-3',
-      classId: '11-A',
-      className: 'Grade 11 Section A',
-      grade: '11',
-      section: 'A',
-      subject: { id: 'physics-1', name: 'Physics', code: 'PHY', description: 'General Physics', isActive: true },
-      isClassTeacher: false
-    }
-  ],
-  address: {
-    street: '123 Teacher Lane',
-    city: 'Education City',
-    state: 'Academic State',
-    postalCode: '12345',
-    country: 'USA'
-  },
-  emergencyContact: {
-    name: 'Jane Smith',
-    relationship: 'Spouse',
-    phoneNumber: '+1-555-0102',
-    email: 'jane.smith@email.com'
-  },
-  salary: 75000,
-  dateOfBirth: '1985-03-20',
-  gender: 'MALE',
-  bloodGroup: 'A+',
-  maritalStatus: 'MARRIED'
-};
-
-// Mock activity data
+// Mock activity data - will be replaced when backend supports activity tracking
 const mockActivities: TeacherActivity[] = [
   {
     id: '1',
@@ -163,8 +95,42 @@ const mockActivities: TeacherActivity[] = [
 const TeacherDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [teacher] = useState<Teacher>(mockTeacher);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activities] = useState<TeacherActivity[]>(mockActivities);
+
+  // Fetch teacher data from API
+  useEffect(() => {
+    const fetchTeacher = async () => {
+      if (!id) {
+        setError('Teacher ID is required');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await getTeacherById(id);
+
+        if (response.success && response.data) {
+          const transformedTeacher = transformProfileTeacherDetailToTeacher(response.data);
+          setTeacher(transformedTeacher);
+        } else {
+          setError(response.message || 'Failed to fetch teacher details');
+        }
+      } catch (err) {
+        setError('Failed to fetch teacher details. Please try again.');
+        console.error('Error fetching teacher:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeacher();
+  }, [id]);
 
   const handleResetPassword = () => {
     // Mock password reset
@@ -181,21 +147,35 @@ const TeacherDetailPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    if (!dateString || dateString === 'N/A') {
+      return 'Not specified';
+    }
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString || dateString === 'N/A') {
+      return 'Not specified';
+    }
+    try {
+      return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Invalid date';
+    }
   };
 
   const getActivityIcon = (type: TeacherActivity['type']) => {
@@ -218,11 +198,61 @@ const TeacherDetailPage: React.FC = () => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">Loading teacher details...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 text-destructive">
+              <User className="h-12 w-12" />
+            </div>
+            <h3 className="mt-2 text-sm font-semibold text-foreground">Error loading teacher</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Teacher not found state
   if (!teacher) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">Teacher not found</p>
+          <div className="text-center">
+            <User className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-2 text-sm font-semibold text-foreground">Teacher not found</h3>
+            <p className="mt-1 text-sm text-muted-foreground">The teacher you're looking for doesn't exist.</p>
+            <Button 
+              onClick={() => navigate('/teachers')} 
+              className="mt-4"
+              variant="outline"
+            >
+              Back to Teachers
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
@@ -366,10 +396,12 @@ const TeacherDetailPage: React.FC = () => {
                     <Mail className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">Email</p>
-                      <p className="text-sm text-muted-foreground">{teacher.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {teacher.email !== 'N/A' ? teacher.email : 'Not available'}
+                      </p>
                     </div>
                   </div>
-                  {teacher.phoneNumber && (
+                  {teacher.phoneNumber && teacher.phoneNumber !== 'N/A' && (
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-muted-foreground" />
                       <div>
@@ -383,9 +415,15 @@ const TeacherDetailPage: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium">Address</p>
                       <p className="text-sm text-muted-foreground">
-                        {teacher.address.street}<br />
-                        {teacher.address.city}, {teacher.address.state} {teacher.address.postalCode}<br />
-                        {teacher.address.country}
+                        {teacher.address.street !== 'N/A' ? (
+                          <>
+                            {teacher.address.street}<br />
+                            {teacher.address.city}, {teacher.address.state} {teacher.address.postalCode}<br />
+                            {teacher.address.country}
+                          </>
+                        ) : (
+                          'Not available'
+                        )}
                       </p>
                     </div>
                   </div>
@@ -402,17 +440,23 @@ const TeacherDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium">{teacher.emergencyContact.name}</p>
-                    <p className="text-sm text-muted-foreground">{teacher.emergencyContact.relationship}</p>
+                    <p className="text-sm font-medium">
+                      {teacher.emergencyContact.name !== 'N/A' ? teacher.emergencyContact.name : 'Not specified'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {teacher.emergencyContact.relationship !== 'N/A' ? teacher.emergencyContact.relationship : 'Not specified'}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Phone</p>
-                      <p className="text-sm text-muted-foreground">{teacher.emergencyContact.phoneNumber}</p>
+                  {teacher.emergencyContact.phoneNumber !== 'N/A' && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Phone</p>
+                        <p className="text-sm text-muted-foreground">{teacher.emergencyContact.phoneNumber}</p>
+                      </div>
                     </div>
-                  </div>
-                  {teacher.emergencyContact.email && (
+                  )}
+                  {teacher.emergencyContact.email && teacher.emergencyContact.email !== 'N/A' && (
                     <div className="flex items-center gap-3">
                       <Mail className="w-4 h-4 text-muted-foreground" />
                       <div>
@@ -526,7 +570,7 @@ const TeacherDetailPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Gender</p>
-                      <p className="capitalize">{teacher.gender.toLowerCase()}</p>
+                      <p className="capitalize">{teacher.gender?.toLowerCase() || 'Not specified'}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Blood Group</p>
@@ -534,7 +578,7 @@ const TeacherDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
-                      <p className="capitalize">{teacher.maritalStatus.toLowerCase()}</p>
+                      <p className="capitalize">{teacher.maritalStatus?.toLowerCase() || 'Not specified'}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
@@ -542,11 +586,11 @@ const TeacherDetailPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Category</p>
-                      <p>General</p>
+                      <p>Not available</p> {/* Backend doesn't provide category in detail response */}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Religion</p>
-                      <p>Christianity</p>
+                      <p>Not available</p> {/* Backend doesn't provide religion in detail response */}
                     </div>
                   </div>
                 </CardContent>

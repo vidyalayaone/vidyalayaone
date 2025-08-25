@@ -17,7 +17,8 @@ import {
   PaginationParams,
   ProfileServiceStudent,
   CreateStudentRequest,
-  ProfileServiceTeachersResponse
+  ProfileServiceTeachersResponse,
+  ProfileServiceTeacherDetail
 } from './types';
 
 // Import mock API for fallback
@@ -241,6 +242,16 @@ export const api = {
     }
   },
 
+  // Profile service: get a specific teacher by ID
+  getTeacherById: async (id: string): Promise<APIResponse<ProfileServiceTeacherDetail>> => {
+    try {
+      const response = await httpClient.get(`/profile/teachers/${id}`);
+      return handleResponse<ProfileServiceTeacherDetail>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Profile service: get all students for a school (admin only)
   getStudentsBySchool: async (options?: { academicYear?: string; category?: string; classId?: string; sectionId?: string }) : Promise<APIResponse> => {
     try {
@@ -297,6 +308,7 @@ export const {
   getClassesAndSections,
   getTeachers,
   getTeachersBySchool,
+  getTeacherById,
   getStudentsBySchool,
   getStudentById,
   createStudent

@@ -183,6 +183,60 @@ export interface ProfileServiceTeachersResponse {
   };
 }
 
+// Single teacher response from profile service
+export interface ProfileServiceTeacherDetail {
+  teacher: {
+    id: string;
+    userId: string;
+    employeeId: string;
+    schoolId: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    gender?: 'MALE' | 'FEMALE' | 'OTHER';
+    bloodGroup?: string;
+    maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+    dateOfBirth?: string;
+    category?: string;
+    religion?: string;
+    qualifications?: string;
+    experienceYears?: number;
+    joiningDate?: string;
+    salary?: number;
+    address?: any;
+    subjectIds: string[];
+    subjects: {
+      id: string;
+      name: string;
+      code: string;
+    }[];
+    documents: {
+      id: string;
+      name: string;
+      description?: string;
+      type: string;
+      url: string;
+      mimeType: string;
+      fileSize?: number;
+      isVerified: boolean;
+      expiryDate?: string;
+      metaData?: any;
+      createdAt: string;
+      updatedAt: string;
+    }[];
+    metaData?: any;
+    createdAt: string;
+    updatedAt: string;
+  };
+  userDetails?: {
+    username: string;
+    email: string;
+    phone?: string;
+    isActive: boolean;
+    lastLogin?: string;
+  } | null;
+}
+
 // Student-specific interfaces
 export interface Student extends Omit<User, 'role'> {
   role: {

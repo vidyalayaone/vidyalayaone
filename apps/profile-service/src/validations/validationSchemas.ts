@@ -98,3 +98,30 @@ export const createStudentSchema = z.object({
 export const updateStudentSchema = createStudentSchema.partial().extend({
   id: z.string().uuid('Invalid student ID format'),
 });
+
+// Teacher validation schemas
+export const createTeacherSchema = z.object({
+  // Basic teacher information (no userId - will be created internally)
+  firstName: z.string().min(1, 'First name is required').max(100),
+  lastName: z.string().min(1, 'Last name is required').max(100),
+  employeeId: z.string().min(1, 'Employee ID is required').max(50),
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
+  bloodGroup: z.string().max(10).optional(),
+  maritalStatus: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']).optional(),
+  dateOfBirth: z.string().datetime('Invalid date of birth format').optional(),
+  category: z.string().max(50).optional(),
+  religion: z.string().max(50).optional(),
+  qualifications: z.string().max(255).optional(),
+  experienceYears: z.number().int().min(0).optional(),
+  joiningDate: z.string().datetime('Invalid joining date format').optional(),
+  salary: z.number().positive().optional(),
+  address: addressSchema,
+  subjectIds: z.array(z.string().uuid('Invalid subject ID format')).optional(),
+  
+  // Documents (optional)
+  documents: z.array(documentSchema).optional(),
+});
+
+export const updateTeacherSchema = createTeacherSchema.partial().extend({
+  id: z.string().uuid('Invalid teacher ID format'),
+});

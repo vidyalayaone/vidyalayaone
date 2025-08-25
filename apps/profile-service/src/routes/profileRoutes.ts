@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { createStudent } from '../controllers/createStudent';
 import { getStudent } from '../controllers/getStudent';
 import { getAllStudents } from '../controllers/getAllStudents';
+import { createTeacher } from '../controllers/createTeacher';
+import { getTeacher } from '../controllers/getTeacher';
+import { getAllTeachers } from '../controllers/getAllTeachers';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -20,5 +23,10 @@ const profileLimiter = rateLimit({
 router.post('/students', profileLimiter, createStudent);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
+
+// Teacher routes
+router.post('/teachers', profileLimiter, createTeacher);
+router.get('/teachers/:id', profileLimiter, getTeacher);
+router.get('/schools/teachers', profileLimiter, getAllTeachers);
 
 export default router;

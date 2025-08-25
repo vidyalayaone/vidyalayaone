@@ -86,6 +86,51 @@ export class AuthService {
   }
 
   /**
+   * Create a new user in the auth service for teacher
+   */
+  async createUserForTeacher(userData: CreateUserRequest): Promise<CreateUserResponse> {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v1/internal/create-user-for-teacher`,
+        {
+          ...userData,
+          roleName: userData.roleName || 'TEACHER', // Default to TEACHER role
+        },
+        {
+          timeout: this.timeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Request': 'true', // Mark as internal service request
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to create user in auth service:', error);
+      
+      if (axios.isAxiosError(error)) {
+        // Return structured error response
+        return {
+          success: false,
+          error: {
+            message: error.response?.data?.error?.message || 'Failed to create user in auth service',
+          },
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          message: 'Internal error while creating user',
+        },
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Delete a user from auth service (for rollback scenarios)
    */
   async deleteUser(userId: string): Promise<{ success: boolean }> {

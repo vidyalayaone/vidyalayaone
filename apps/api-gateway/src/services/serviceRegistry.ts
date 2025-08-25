@@ -78,7 +78,10 @@ class ServiceRegistry {
       routes: [
         { path: '/students', method: 'POST', isProtected: true },
         { path: '/students/:id', method: 'GET', isProtected: true },
-        { path: '/schools/:schoolId/students', method: 'GET', isProtected: true },
+        { path: '/schools/students', method: 'GET', isProtected: true },
+        { path: '/teachers', method: 'POST', isProtected: true },
+        { path: '/teachers/:id', method: 'GET', isProtected: true },
+        { path: '/schools/teachers', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.profile.timeout,

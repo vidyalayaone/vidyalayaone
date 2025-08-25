@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createUserForStudent, deleteUser } from '../controllers/createUserForStudent';
+import { createUserForTeacher } from '../controllers/createUserForTeacher';
 import rateLimit from 'express-rate-limit';
 
 const router: Router = Router();
@@ -16,6 +17,7 @@ const internalLimiter = rateLimit({
 
 // Internal routes (only accessible by other services)
 router.post('/create-user-for-student', internalLimiter, createUserForStudent);
+router.post('/create-user-for-teacher', internalLimiter, createUserForTeacher);
 router.delete('/users/:userId', internalLimiter, deleteUser);
 
 export default router;

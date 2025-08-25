@@ -80,7 +80,7 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'Manage student records and enrollment',
         requiredPermissions: [PERMISSIONS.STUDENT.VIEW]
       },
-      { 
+      {
         path: '/teachers', 
         label: 'Teachers', 
         icon: UserCog,
@@ -93,6 +93,13 @@ export const allNavigationItems: NavigationGroup[] = [
         icon: BookOpen,
         description: 'Manage class schedules and assignments',
         requiredPermissions: [PERMISSIONS.CLASS.VIEW]
+      },
+      { 
+        path: '/admission', 
+        label: 'Admission', 
+        icon: UserPlus,
+        description: 'Handle new student admissions',
+        requiredPermissions: [PERMISSIONS.ADMISSION.VIEW]
       },
     ]
   },
@@ -146,13 +153,7 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Administrative',
     items: [
-      { 
-        path: '/admissions', 
-        label: 'Admissions', 
-        icon: UserPlus,
-        description: 'Handle new student admissions',
-        requiredPermissions: [PERMISSIONS.ADMISSION.VIEW]
-      },
+      
       { 
         path: '/fees', 
         label: 'Fee Management', 
@@ -160,20 +161,20 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'Manage student fees and payments',
         requiredPermissions: [PERMISSIONS.FEE.VIEW]
       },
-      { 
-        path: '/library', 
-        label: 'Library', 
-        icon: Library,
-        description: 'Manage library books and resources',
-        requiredPermissions: [PERMISSIONS.SCHOOL.VIEW] // Using school permissions as proxy
-      },
-      { 
-        path: '/events', 
-        label: 'Events', 
-        icon: CalendarDays,
-        description: 'Schedule and manage school events',
-        requiredPermissions: [PERMISSIONS.ACADEMIC_CALENDAR.VIEW]
-      },
+      // { 
+      //   path: '/library', 
+      //   label: 'Library', 
+      //   icon: Library,
+      //   description: 'Manage library books and resources',
+      //   requiredPermissions: [PERMISSIONS.SCHOOL.VIEW] // Using school permissions as proxy
+      // },
+      // { 
+      //   path: '/events', 
+      //   label: 'Events', 
+      //   icon: CalendarDays,
+      //   description: 'Schedule and manage school events',
+      //   requiredPermissions: [PERMISSIONS.ACADEMIC_CALENDAR.VIEW]
+      // },
       { 
         path: '/substitute-teacher', 
         label: 'Substitute Teacher', 
@@ -183,51 +184,51 @@ export const allNavigationItems: NavigationGroup[] = [
       }
     ]
   },
-  {
-    label: 'Reports & Analytics',
-    items: [
-      { 
-        path: '/reports', 
-        label: 'Reports', 
-        icon: FileText,
-        description: 'Generate and view various reports',
-        requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN, PERMISSIONS.REPORT.VIEW_TEACHER, PERMISSIONS.REPORT.VIEW_STUDENT]
-      },
-      { 
-        path: '/analytics', 
-        label: 'Analytics', 
-        icon: TrendingUp,
-        description: 'View performance analytics and insights',
-        requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN] // Using report admin as proxy for analytics
-      }
-    ]
-  },
-  {
-    label: 'Communication',
-    items: [
-      { 
-        path: '/messages', 
-        label: 'Messages', 
-        icon: MessageSquare,
-        description: 'Internal messaging system',
-        requiredPermissions: [PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
-      },
-      { 
-        path: '/announcements', 
-        label: 'Announcements', 
-        icon: Bell,
-        description: 'School and class announcements',
-        requiredPermissions: [PERMISSIONS.COMMUNICATION.SEND_ANNOUNCEMENT, PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
-      },
-      { 
-        path: '/notifications', 
-        label: 'Notifications', 
-        icon: Bell,
-        description: 'System notifications and alerts',
-        requiredPermissions: [PERMISSIONS.COMMUNICATION.MANAGE_NOTIFICATIONS]
-      }
-    ]
-  },
+  // {
+  //   label: 'Reports & Analytics',
+  //   items: [
+  //     { 
+  //       path: '/reports', 
+  //       label: 'Reports', 
+  //       icon: FileText,
+  //       description: 'Generate and view various reports',
+  //       requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN, PERMISSIONS.REPORT.VIEW_TEACHER, PERMISSIONS.REPORT.VIEW_STUDENT]
+  //     },
+  //     { 
+  //       path: '/analytics', 
+  //       label: 'Analytics', 
+  //       icon: TrendingUp,
+  //       description: 'View performance analytics and insights',
+  //       requiredPermissions: [PERMISSIONS.REPORT.VIEW_ADMIN] // Using report admin as proxy for analytics
+  //     }
+  //   ]
+  // },
+  // {
+  //   label: 'Communication',
+  //   items: [
+  //     { 
+  //       path: '/messages', 
+  //       label: 'Messages', 
+  //       icon: MessageSquare,
+  //       description: 'Internal messaging system',
+  //       requiredPermissions: [PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
+  //     },
+  //     { 
+  //       path: '/announcements', 
+  //       label: 'Announcements', 
+  //       icon: Bell,
+  //       description: 'School and class announcements',
+  //       requiredPermissions: [PERMISSIONS.COMMUNICATION.SEND_ANNOUNCEMENT, PERMISSIONS.COMMUNICATION.VIEW_MESSAGES]
+  //     },
+  //     { 
+  //       path: '/notifications', 
+  //       label: 'Notifications', 
+  //       icon: Bell,
+  //       description: 'System notifications and alerts',
+  //       requiredPermissions: [PERMISSIONS.COMMUNICATION.MANAGE_NOTIFICATIONS]
+  //     }
+  //   ]
+  // },
   {
     label: 'Settings',
     items: [

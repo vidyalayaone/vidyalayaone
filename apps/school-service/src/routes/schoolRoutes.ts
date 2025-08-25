@@ -8,6 +8,7 @@ import { createClasses } from "../controllers/createClasses";
 import { createSections } from "../controllers/createSections";
 import { getClassesAndSections } from "../controllers/getClassesAndSections";
 import { getClassesAndSectionsInternal } from "../controllers/getClassesAndSectionsInternal";
+import { getClassByIdInternal } from "../controllers/getClassByIdInternal";
 import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
 import { createClassSubjects } from "../controllers/createClassSubjects";
 
@@ -25,7 +26,8 @@ router.post('/sections', createSections);
 router.get('/classes-sections/:schoolId', getClassesAndSections);
 
 // Internal route for other services
-router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal); // needs to be updated
+router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal);
+router.get('/internal/class/:classId', getClassByIdInternal);
 
 // Subject management routes
 router.post('/subjects/global', createGlobalSubjects); // needs to be updated

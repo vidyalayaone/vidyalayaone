@@ -62,6 +62,7 @@ class ServiceRegistry {
         { path: '/sections', method: 'POST', isProtected: true },
         { path: '/classes-sections/:schoolId', method: 'GET', isProtected: true },
         { path: '/internal/classes-sections/:schoolId', method: 'GET', isProtected: false },
+        { path: '/internal/class/:classId', method: 'GET', isProtected: false },
         { path: '/subjects/global', method: 'POST', isProtected: true },
         { path: '/subjects', method: 'POST', isProtected: true },
       ],

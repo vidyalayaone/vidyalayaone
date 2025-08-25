@@ -48,32 +48,6 @@ export async function createUserForStudent(req: Request, res: Response) {
       return;
     }
 
-    // Check if email already exists (if provided)
-    if (email) {
-      const existingEmail = await prisma.user.findFirst({ where: { email } });
-      if (existingEmail) {
-        res.status(400).json({
-          success: false,
-          error: { message: 'Email already exists' },
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-    }
-
-    // Check if phone already exists (if provided)
-    if (phone) {
-      const existingPhone = await prisma.user.findFirst({ where: { phone } });
-      if (existingPhone) {
-        res.status(400).json({
-          success: false,
-          error: { message: 'Phone number already exists' },
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-    }
-
     // Find the role
     const role = await prisma.role.findFirst({ 
       where: { 
@@ -104,7 +78,7 @@ export async function createUserForStudent(req: Request, res: Response) {
         schoolId,
         roleId: role.id,
         isActive: true,
-        isPhoneVerified: false, // Auto-verify for internal creation
+        isPhoneVerified: true, // Auto-verify for internal creation
         isEmailVerified: false, // Email can be verified later
       },
       select: {
@@ -117,6 +91,8 @@ export async function createUserForStudent(req: Request, res: Response) {
         createdAt: true,
       },
     });
+
+    console.log('Temporary password for user:', password);
 
     res.status(201).json({
       success: true,

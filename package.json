@@ -11,7 +11,8 @@
     "dev:app": "pnpm --filter @vidyalayaone/$APP dev",
     "build:app": "pnpm --filter @vidyalayaone/$APP build",
     "start:app": "pnpm --filter @vidyalayaone/$APP start",
-    "build:packages": "pnpm run --recursive --filter \"./packages/**\" build"
+    "build:packages": "pnpm run --recursive --filter \"./packages/**\" build",
+    "automate": "pnpm --filter school-frontend automate"
   },
   "keywords": [],
   "author": "",

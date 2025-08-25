@@ -16,7 +16,8 @@
     "db:reset": "prisma migrate reset",
     "db:seed": "ts-node-dev --require tsconfig-paths/register prisma/seed.ts",
     "db:studio": "prisma studio --port 5557",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:clean": "ts-node-dev --require tsconfig-paths/register prisma/clean.ts"
   },
   "keywords": [],
   "author": "",

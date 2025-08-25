@@ -74,7 +74,6 @@ import {
 
 import { api } from '@/api/api'; // <-- add API import to fetch real students
 import { useAuthStore } from '@/store/authStore';
-import { useClassesStore } from '@/store/classesStore';
 
 // Student type with enhanced fields
 type EnhancedStudent = {
@@ -135,12 +134,33 @@ type EnhancedStudent = {
   };
 };
 
+// Types for classes and sections
+interface ClassSection {
+  id: string;
+  name: string;
+  classTeacher: string | null;
+  classTeacherId: string | null;
+  totalStudents: number | null;
+  totalBoys: number | null;
+  totalGirls: number | null;
+}
+
+interface SchoolClass {
+  id: string;
+  grade: string;
+  displayName: string;
+  sections: ClassSection[];
+}
+
 // Sort types
 type SortField = 'name' | 'rollNo' | 'admissionDate' | 'feeStatus';
 type SortOrder = 'asc' | 'desc';
 
 const StudentsPage: React.FC = () => {
   const navigate = useNavigate();
+
+  // State for academic year selection
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2025-26');
 
   // State for filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,18 +174,58 @@ const StudentsPage: React.FC = () => {
   const [isFetchingStudents, setIsFetchingStudents] = useState<boolean>(false);
   const [fetchStudentsError, setFetchStudentsError] = useState<string | null>(null);
 
-  const { school } = useAuthStore();
-  // Classes store (used for filter dropdowns)
-  const classesFromStore = useClassesStore(state => state.classes);
-  const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
-  const classesStoreLoading = useClassesStore(state => state.isLoading);
+  // Classes data fetched from API
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [isFetchingClasses, setIsFetchingClasses] = useState<boolean>(false);
+  const [fetchClassesError, setFetchClassesError] = useState<string | null>(null);
 
-  // Ensure classes are loaded for current school & academic year (used by filters)
+  const { school } = useAuthStore();
+
+  // Transform backend data to frontend format
+  const transformBackendClassData = (backendData: any): SchoolClass[] => {
+    return backendData.classes.map((backendClass: any) => ({
+      id: backendClass.id,
+      grade: backendClass.name,
+      displayName: backendClass.name,
+      sections: backendClass.sections.map((backendSection: any) => ({
+        id: backendSection.id,
+        name: backendSection.name,
+        classTeacher: null,
+        classTeacherId: null,
+        totalStudents: null,
+        totalBoys: null,
+        totalGirls: null,
+      }))
+    }));
+  };
+
+  // Fetch classes and sections based on selected academic year
   React.useEffect(() => {
-    if (!school?.id) return;
-    // fire-and-forget; store will cache and avoid duplicate network calls
-    fetchClassesAndSections(school.id, '2025-26').catch(console.error);
-  }, [school?.id, fetchClassesAndSections]);
+    const fetchClasses = async () => {
+      if (!school?.id) return;
+
+      setIsFetchingClasses(true);
+      setFetchClassesError(null);
+
+      try {
+        const response = await api.getClassesAndSections(school.id, selectedAcademicYear);
+
+        if (response.success && response.data) {
+          const transformedData = transformBackendClassData(response.data);
+          setClasses(transformedData);
+        } else {
+          setFetchClassesError(response.message || 'Failed to fetch classes');
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        setFetchClassesError('Failed to load classes');
+      } finally {
+        setIsFetchingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [school?.id, selectedAcademicYear]);
 
   React.useEffect(() => {
     const fetchStudents = async () => {
@@ -175,7 +235,7 @@ const StudentsPage: React.FC = () => {
       setFetchStudentsError(null);
 
       try {
-        const response = await api.getStudentsBySchool(school.id, { academicYear: '2025-26' });
+        const response = await api.getStudentsBySchool({ academicYear: selectedAcademicYear });
 
         if (response.success && response.data) {
           const payload = response.data as any;
@@ -202,7 +262,7 @@ const StudentsPage: React.FC = () => {
               grade: u.currentClass || 'N/A',
               section: u.currentSection || 'N/A',
               className: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
-              academicYear: u.academicYear || '2025-26'
+              academicYear: u.academicYear || selectedAcademicYear
             },
             parentGuardian: {
               fatherName: '', fatherPhone: '', fatherEmail: '', fatherOccupation: '',
@@ -229,30 +289,30 @@ const StudentsPage: React.FC = () => {
     };
 
     fetchStudents();
-  }, [school?.id]);
+  }, [school?.id, selectedAcademicYear]);
 
   // Helper function to get available classes
   const availableClasses = useMemo(() => {
-    // Prefer classes from the centralized classes store when available
-    if (classesFromStore && classesFromStore.length > 0) {
-      return classesFromStore.map(c => c.grade).sort();
+    // Use classes from the API based on selected academic year
+    if (classes && classes.length > 0) {
+      return classes.map(c => c.grade).sort();
     }
 
     // Fallback to inferring from fetched students
-    const classes = [...new Set(students.map(student => student.currentClass.grade))].sort();
-    return classes;
-  }, [classesFromStore, students]);
+    const classesFromStudents = [...new Set(students.map(student => student.currentClass.grade))].sort();
+    return classesFromStudents;
+  }, [classes, students]);
 
   // Helper function to get available sections for selected class
   const availableSections = useMemo(() => {
-    // If classes store is populated, use it to derive sections (more accurate)
-    if (classesFromStore && classesFromStore.length > 0) {
+    // Use classes from the API based on selected academic year
+    if (classes && classes.length > 0) {
       if (classFilter === 'all') {
-        const all = classesFromStore.flatMap(c => c.sections.map(s => s.name));
+        const all = classes.flatMap(c => c.sections.map(s => s.name));
         return [...new Set(all)].sort();
       }
 
-      const cls = classesFromStore.find(c => c.grade === classFilter || c.displayName === classFilter || c.id === classFilter);
+      const cls = classes.find(c => c.grade === classFilter || c.displayName === classFilter || c.id === classFilter);
       if (cls) return cls.sections.map(s => s.name).sort();
       return [];
     }
@@ -267,7 +327,7 @@ const StudentsPage: React.FC = () => {
         .map(student => student.currentClass.section)
     )].sort();
     return sections;
-  }, [classesFromStore, classFilter, students]);
+  }, [classes, classFilter, students]);
 
   // Reset section filter when class changes
   React.useEffect(() => {
@@ -407,7 +467,16 @@ const StudentsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter]);
+  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, selectedAcademicYear]);
+
+  // Reset filters when academic year changes
+  React.useEffect(() => {
+    setClassFilter('all');
+    setSectionFilter('all');
+    setFeeStatusFilter('all');
+    setQuickFilter('all');
+    setSelectedStudents([]);
+  }, [selectedAcademicYear]);
 
   // Helper functions
   const handleSort = (field: SortField) => {
@@ -483,6 +552,19 @@ const StudentsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-muted-foreground">Academic Year</label>
+              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Select Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2024-25">2024-25</SelectItem>
+                  <SelectItem value="2025-26">2025-26</SelectItem>
+                  <SelectItem value="2026-27">2026-27</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="space-x-2">
@@ -613,7 +695,11 @@ const StudentsPage: React.FC = () => {
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-muted-foreground">Class</label>
-                  <Select value={classFilter} onValueChange={setClassFilter}>
+                  <Select 
+                    value={classFilter} 
+                    onValueChange={setClassFilter}
+                    disabled={isFetchingClasses}
+                  >
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
@@ -633,7 +719,7 @@ const StudentsPage: React.FC = () => {
                   <Select 
                     value={sectionFilter} 
                     onValueChange={setSectionFilter}
-                    disabled={classFilter !== 'all' && availableSections.length === 1}
+                    disabled={isFetchingClasses || (classFilter !== 'all' && availableSections.length === 1)}
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue placeholder="Select Section" />
@@ -736,9 +822,19 @@ const StudentsPage: React.FC = () => {
         {/* Students Table */}
         <Card>
           <CardHeader>
-            <CardTitle>
-              Students List ({filteredAndSortedStudents.length} total, showing {currentStudents.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                Students List ({filteredAndSortedStudents.length} total, showing {currentStudents.length})
+              </CardTitle>
+              {(isFetchingStudents || isFetchingClasses) && (
+                <div className="text-sm text-muted-foreground">Loading...</div>
+              )}
+            </div>
+            {(fetchStudentsError || fetchClassesError) && (
+              <div className="text-sm text-red-600">
+                {fetchStudentsError || fetchClassesError}
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -895,7 +991,13 @@ const StudentsPage: React.FC = () => {
               
               {currentStudents.length === 0 && (
                 <div className="flex h-24 items-center justify-center">
-                  <p className="text-muted-foreground">No students found.</p>
+                  <p className="text-muted-foreground">
+                    {isFetchingStudents 
+                      ? 'Loading students...' 
+                      : fetchStudentsError 
+                        ? 'Failed to load students' 
+                        : 'No students found for the selected academic year.'}
+                  </p>
                 </div>
               )}
             </div>

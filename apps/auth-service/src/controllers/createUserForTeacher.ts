@@ -92,6 +92,7 @@ export async function createUserForTeacher(req: Request, res: Response) {
       },
     });
 
+    console.log('Teacher username:', username);
     console.log('Temporary password for teacher:', password);
 
     res.status(201).json({

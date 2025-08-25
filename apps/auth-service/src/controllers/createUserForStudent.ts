@@ -92,7 +92,8 @@ export async function createUserForStudent(req: Request, res: Response) {
       },
     });
 
-    console.log('Temporary password for user:', password);
+    console.log('Student username:', username);
+    console.log('Temporary password for student:', password);
 
     res.status(201).json({
       success: true,

@@ -14,7 +14,9 @@ import {
   RefreshTokenRequest,
   Class,
   PaginatedResponse,
-  PaginationParams
+  PaginationParams,
+  ProfileServiceStudent,
+  CreateStudentRequest
 } from './types';
 
 // Import mock API for fallback
@@ -216,7 +218,7 @@ export const api = {
   },
 
   // Profile service: get all students for a school (admin only)
-  getStudentsBySchool: async (schoolId: string, options?: { academicYear?: string; category?: string; classId?: string; sectionId?: string }) : Promise<APIResponse> => {
+  getStudentsBySchool: async (options?: { academicYear?: string; category?: string; classId?: string; sectionId?: string }) : Promise<APIResponse> => {
     try {
       const queryParams = new URLSearchParams();
       if (options?.academicYear) queryParams.append('academicYear', options.academicYear);
@@ -225,9 +227,29 @@ export const api = {
       if (options?.sectionId) queryParams.append('sectionId', options.sectionId);
 
       const queryString = queryParams.toString();
-      const url = `/profile/schools/${schoolId}/students${queryString ? `?${queryString}` : ''}`;
+      const url = `/profile/schools/students${queryString ? `?${queryString}` : ''}`;
       const response = await httpClient.get(url);
       return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: get a specific student by ID
+  getStudentById: async (id: string): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.get(`/profile/students/${id}`);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: create a new student
+  createStudent: async (data: CreateStudentRequest): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.post('/profile/students', data);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
     } catch (error) {
       return handleError(error);
     }
@@ -250,5 +272,7 @@ export const {
   getClasses,
   getClassesAndSections,
   getTeachers,
-  getStudentsBySchool
+  getStudentsBySchool,
+  getStudentById,
+  createStudent
 } = api;

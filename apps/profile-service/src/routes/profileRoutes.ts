@@ -19,6 +19,6 @@ const profileLimiter = rateLimit({
 // Student routes
 router.post('/students', profileLimiter, createStudent);
 router.get('/students/:id', profileLimiter, getStudent);
-router.get('/schools/:schoolId/students', profileLimiter, getAllStudents);
+router.get('/schools/students', profileLimiter, getAllStudents);
 
 export default router;

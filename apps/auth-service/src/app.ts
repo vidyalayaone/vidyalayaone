@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import authRoutes from './routes/authRoutes';
+import internalRoutes from './routes/internalRoutes';
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
@@ -60,6 +61,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 // app.use(`${config.server.apiPrefix}/auth`, authRoutes);
 app.use(`${config.server.apiPrefix}/auth`, authRoutes);
+app.use(`${config.server.apiPrefix}/internal`, internalRoutes);
 
 // 404 handler
 app.use(notFound);

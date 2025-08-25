@@ -3,6 +3,7 @@ import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 import axios from 'axios';
 import config from '../config/config';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -24,13 +25,16 @@ interface ClassSectionMap {
 
 export async function getAllStudents(req: Request, res: Response) {
   try {
-    const { schoolId } = req.params;
     const { 
       academicYear = '2025-26',
       category = 'all',
       classId = 'all',
       sectionId = 'all'
     } = req.query;
+
+    // Get school context and user information
+    const { context, schoolId } = getSchoolContext(req);
+    const user = getUser(req);
 
     // Validate school ID parameter
     if (!schoolId) {
@@ -63,10 +67,6 @@ export async function getAllStudents(req: Request, res: Response) {
       return;
     }
 
-    // Get school context and user information
-    const { context, schoolId: contextSchoolId } = getSchoolContext(req);
-    const user = getUser(req);
-
     // Only allow access in school context
     if (context !== 'school') {
       res.status(400).json({
@@ -77,30 +77,10 @@ export async function getAllStudents(req: Request, res: Response) {
       return;
     }
 
-    if (!contextSchoolId) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'School ID is required from context' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    // Verify that the requested school ID matches the context school ID
-    if (schoolId !== contextSchoolId) {
+    if(!hasPermission(PERMISSIONS.STUDENT.VIEW, user)) {
       res.status(403).json({
         success: false,
-        error: { message: 'Cannot access students from a different school' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    // Only allow ADMIN roles to access all students
-    if (!['ADMIN'].includes(user.role)) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'Access denied. Only admin can access all students' },
+        error: { message: 'You do not have permission to view student records' },
         timestamp: new Date().toISOString()
       });
       return;

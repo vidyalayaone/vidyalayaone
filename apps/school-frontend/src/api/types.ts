@@ -1,5 +1,77 @@
 // TypeScript interfaces for API responses and data models
 
+// Profile Service Student interfaces (from backend Prisma schema)
+export interface ProfileServiceGuardian {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+  address?: any;
+  metaData?: any;
+}
+
+export interface ProfileServiceStudentGuardian {
+  id: string;
+  relation?: string;
+  guardian: ProfileServiceGuardian;
+  metaData?: any;
+}
+
+export interface ProfileServiceStudentEnrollment {
+  id: string;
+  classId: string;
+  sectionId: string;
+  academicYear: string;
+  rollNumber?: string;
+  isCurrent: boolean;
+  fromDate?: string;
+  toDate?: string;
+  metaData?: any;
+  className?: string; // Added by backend
+  sectionName?: string; // Added by backend
+}
+
+export interface ProfileServiceDocument {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  url: string;
+  mimeType: string;
+  fileSize?: number;
+  isVerified: boolean;
+  expiryDate?: string;
+  metaData?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfileServiceStudent {
+  id: string;
+  userId: string;
+  admissionNumber: string;
+  schoolId: string;
+  firstName: string;
+  lastName: string;
+  bloodGroup?: string;
+  category?: string;
+  religion?: string;
+  admissionDate: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  address?: any;
+  contactInfo?: any;
+  profilePhoto?: string;
+  metaData?: any;
+  guardians: ProfileServiceStudentGuardian[];
+  enrollments: ProfileServiceStudentEnrollment[];
+  documents: ProfileServiceDocument[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// User interface for authentication and user management
 export interface User {
   id: string;
   username: string;
@@ -371,6 +443,76 @@ export interface ResetPasswordRequest {
 
 export interface RefreshTokenRequest {
   refreshToken: string;
+}
+
+// Student creation request interface
+export interface CreateStudentRequest {
+  // Basic student information (no userId - will be created internally)
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  bloodGroup?: string;
+  category?: string;
+  religion?: string;
+  admissionDate: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  contactInfo: {
+    primaryPhone: string; // Required for user account creation
+    secondaryPhone?: string;
+    email: string; // Required for user account creation
+    emergencyContact?: string;
+  };
+  profilePhoto?: string;
+  
+  // Parent/Guardian information (using parent info format for easier frontend mapping)
+  parentInfo?: {
+    fatherName: string;
+    fatherPhone?: string;
+    fatherEmail?: string;
+    fatherOccupation?: string;
+    motherName: string;
+    motherPhone?: string;
+    motherEmail?: string;
+    motherOccupation?: string;
+    guardianName?: string;
+    guardianPhone?: string;
+    guardianEmail?: string;
+    guardianRelation?: string;
+  };
+  
+  // Medical information
+  medicalInfo?: {
+    allergies?: string;
+    chronicConditions?: string;
+    medications?: string;
+    doctorName?: string;
+    doctorPhone?: string;
+    healthInsurance?: string;
+  };
+  
+  // Documents (optional)
+  documents?: {
+    name: string;
+    description?: string;
+    type: string;
+    mimeType: string;
+    fileSize?: number;
+    base64Data?: string;
+  }[];
+  
+  // Enrollment information
+  classId: string;
+  sectionId: string;
+  academicYear: string;
+  rollNumber?: string;
 }
 
 // Dashboard Stats Types

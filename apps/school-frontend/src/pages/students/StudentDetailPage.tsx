@@ -53,7 +53,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import StudentFeesTab from '@/components/students/StudentFeesTab';
-import { studentsAPI, type Student } from '@/api/mockStudentsAPI';
+import { getStudentById } from '@/api/api';
+import type { ProfileServiceStudent } from '@/api/types';
 import toast from 'react-hot-toast';
 
 // Mock student data according to the new JSON shape
@@ -66,8 +67,85 @@ const StudentDetailPage: React.FC = () => {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
-  const [student, setStudent] = useState<Student | null>(null);
+  const [student, setStudent] = useState<ProfileServiceStudent | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper functions for student data
+  const getFullName = (student: ProfileServiceStudent): string => {
+    return `${student.firstName} ${student.lastName}`.trim();
+  };
+
+  const getCurrentEnrollment = (student: ProfileServiceStudent) => {
+    return student.enrollments.find(enrollment => enrollment.isCurrent) || null;
+  };
+
+  const getFatherGuardian = (student: ProfileServiceStudent) => {
+    const fatherRelation = student.guardians.find(sg => 
+      sg.relation?.toLowerCase() === 'father'
+    );
+    return fatherRelation?.guardian || null;
+  };
+
+  const getMotherGuardian = (student: ProfileServiceStudent) => {
+    const motherRelation = student.guardians.find(sg => 
+      sg.relation?.toLowerCase() === 'mother'
+    );
+    return motherRelation?.guardian || null;
+  };
+
+  const getContactPhone = (student: ProfileServiceStudent): string => {
+    if (student.contactInfo?.phone) {
+      return student.contactInfo.phone;
+    }
+    
+    const father = getFatherGuardian(student);
+    if (father?.phone) {
+      return father.phone;
+    }
+    
+    const mother = getMotherGuardian(student);
+    if (mother?.phone) {
+      return mother.phone;
+    }
+    
+    return 'N/A';
+  };
+
+  const getContactEmail = (student: ProfileServiceStudent): string => {
+    if (student.contactInfo?.email) {
+      return student.contactInfo.email;
+    }
+    
+    const father = getFatherGuardian(student);
+    if (father?.email) {
+      return father.email;
+    }
+    
+    const mother = getMotherGuardian(student);
+    if (mother?.email) {
+      return mother.email;
+    }
+    
+    return 'N/A';
+  };
+
+  const getAddressString = (student: ProfileServiceStudent): string => {
+    if (student.address && typeof student.address === 'object') {
+      const addr = student.address;
+      const parts = [
+        addr.street,
+        addr.city,
+        addr.state,
+        addr.pincode
+      ].filter(Boolean);
+      return parts.join(', ') || 'N/A';
+    }
+    return student.address || 'N/A';
+  };
+
+  const getAvatarUrl = (student: ProfileServiceStudent): string => {
+    return student.profilePhoto || '/placeholder.svg';
+  };
 
   // Check if we came from fees page and should open fees tab
   useEffect(() => {
@@ -89,9 +167,9 @@ const StudentDetailPage: React.FC = () => {
       
       setLoading(true);
       try {
-        const studentData = await studentsAPI.getStudentById(id);
-        if (studentData) {
-          setStudent(studentData);
+        const response = await getStudentById(id);
+        if (response.success && response.data) {
+          setStudent(response.data.student);
         } else {
           toast.error('Student not found');
           navigate('/students');
@@ -151,26 +229,33 @@ const StudentDetailPage: React.FC = () => {
   };
 
   const getStatusBadge = () => {
-    if (student.status === 'Active') {
+    const currentEnrollment = getCurrentEnrollment(student);
+    const status = currentEnrollment ? 'Active' : 'Inactive';
+    if (status === 'Active') {
       return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
     } else {
       return <Badge variant="secondary">Inactive</Badge>;
     }
   };
 
-  const getFeeStatusBadge = () => {
-    switch (student.feeStatus) {
-      case 'Paid':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Paid</Badge>;
-      case 'Pending':
-        return <Badge variant="outline" className="border-yellow-300 text-yellow-800">Pending</Badge>;
-      case 'Partial':
-        return <Badge variant="outline" className="border-blue-300 text-blue-800">Partial</Badge>;
-      case 'Overdue':
-        return <Badge variant="destructive">Overdue</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
+  const getCurrentClassInfo = () => {
+    const currentEnrollment = getCurrentEnrollment(student);
+    if (currentEnrollment) {
+      // Use className and sectionName if available, otherwise fallback to IDs
+      const className = currentEnrollment.className || currentEnrollment.classId;
+      const sectionName = currentEnrollment.sectionName || currentEnrollment.sectionId;
+      return `${className} - ${sectionName}`;
     }
+    return 'N/A';
+  };
+
+  const getCurrentRollNumber = () => {
+    const currentEnrollment = getCurrentEnrollment(student);
+    return currentEnrollment?.rollNumber || 'N/A';
+  };
+
+  const getFeeStatusBadge = () => {
+    return <Badge variant="outline" className="border-blue-300 text-blue-800">Not Available</Badge>;
   };
 
   return (
@@ -187,28 +272,28 @@ const StudentDetailPage: React.FC = () => {
             Students
           </span>
           <span>→</span>
-          <span className="text-foreground font-medium">{student.name}</span>
+          <span className="text-foreground font-medium">{getFullName(student)}</span>
         </div>
 
         {/* Header Section with Photo and Info */}
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={student.avatar} />
+              <AvatarImage src={getAvatarUrl(student)} />
               <AvatarFallback className="text-lg">
-                {student.name.split(' ').map(n => n[0]).join('')}
+                {getFullName(student).split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <h1 className="text-3xl font-bold tracking-tight">{student.name}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{getFullName(student)}</h1>
                 {getStatusBadge()}
               </div>
-              <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                <span>Roll No: <span className="font-medium text-foreground">{student.rollNo}</span></span>
+              {/* <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                <span>Admission No: <span className="font-medium text-foreground">{student.admissionNumber}</span></span>
                 <span>Student ID: <span className="font-medium text-foreground">{student.id}</span></span>
-                <span>Class: <span className="font-medium text-foreground">{student.class} - {student.section}</span></span>
-              </div>
+                <span>Class: <span className="font-medium text-foreground">{getCurrentClassInfo()}</span></span>
+              </div> */}
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -237,11 +322,11 @@ const StudentDetailPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Roll No</p>
-                <p className="text-lg font-semibold">{student.rollNo}</p>
+                <p className="text-lg font-semibold">{getCurrentRollNumber()}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Class</p>
-                <p className="text-lg font-semibold">{student.class} - {student.section}</p>
+                <p className="text-lg font-semibold">{getCurrentClassInfo()}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Fee Status</p>
@@ -253,7 +338,7 @@ const StudentDetailPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Contact</p>
-                <p className="text-sm">{student.phone}</p>
+                <p className="text-sm">{getContactPhone(student)}</p>
               </div>
             </div>
           </CardContent>
@@ -284,23 +369,27 @@ const StudentDetailPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Roll No</p>
-                      <p className="text-lg">{student.rollNo}</p>
+                      <p className="text-lg">{getCurrentRollNumber()}</p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-sm font-medium text-muted-foreground">Student ID</p>
                       <p className="text-lg">{student.id}</p>
+                    </div> */}
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Admission No</p>
+                      <p className="text-lg">{student.admissionNumber}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Class</p>
-                      <p className="text-lg">{student.class}</p>
+                      <p className="text-lg">{getCurrentClassInfo()}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Section</p>
-                      <p className="text-lg">{student.section}</p>
-                    </div>
-                    <div className="col-span-2">
                       <p className="text-sm font-medium text-muted-foreground">Admission Date</p>
                       <p>{new Date(student.admissionDate).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
+                      <p>{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -319,23 +408,35 @@ const StudentDetailPage: React.FC = () => {
                     <p className="text-sm font-medium text-muted-foreground">Email</p>
                     <p className="flex items-center">
                       <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {student.email}
+                      {getContactEmail(student)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Phone</p>
                     <p className="flex items-center">
                       <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {student.phone}
+                      {getContactPhone(student)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Address</p>
                     <p className="flex items-start">
                       <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-1" />
-                      {student.address}
+                      {getAddressString(student)}
                     </p>
                   </div>
+                  {student.gender && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                      <p>{student.gender}</p>
+                    </div>
+                  )}
+                  {student.bloodGroup && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Blood Group</p>
+                      <p>{student.bloodGroup}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -349,38 +450,112 @@ const StudentDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium text-muted-foreground">Father</p>
-                      <p className="font-medium">{student.parentGuardian.fatherName}</p>
-                      {student.parentGuardian.fatherOccupation && (
-                        <p className="text-sm text-muted-foreground">{student.parentGuardian.fatherOccupation}</p>
-                      )}
-                      {student.parentGuardian.fatherPhone && (
-                        <p className="text-sm">{student.parentGuardian.fatherPhone}</p>
-                      )}
-                      {student.parentGuardian.fatherEmail && (
-                        <p className="text-sm text-muted-foreground">{student.parentGuardian.fatherEmail}</p>
-                      )}
-                    </div>
+                    {(() => {
+                      const father = getFatherGuardian(student);
+                      const mother = getMotherGuardian(student);
+                      
+                      return (
+                        <>
+                          {father && (
+                            <div className="border rounded-lg p-3">
+                              <p className="text-sm font-medium text-muted-foreground">Father</p>
+                              <p className="font-medium">{`${father.firstName} ${father.lastName}`}</p>
+                              {father.phone && (
+                                <p className="text-sm">{father.phone}</p>
+                              )}
+                              {father.email && (
+                                <p className="text-sm text-muted-foreground">{father.email}</p>
+                              )}
+                            </div>
+                          )}
 
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium text-muted-foreground">Mother</p>
-                      <p className="font-medium">{student.parentGuardian.motherName}</p>
-                      {student.parentGuardian.motherOccupation && (
-                        <p className="text-sm text-muted-foreground">{student.parentGuardian.motherOccupation}</p>
-                      )}
-                      {student.parentGuardian.motherPhone && (
-                        <p className="text-sm">{student.parentGuardian.motherPhone}</p>
-                      )}
-                      {student.parentGuardian.motherEmail && (
-                        <p className="text-sm text-muted-foreground">{student.parentGuardian.motherEmail}</p>
-                      )}
-                    </div>
+                          {mother && (
+                            <div className="border rounded-lg p-3">
+                              <p className="text-sm font-medium text-muted-foreground">Mother</p>
+                              <p className="font-medium">{`${mother.firstName} ${mother.lastName}`}</p>
+                              {mother.phone && (
+                                <p className="text-sm">{mother.phone}</p>
+                              )}
+                              {mother.email && (
+                                <p className="text-sm text-muted-foreground">{mother.email}</p>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Show other guardians */}
+                          {student.guardians
+                            .filter(sg => sg.relation?.toLowerCase() !== 'father' && sg.relation?.toLowerCase() !== 'mother')
+                            .map((sg) => (
+                              <div key={sg.id} className="border rounded-lg p-3">
+                                <p className="text-sm font-medium text-muted-foreground">{sg.relation || 'Guardian'}</p>
+                                <p className="font-medium">{`${sg.guardian.firstName} ${sg.guardian.lastName}`}</p>
+                                {sg.guardian.phone && (
+                                  <p className="text-sm">{sg.guardian.phone}</p>
+                                )}
+                                {sg.guardian.email && (
+                                  <p className="text-sm text-muted-foreground">{sg.guardian.email}</p>
+                                )}
+                              </div>
+                            ))
+                          }
+                          
+                          {student.guardians.length === 0 && (
+                            <div className="col-span-2 text-center py-4 text-muted-foreground">
+                              No guardian information available
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Transport Info Card */}
+              {/* Personal Info Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <User className="mr-2 h-5 w-5" />
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {student.dateOfBirth && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
+                        <p>{new Date(student.dateOfBirth).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {student.gender && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                        <p>{student.gender}</p>
+                      </div>
+                    )}
+                    {student.bloodGroup && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Blood Group</p>
+                        <p>{student.bloodGroup}</p>
+                      </div>
+                    )}
+                    {student.category && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Category</p>
+                        <p>{student.category}</p>
+                      </div>
+                    )}
+                    {student.religion && (
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Religion</p>
+                        <p>{student.religion}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Transport Info Card - Commented out as it's not in the new schema */}
               {/* <Card>
                 <CardHeader>
                   <CardTitle>Transport Information</CardTitle>
@@ -423,10 +598,22 @@ const StudentDetailPage: React.FC = () => {
                           <FileText className="h-5 w-5 text-muted-foreground" />
                           <div>
                             <p className="font-medium">{doc.name}</p>
+                            {doc.description && (
+                              <p className="text-sm text-muted-foreground">{doc.description}</p>
+                            )}
+                            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                              <span>{doc.type.replace('_', ' ')}</span>
+                              {doc.isVerified && (
+                                <Badge variant="outline" className="text-xs">Verified</Badge>
+                              )}
+                              {doc.expiryDate && (
+                                <span>Expires: {new Date(doc.expiryDate).toLocaleDateString()}</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => window.open(doc.url, '_blank')}>
                             View
                           </Button>
                           <Button variant="outline" size="sm">
@@ -513,7 +700,7 @@ const StudentDetailPage: React.FC = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action will deactivate the student <strong>{student.name}</strong>. 
+                This action will deactivate the student <strong>{getFullName(student)}</strong>. 
                 The student will not be able to access the system until reactivated.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -535,7 +722,7 @@ const StudentDetailPage: React.FC = () => {
             <DialogHeader>
               <DialogTitle>Upload Document</DialogTitle>
               <DialogDescription>
-                Upload a new document for {student.name}.
+                Upload a new document for {getFullName(student)}.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">

@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
+import axios from 'axios';
+import config from '../config/config';
 
 const { prisma } = DatabaseService;
 
@@ -41,11 +44,11 @@ export async function getStudent(req: Request, res: Response) {
       return;
     }
 
-    // Only allow ADMIN, TEACHER, and STUDENT roles
-    if (!['ADMIN', 'TEACHER', 'STUDENT'].includes(user.role)) {
+    // Check permissions
+    if (!hasPermission(PERMISSIONS.STUDENT.VIEW, user)) {
       res.status(403).json({
         success: false,
-        error: { message: 'Access denied. Only admins, teachers, and students can access student information' },
+        error: { message: 'You do not have permission to view student records' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -86,21 +89,64 @@ export async function getStudent(req: Request, res: Response) {
       return;
     }
 
-    // Additional access control for STUDENT role
-    // Students can only access their own profile
-    if (user.role === 'STUDENT' && student.userId !== user.id) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'Students can only access their own profile' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
+    // Fetch class and section names for current enrollments
+    const enrichedEnrollments = await Promise.all(
+      student.enrollments.map(async (enrollment) => {
+        try {
+          const schoolServiceResponse = await axios.get(
+            `${config.services.school.url}/api/v1/school/internal/class/${enrollment.classId}`,
+            {
+              timeout: config.services.school.timeout
+            }
+          );
+
+          if (schoolServiceResponse.data.success) {
+            const classData = schoolServiceResponse.data.data.class;
+            const section = classData.sections.find((s: any) => s.id === enrollment.sectionId);
+            
+            if (!section) {
+              console.warn(`Section ${enrollment.sectionId} not found in class ${enrollment.classId}`);
+              return {
+                ...enrollment,
+                className: classData.name,
+                sectionName: 'Unknown Section'
+              };
+            }
+
+            return {
+              ...enrollment,
+              className: classData.name,
+              sectionName: section.name
+            };
+          } else {
+            console.warn(`Failed to fetch class data for class ID: ${enrollment.classId}`);
+            return {
+              ...enrollment,
+              className: 'Unknown Class',
+              sectionName: 'Unknown Section'
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching class data for class ID: ${enrollment.classId}`, error);
+          return {
+            ...enrollment,
+            className: 'Unknown Class',
+            sectionName: 'Unknown Section'
+          };
+        }
+      })
+    );
+
+    // Create enriched student object with class and section names
+    const enrichedStudent = {
+      ...student,
+      enrollments: enrichedEnrollments
+    };
 
     res.status(200).json({
       success: true,
       data: {
-        student,
+        student: enrichedStudent,
       },
       timestamp: new Date().toISOString(),
     });

@@ -16,7 +16,8 @@ import {
   PaginatedResponse,
   PaginationParams,
   ProfileServiceStudent,
-  CreateStudentRequest
+  CreateStudentRequest,
+  ProfileServiceTeachersResponse
 } from './types';
 
 // Import mock API for fallback
@@ -217,6 +218,29 @@ export const api = {
     }
   },
 
+  // Profile service: get all teachers for a school (admin only)
+  getTeachersBySchool: async (options?: { 
+    category?: string; 
+    gender?: string; 
+    maritalStatus?: string; 
+    hasSubjects?: string; 
+  }): Promise<APIResponse<ProfileServiceTeachersResponse>> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (options?.category) queryParams.append('category', options.category);
+      if (options?.gender) queryParams.append('gender', options.gender);
+      if (options?.maritalStatus) queryParams.append('maritalStatus', options.maritalStatus);
+      if (options?.hasSubjects) queryParams.append('hasSubjects', options.hasSubjects);
+
+      const queryString = queryParams.toString();
+      const url = `/profile/schools/teachers${queryString ? `?${queryString}` : ''}`;
+      const response = await httpClient.get(url);
+      return handleResponse<ProfileServiceTeachersResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Profile service: get all students for a school (admin only)
   getStudentsBySchool: async (options?: { academicYear?: string; category?: string; classId?: string; sectionId?: string }) : Promise<APIResponse> => {
     try {
@@ -272,6 +296,7 @@ export const {
   getClasses,
   getClassesAndSections,
   getTeachers,
+  getTeachersBySchool,
   getStudentsBySchool,
   getStudentById,
   createStudent

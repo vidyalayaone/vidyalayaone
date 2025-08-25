@@ -65,6 +65,7 @@ class ServiceRegistry {
         { path: '/internal/class/:classId', method: 'GET', isProtected: false },
         { path: '/subjects/global', method: 'POST', isProtected: true },
         { path: '/subjects', method: 'POST', isProtected: true },
+        { path: '/subjects', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,

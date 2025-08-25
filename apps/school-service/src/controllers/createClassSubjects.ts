@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { createClassSubjectsSchema } from '../validations/validationSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -11,9 +12,8 @@ export async function createClassSubjects(req: Request, res: Response): Promise<
     if (!validation.success) return;
 
     const { schoolId, academicYear, classSubjects } = validation.data;
-    const adminData = getUser(req);
-    const adminId = adminData?.id;
-    const role = adminData?.role;    
+    const userData = getUser(req);
+    const userId = userData?.id;
     const { context } = getSchoolContext(req);
 
     // Only admin can add subjects to classes and only from platform context
@@ -26,10 +26,10 @@ export async function createClassSubjects(req: Request, res: Response): Promise<
       return;
     }
 
-    if (!adminId || role?.toLowerCase() !== 'admin') {
+    if (!hasPermission(PERMISSIONS.CLASS.UPDATE, userData)){
       res.status(403).json({
         success: false,
-        error: { message: 'Only admins can manage class subjects' },
+        error: { message: 'You do not have permission to manage class subjects' },
         timestamp: new Date().toISOString()
       });
       return;

@@ -33,6 +33,7 @@ services:
       - AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
       - SCHOOL_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
       - PROFILE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
+      - ATTENDANCE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/attendance_db
     networks:
       - vidyalayaone-network
     restart: "no"
@@ -121,6 +122,34 @@ services:
       - vidyalayaone-network
     restart: unless-stopped
 
+  # Attendance Service
+  attendance-service:
+    build:
+      context: .
+      dockerfile: apps/attendance-service/Dockerfile
+    container_name: vidyalayaone-attendance
+    ports:
+      - "3004:3004"
+      - "5559:5559"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/attendance_db
+      - PORT=3004
+      - NODE_ENV=development
+    volumes:
+    - ./apps/attendance-service:/app/apps/attendance-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/attendance-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/attendance-service/src/generated
+    - /app/apps/attendance-service/node_modules/.prisma
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
   # API Gateway
   api-gateway:
     build:
@@ -133,12 +162,14 @@ services:
       - auth-service
       - school-service
       - profile-service
+      - attendance-service
     environment:
       - PORT=3000
       - NODE_ENV=development
       - AUTH_SERVICE_URL=http://auth-service:3001
       - SCHOOL_SERVICE_URL=http://school-service:3002
       - PROFILE_SERVICE_URL=http://profile-service:3003
+      - ATTENDANCE_SERVICE_URL=http://attendance-service:3004
       - JWT_SECRET=your-jwt-secret-here
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
@@ -165,6 +196,7 @@ services:
       - VITE_AUTH_SERVICE_URL=http://localhost:3001
       - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
       - VITE_PROFILE_SERVICE_URL=http://localhost:3003
+      - VITE_ATTENDANCE_SERVICE_URL=http://localhost:3004
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend
       - ./packages:/app/packages

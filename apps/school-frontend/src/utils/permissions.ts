@@ -129,9 +129,14 @@ export const ALL_PERMISSIONS = Object.values(PERMISSIONS).reduce((acc, permissio
   return [...acc, ...Object.values(permissionGroup)];
 }, [] as string[]);
 
+interface User {
+  permissions?: string[];
+  [key: string]: unknown;
+}
+
 export async function hasPermission(
   permission: string,
-  user: any
+  user: User | null
 ): Promise<boolean> {
   if (!user) return false;
   const permissions: string[] = user.permissions || [];

@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model StudentAttendance {
+  id                String            @id @default(uuid())
+  studentId         String            @map("student_id") // Reference to profile-service Student.id
+  schoolId          String            @map("school_id") // Reference to school-service School.id (for filtering)
+  attendanceDate    DateTime          @map("attendance_date") @db.Date // Date of attendance (unique per student per date)
+  status            AttendanceStatus  // Attendance status
+  attendanceTakerId String            @map("attendance_taker_id") // Teacher.id who marked attendance (profile-service)
+  metaData          Json?             @map("meta_data") // Additional flexible data (notes, reasons, etc.)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  // Unique constraint to prevent duplicate attendance entries
+  @@unique([studentId, attendanceDate])
+  @@map("student_attendance")
+}
+
+model TeacherAttendance {
+  id             String                @id @default(uuid())
+  teacherId      String                @map("teacher_id") // Reference to profile-service Teacher.id
+  schoolId       String                @map("school_id") // Reference to school-service School.id (for filtering)
+  attendanceDate DateTime              @map("attendance_date") @db.Date // Date of attendance (unique per teacher per date)
+  status         TeacherAttendanceStatus // Attendance status for teachers
+  metaData       Json?                 @map("meta_data") // Additional flexible data (reasons, check-in/out times, etc.)
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  // Unique constraint to prevent duplicate attendance entries
+  @@unique([teacherId, attendanceDate])
+  @@map("teacher_attendance")
+}
+
+// Enum for student attendance status
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+}
+
+// Enum for teacher attendance status (includes HALF_DAY)
+enum TeacherAttendanceStatus {
+  PRESENT
+  ABSENT
+  LEAVE
+  HALF_DAY
+}

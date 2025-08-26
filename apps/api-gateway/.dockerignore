@@ -10,7 +10,6 @@ README.md
 **/.env
 .env.*
 !.env.example
-!apps/*/.env
 .nyc_output
 coverage
 .docker

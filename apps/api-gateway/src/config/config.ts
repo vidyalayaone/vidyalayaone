@@ -14,6 +14,7 @@ interface ServicesConfig {
   auth: ServiceConfig;
   school: ServiceConfig;
   profile: ServiceConfig;
+  attendance: ServiceConfig;
   // add more services
 }
 
@@ -58,6 +59,10 @@ const config: Config = {
     profile: {
       url: process.env.PROFILE_SERVICE_URL || 'http://localhost:3003',
       timeout: parseInt(process.env.PROFILE_SERVICE_TIMEOUT || '30000', 10),
+    },
+    attendance: {
+      url: process.env.ATTENDANCE_SERVICE_URL || 'http://localhost:3004',
+      timeout: parseInt(process.env.ATTENDANCE_SERVICE_TIMEOUT || '30000', 10),
     },
   },
   jwt: {

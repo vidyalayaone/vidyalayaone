@@ -568,8 +568,27 @@ async function runAutomation() {
 }
 
 // Handle script execution
-if (import.meta.url === `file://${process.argv[1]}`) {
-  runAutomation().catch(console.error);
+// Cross-platform solution for detecting if this is the main module
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Cross-platform check for main module
+const isMainModule = process.argv[1] && (
+  path.resolve(__filename) === path.resolve(process.argv[1]) ||
+  __filename === process.argv[1] ||
+  import.meta.url === `file://${process.argv[1]}` ||
+  import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`
+);
+
+if (isMainModule) {
+  console.log('Starting automation script...');
+  runAutomation().catch(error => {
+    console.error('Automation failed:', error);
+    process.exit(1);
+  });
 }
 
 export {

@@ -1,6 +1,6 @@
 // Student detail view page
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
   Edit, 
@@ -52,9 +52,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import StudentFeesTab from '@/components/students/StudentFeesTab';
-import { getStudentById } from '@/api/api';
-import type { ProfileServiceStudent } from '@/api/types';
+import { getStudentById, createStudentDocument, getStudentDocuments } from '@/api/api';
+import type { ProfileServiceStudent, CreateDocumentRequest } from '@/api/types';
 import toast from 'react-hot-toast';
 
 // Mock student data according to the new JSON shape
@@ -69,6 +77,13 @@ const StudentDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('basic');
   const [student, setStudent] = useState<ProfileServiceStudent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<ProfileServiceStudent['documents']>([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [documentName, setDocumentName] = useState('');
+  const [documentType, setDocumentType] = useState<CreateDocumentRequest['type']>('OTHER');
+  const [documentDescription, setDocumentDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Helper functions for student data
   const getFullName = (student: ProfileServiceStudent): string => {
@@ -147,6 +162,87 @@ const StudentDetailPage: React.FC = () => {
     return student.profilePhoto || '/placeholder.svg';
   };
 
+  // Load documents for the student
+  const loadDocuments = useCallback(async () => {
+    if (!id) return;
+    
+    setDocumentsLoading(true);
+    try {
+      const response = await getStudentDocuments(id);
+      if (response.success && response.data) {
+        setDocuments(response.data.documents);
+      } else {
+        console.error('Failed to load documents:', response.message);
+      }
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  }, [id]);
+
+  // Handle file upload to a storage service (mock for now)
+  const uploadFileToStorage = async (file: File): Promise<string> => {
+    // For now, return a mock URL. In production, you'd upload to GCS/S3
+    // and return the actual URL
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`https://storage.example.com/documents/${Date.now()}-${file.name}`);
+      }, 1000);
+    });
+  };
+
+  // Handle document upload
+  const handleUploadDocument = async () => {
+    if (!selectedFile || !documentName || !id) {
+      toast.error('Please fill in all required fields and select a file');
+      return;
+    }
+
+    setUploadingDocument(true);
+    try {
+      // Upload file to storage first
+      const fileUrl = await uploadFileToStorage(selectedFile);
+      
+      // Create document record
+      const documentData: CreateDocumentRequest = {
+        name: documentName,
+        type: documentType,
+        url: fileUrl,
+        description: documentDescription || undefined,
+        mimeType: selectedFile.type,
+        fileSize: selectedFile.size,
+      };
+
+      const response = await createStudentDocument(id, documentData);
+      if (response.success) {
+        toast.success('Document uploaded successfully');
+        setUploadDocumentDialogOpen(false);
+        // Reset form
+        setDocumentName('');
+        setDocumentType('OTHER');
+        setDocumentDescription('');
+        setSelectedFile(null);
+        // Reload documents
+        loadDocuments();
+      } else {
+        toast.error(response.message || 'Failed to upload document');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('Failed to upload document');
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
   // Check if we came from fees page and should open fees tab
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -170,6 +266,8 @@ const StudentDetailPage: React.FC = () => {
         const response = await getStudentById(id);
         if (response.success && response.data) {
           setStudent(response.data.student);
+          // Load documents after student is loaded
+          await loadDocuments();
         } else {
           toast.error('Student not found');
           navigate('/students');
@@ -183,7 +281,7 @@ const StudentDetailPage: React.FC = () => {
     };
 
     fetchStudent();
-  }, [id, navigate]);
+  }, [id, navigate, loadDocuments]);
 
   if (loading) {
     return (
@@ -214,13 +312,6 @@ const StudentDetailPage: React.FC = () => {
     console.log('Deactivating student:', id);
     // Here you would call the API to deactivate the student
     navigate('/students');
-  };
-
-  const handleUploadDocument = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    console.log('Uploading documents:', files);
-    // Here you would call the API to upload documents
-    setUploadDocumentDialogOpen(false);
   };
 
   const handleMarkAsPaid = () => {
@@ -590,9 +681,14 @@ const StudentDetailPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {student.documents.length > 0 ? (
+                {documentsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span className="ml-2">Loading documents...</span>
+                  </div>
+                ) : documents.length > 0 ? (
                   <div className="space-y-3">
-                    {student.documents.map((doc) => (
+                    {documents.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <FileText className="h-5 w-5 text-muted-foreground" />
@@ -602,7 +698,7 @@ const StudentDetailPage: React.FC = () => {
                               <p className="text-sm text-muted-foreground">{doc.description}</p>
                             )}
                             <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                              <span>{doc.type.replace('_', ' ')}</span>
+                              <span>{doc.type.replace(/_/g, ' ')}</span>
                               {doc.isVerified && (
                                 <Badge variant="outline" className="text-xs">Verified</Badge>
                               )}
@@ -616,7 +712,7 @@ const StudentDetailPage: React.FC = () => {
                           <Button variant="outline" size="sm" onClick={() => window.open(doc.url, '_blank')}>
                             View
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => window.open(doc.url, '_blank')}>
                             <Download className="mr-2 h-4 w-4" />
                             Download
                           </Button>
@@ -718,27 +814,87 @@ const StudentDetailPage: React.FC = () => {
 
         {/* Upload Document Dialog */}
         <Dialog open={uploadDocumentDialogOpen} onOpenChange={setUploadDocumentDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Upload Document</DialogTitle>
               <DialogDescription>
-                Upload a new document for {getFullName(student)}.
+                Upload a new document for {student ? getFullName(student) : 'this student'}.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="document-upload">Select Document</Label>
+                <Label htmlFor="document-name">Document Name *</Label>
+                <Input
+                  id="document-name"
+                  placeholder="e.g., Birth Certificate"
+                  value={documentName}
+                  onChange={(e) => setDocumentName(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="document-type">Document Type *</Label>
+                <Select value={documentType} onValueChange={(value: CreateDocumentRequest['type']) => setDocumentType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BIRTH_CERTIFICATE">Birth Certificate</SelectItem>
+                    <SelectItem value="AADHAAR_CARD">Aadhaar Card</SelectItem>
+                    <SelectItem value="PASSPORT">Passport</SelectItem>
+                    <SelectItem value="MARK_SHEET">Mark Sheet</SelectItem>
+                    <SelectItem value="TRANSFER_CERTIFICATE">Transfer Certificate</SelectItem>
+                    <SelectItem value="CHARACTER_CERTIFICATE">Character Certificate</SelectItem>
+                    <SelectItem value="MEDICAL_CERTIFICATE">Medical Certificate</SelectItem>
+                    <SelectItem value="VACCINATION_RECORD">Vaccination Record</SelectItem>
+                    <SelectItem value="PHOTO">Photo</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="document-description">Description</Label>
+                <Textarea
+                  id="document-description"
+                  placeholder="Optional description"
+                  value={documentDescription}
+                  onChange={(e) => setDocumentDescription(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="document-upload">Select File *</Label>
                 <Input
                   id="document-upload"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  onChange={handleUploadDocument}
+                  onChange={handleFileSelect}
                 />
+                {selectedFile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                  </p>
+                )}
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setUploadDocumentDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setUploadDocumentDialogOpen(false)} disabled={uploadingDocument}>
                 Cancel
+              </Button>
+              <Button onClick={handleUploadDocument} disabled={uploadingDocument || !selectedFile || !documentName}>
+                {uploadingDocument ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

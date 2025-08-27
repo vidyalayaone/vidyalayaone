@@ -42,9 +42,35 @@ export interface ProfileServiceDocument {
   fileSize?: number;
   isVerified: boolean;
   expiryDate?: string;
+  uploadedBy?: string;
   metaData?: any;
   createdAt: string;
   updatedAt: string;
+}
+
+// Document API types
+export interface CreateDocumentRequest {
+  name: string;
+  type: 'BIRTH_CERTIFICATE' | 'AADHAAR_CARD' | 'PAN_CARD' | 'PASSPORT' | 'VOTER_ID' | 'DRIVING_LICENSE' | 
+        'MARK_SHEET' | 'DEGREE_CERTIFICATE' | 'DIPLOMA_CERTIFICATE' | 'TRANSFER_CERTIFICATE' | 
+        'CHARACTER_CERTIFICATE' | 'EXPERIENCE_CERTIFICATE' | 'MEDICAL_CERTIFICATE' | 'VACCINATION_RECORD' | 
+        'HEALTH_CHECKUP_REPORT' | 'INCOME_CERTIFICATE' | 'FEE_RECEIPT' | 'SALARY_SLIP' | 'BANK_STATEMENT' | 
+        'PHOTO' | 'SIGNATURE' | 'CASTE_CERTIFICATE' | 'DOMICILE_CERTIFICATE' | 'RESIDENCE_PROOF' | 'OTHER';
+  url: string;
+  description?: string;
+  mimeType?: string;
+  fileSize?: number;
+  expiryDate?: string;
+}
+
+export interface DocumentsListResponse {
+  documents: ProfileServiceDocument[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface ProfileServiceStudent {

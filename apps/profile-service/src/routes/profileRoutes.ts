@@ -6,6 +6,9 @@ import { createTeacher } from '../controllers/createTeacher';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
 import rateLimit from 'express-rate-limit';
+import { createStudentDocument } from '../controllers/documents/uploadDocument';
+import { listStudentDocuments } from '../controllers/documents/listStudentDocuments';
+import { getStudentDocument } from '../controllers/documents/getStudentDocument';
 
 const router: Router = Router();
 
@@ -23,6 +26,10 @@ const profileLimiter = rateLimit({
 router.post('/students', profileLimiter, createStudent);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
+// Student documents
+router.post('/students/:id/documents', profileLimiter, createStudentDocument);
+router.get('/students/:id/documents', profileLimiter, listStudentDocuments);
+router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument);
 
 // Teacher routes
 router.post('/teachers', profileLimiter, createTeacher);

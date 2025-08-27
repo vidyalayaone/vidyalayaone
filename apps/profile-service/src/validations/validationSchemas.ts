@@ -125,3 +125,50 @@ export const createTeacherSchema = z.object({
 export const updateTeacherSchema = createTeacherSchema.partial().extend({
   id: z.string().uuid('Invalid teacher ID format'),
 });
+
+// Document validation schemas
+export const createDocumentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(255),
+  type: z.enum([
+    'BIRTH_CERTIFICATE',
+    'AADHAAR_CARD',
+    'PAN_CARD',
+    'PASSPORT',
+    'VOTER_ID',
+    'DRIVING_LICENSE',
+    'MARK_SHEET',
+    'DEGREE_CERTIFICATE',
+    'DIPLOMA_CERTIFICATE',
+    'TRANSFER_CERTIFICATE',
+    'CHARACTER_CERTIFICATE',
+    'EXPERIENCE_CERTIFICATE',
+    'MEDICAL_CERTIFICATE',
+    'VACCINATION_RECORD',
+    'HEALTH_CHECKUP_REPORT',
+    'INCOME_CERTIFICATE',
+    'FEE_RECEIPT',
+    'SALARY_SLIP',
+    'BANK_STATEMENT',
+    'PHOTO',
+    'SIGNATURE',
+    'CASTE_CERTIFICATE',
+    'DOMICILE_CERTIFICATE',
+    'RESIDENCE_PROOF',
+    'OTHER'
+  ], 'Invalid document type'),
+  url: z.string().url('Valid URL is required').max(500),
+  description: z.string().max(1000).optional(),
+  mimeType: z.string().min(1, 'MIME type is required').max(100).optional(),
+  fileSize: z.number().int().min(0).optional(),
+  expiryDate: z.string().datetime('Invalid expiry date format').optional(),
+});
+
+export const listDocumentsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/, 'Page must be a number').optional(),
+  pageSize: z.string().regex(/^\d+$/, 'Page size must be a number').optional(),
+});
+
+export const documentParamsSchema = z.object({
+  id: z.string().uuid('Invalid student ID format'),
+  docId: z.string().uuid('Invalid document ID format').optional(),
+});

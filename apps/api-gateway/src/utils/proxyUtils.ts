@@ -18,6 +18,13 @@ export function createServiceProxy(service: ServiceConfig) {
           proxyReq.setHeader('X-User-ID', req.user.userId);
           proxyReq.setHeader('X-User-Email', req.user.email || '');
         }
+
+        // Forward request ID if present (added by gateway middleware)
+        if (req.requestId) {
+          proxyReq.setHeader('X-Request-ID', req.requestId);
+        } else if (req.headers['x-request-id']) {
+          proxyReq.setHeader('X-Request-ID', req.headers['x-request-id'] as string);
+        }
         
         // Log proxy request in development
         if (process.env.NODE_ENV === 'development') {

@@ -28,6 +28,13 @@ export DATABASE_URL=$PROFILE_DATABASE_URL
 pnpm db:generate
 pnpm db:migrate --name init
 
+# Run payment service migrations
+echo "Running payment service migrations..."
+cd /app/apps/payment-service
+export DATABASE_URL=$PAYMENT_DATABASE_URL
+pnpm db:generate
+pnpm db:migrate --name init
+
 # Run attendance service migrations
 echo "Running attendance service migrations..."
 cd /app/apps/attendance-service

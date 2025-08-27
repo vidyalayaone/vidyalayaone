@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SchoolPayment {
+  id                    String        @id @default(uuid())
+  schoolId              String        @map("school_id") // Foreign key to school-service
+  razorpayOrderId       String        @unique @map("razorpay_order_id")
+  razorpayPaymentId     String?       @map("razorpay_payment_id")
+  razorpaySignature     String?       @map("razorpay_signature")
+  amount                Int           // Amount in paise (e.g., 50000 for ₹500)
+  currency              String        @default("INR") @db.VarChar(3)
+  status                PaymentStatus @default(CREATED)
+  failureReason         String?       @map("failure_reason") @db.Text
+  receipt               String?       @db.VarChar(40) // Custom receipt number
+  notes                 Json?         // Additional metadata
+  paymentMethod         String?       @map("payment_method") @db.VarChar(50) // card, upi, netbanking, etc.
+  paymentMethodDetails  Json?         @map("payment_method_details") // Bank name, card details, etc.
+  attempts              Int           @default(1) // Number of payment attempts
+  paidAt                DateTime?     @map("paid_at")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  receiptLogs           ReceiptLog[]
+
+  @@map("school_payments")
+}
+
+model ReceiptLog {
+  id                String         @id @default(uuid())
+  schoolPaymentId   String         @map("school_payment_id")
+  receiptNumber     String         @unique @map("receipt_number")
+  receiptType       ReceiptType    @map("receipt_type")
+  filePath          String         @map("file_path") @db.Text // Path to PDF file
+  fileUrl           String?        @map("file_url") @db.Text // URL if stored in cloud
+  fileSize          Int?           @map("file_size") // File size in bytes
+  generatedAt       DateTime       @default(now()) @map("generated_at")
+  emailSent         Boolean        @default(false) @map("email_sent")
+  emailSentAt       DateTime?      @map("email_sent_at")
+  downloadCount     Int            @default(0) @map("download_count")
+  lastDownloadedAt  DateTime?      @map("last_downloaded_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  schoolPayment     SchoolPayment  @relation(fields: [schoolPaymentId], references: [id], onDelete: Cascade)
+
+  @@map("receipt_logs")
+}
+
+model PaymentWebhook {
+  id                String    @id @default(uuid())
+  razorpayEventId   String    @unique @map("razorpay_event_id")
+  event             String    @db.VarChar(100) // payment.captured, order.paid, etc.
+  accountId         String    @map("account_id")
+  entity            String    @db.VarChar(50) // payment, order, etc.
+  payload           Json      // Complete webhook payload
+  processed         Boolean   @default(false)
+  processedAt       DateTime? @map("processed_at")
+  errorMessage      String?   @map("error_message") @db.Text
+  retryCount        Int       @default(0) @map("retry_count")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@map("payment_webhooks")
+}
+
+// Enums
+enum PaymentStatus {
+  CREATED     // Order created but payment not initiated
+  ATTEMPTED   // Payment initiated by user
+  PAID        // Payment successful
+  FAILED      // Payment failed
+  CANCELLED   // Payment cancelled by user
+  REFUNDED    // Payment refunded
+  PARTIAL_REFUND // Partial refund processed
+}
+
+enum ReceiptType {
+  PAYMENT_RECEIPT    // Receipt for successful payment
+  REFUND_RECEIPT     // Receipt for refund
+  CANCELLATION_RECEIPT // Receipt for cancellation
+}

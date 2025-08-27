@@ -34,6 +34,7 @@ services:
       - SCHOOL_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
       - PROFILE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
       - ATTENDANCE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/attendance_db
+      - PAYMENT_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/payment_db
     networks:
       - vidyalayaone-network
     restart: "no"
@@ -122,6 +123,38 @@ services:
       - vidyalayaone-network
     restart: unless-stopped
 
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: vidyalayaone-payment
+    ports:
+      - "3005:3005"
+      - "5561:5561"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/payment_db
+      - PORT=3005
+      - NODE_ENV=development
+      - RAZORPAY_KEY_ID=your_razorpay_key_id_here
+      - RAZORPAY_KEY_SECRET=your_razorpay_key_secret_here
+      - RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
+      - SCHOOL_SERVICE_URL=http://school-service:3002
+    volumes:
+    - ./apps/payment-service:/app/apps/payment-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/payment-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/payment-service/src/generated
+    - /app/apps/payment-service/node_modules/.prisma
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
   # Attendance Service
   attendance-service:
     build:
@@ -130,7 +163,7 @@ services:
     container_name: vidyalayaone-attendance
     ports:
       - "3004:3004"
-      - "5559:5559"
+      - "5560:5560"
     depends_on:
       migration:
         condition: service_completed_successfully
@@ -162,14 +195,16 @@ services:
       - auth-service
       - school-service
       - profile-service
+      - payment-service
       - attendance-service
     environment:
       - PORT=3000
       - NODE_ENV=development
       - AUTH_SERVICE_URL=http://auth-service:3001
       - SCHOOL_SERVICE_URL=http://school-service:3002
-      - PROFILE_SERVICE_URL=http://profile-service:3003
+      - PAYMENT_SERVICE_URL=http://payment-service:3005
       - ATTENDANCE_SERVICE_URL=http://attendance-service:3004
+      - PROFILE_SERVICE_URL=http://profile-service:3003
       - JWT_SECRET=your-jwt-secret-here
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
@@ -196,6 +231,7 @@ services:
       - VITE_AUTH_SERVICE_URL=http://localhost:3001
       - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
       - VITE_PROFILE_SERVICE_URL=http://localhost:3003
+      - VITE_PAYMENT_SERVICE_URL=http://localhost:3005
       - VITE_ATTENDANCE_SERVICE_URL=http://localhost:3004
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend

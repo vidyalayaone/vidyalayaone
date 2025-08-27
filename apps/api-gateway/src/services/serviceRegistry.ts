@@ -107,6 +107,31 @@ class ServiceRegistry {
       timeout: config.services.attendance.timeout,
     });
 
+    // Payment service registration (conditionally if configured in env)
+    if ((config as any).services.payment) {
+      const paymentCfg: any = (config as any).services.payment;
+      this.services.set('payment', {
+        name: 'payment-service',
+        url: paymentCfg.url,
+        path: '/api/v1/payments',
+        isProtected: true, // default protection; specific public route overrides below
+        routes: [
+          // Public webhook endpoint (Razorpay calls this, no auth)
+          { path: '/webhook', method: 'POST', isProtected: false },
+          // Protected operational endpoints
+          { path: '/orders', method: 'POST', isProtected: true },
+          { path: '/verify', method: 'POST', isProtected: true },
+          { path: '/orders/:orderId/status', method: 'GET', isProtected: true },
+          { path: '/schools/:schoolId/payments', method: 'GET', isProtected: true },
+          { path: '/refunds', method: 'POST', isProtected: true },
+          { path: '/stats', method: 'GET', isProtected: true },
+          { path: '/receipts/:receiptId/download', method: 'GET', isProtected: true },
+        ],
+        healthPath: '/health',
+        timeout: paymentCfg.timeout || 30000,
+      });
+    }
+
     // Future services - fully protected at gateway
     // this.services.set('users', {
     //   name: 'user-service',

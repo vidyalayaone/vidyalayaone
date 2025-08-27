@@ -11,6 +11,7 @@ import { createServiceProxy } from './utils/proxyUtils';
 import { resolveSchool } from "./middleware/resolveSchool";
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
+import { randomUUID } from 'crypto';
 
 const app: Application = express();
 
@@ -42,6 +43,16 @@ if (config.server.nodeEnv === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+// Request ID propagation middleware (generate if absent, pass downstream)
+app.use((req, _res, next) => {
+  const existingId = req.header('X-Request-ID');
+  const requestId = existingId || randomUUID();
+  (req as any).requestId = requestId; // attach for internal usage
+  // Ensure header present for downstream services
+  req.headers['x-request-id'] = requestId;
+  next();
+});
 
 // Health check endpoints
 app.get('/health', (req: Request, res: Response) => {

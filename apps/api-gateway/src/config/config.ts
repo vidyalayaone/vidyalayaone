@@ -15,6 +15,7 @@ interface ServicesConfig {
   school: ServiceConfig;
   profile: ServiceConfig;
   attendance: ServiceConfig;
+  payment?: ServiceConfig; // optional payment service
   // add more services
 }
 
@@ -64,6 +65,10 @@ const config: Config = {
       url: process.env.ATTENDANCE_SERVICE_URL || 'http://localhost:3004',
       timeout: parseInt(process.env.ATTENDANCE_SERVICE_TIMEOUT || '30000', 10),
     },
+    payment: process.env.PAYMENT_SERVICE_URL ? {
+      url: process.env.PAYMENT_SERVICE_URL,
+      timeout: parseInt(process.env.PAYMENT_SERVICE_TIMEOUT || '30000', 10),
+    } : undefined,
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',

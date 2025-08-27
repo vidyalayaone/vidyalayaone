@@ -21,7 +21,10 @@ import {
   ProfileServiceTeacherDetail,
   SchoolSubjectsResponse,
   CreateTeacherRequest,
-  CreateTeacherResponse
+  CreateTeacherResponse,
+  CreateDocumentRequest,
+  DocumentsListResponse,
+  ProfileServiceDocument
 } from './types';
 
 // Import mock API for fallback
@@ -340,6 +343,34 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Student Documents endpoints
+  createStudentDocument: async (studentId: string, data: CreateDocumentRequest): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
+    try {
+      const response = await httpClient.post(`/profile/students/${studentId}/documents`, data);
+      return handleResponse<{ document: ProfileServiceDocument }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  getStudentDocuments: async (studentId: string, page: number = 1, pageSize: number = 20): Promise<APIResponse<DocumentsListResponse>> => {
+    try {
+      const response = await httpClient.get(`/profile/students/${studentId}/documents?page=${page}&pageSize=${pageSize}`);
+      return handleResponse<DocumentsListResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  getStudentDocument: async (studentId: string, docId: string): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
+    try {
+      const response = await httpClient.get(`/profile/students/${studentId}/documents/${docId}`);
+      return handleResponse<{ document: ProfileServiceDocument }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -367,5 +398,8 @@ export const {
   createTeacher,
   getSectionDetails,
   getSectionStudents,
-  getSectionTimetable
+  getSectionTimetable,
+  createStudentDocument,
+  getStudentDocuments,
+  getStudentDocument
 } = api;

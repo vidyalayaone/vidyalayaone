@@ -87,21 +87,10 @@ class ServiceRegistry {
         { path: '/teachers', method: 'POST', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },
-      ],
-      healthPath: '/health',
-      timeout: config.services.profile.timeout,
-    });
-
-    // Documents routed to profile-service under separate path
-    this.services.set('documents', {
-      name: 'profile-service',
-      url: config.services.profile.url,
-      path: '/api/v1/documents',
-      isProtected: true,
-      routes: [
-        { path: '/', method: 'GET', isProtected: true },
-        { path: '/upload', method: 'POST', isProtected: true },
-        { path: '/:id', method: 'GET', isProtected: true },
+        // Student document routes
+        { path: '/students/:id/documents', method: 'POST', isProtected: true },
+        { path: '/students/:id/documents', method: 'GET', isProtected: true },
+        { path: '/students/:id/documents/:docId', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.profile.timeout,

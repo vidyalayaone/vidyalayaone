@@ -26,16 +26,6 @@ interface Config {
     school: ServiceConfig;
     auth: ServiceConfig;
   };
-  storage: {
-    provider: 's3' | 'gcs';
-    bucket: string;
-    region?: string;
-    endpoint?: string; // LocalStack endpoint in dev
-    accessKeyId?: string;
-    secretAccessKey?: string;
-    forcePathStyle?: boolean; // For LocalStack
-    signedUrlExpiresInSeconds: number;
-  };
 }
 
 // Determine the environment and appropriate service URLs
@@ -87,16 +77,6 @@ const config: Config = {
       url: getAuthServiceUrl(),
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
     },
-  },
-  storage: {
-    provider: (process.env.STORAGE_PROVIDER as 's3' | 'gcs') || 's3',
-    bucket: process.env.STORAGE_BUCKET || 'vidyalayaone-documents',
-    region: process.env.AWS_REGION || 'us-east-1',
-    endpoint: process.env.S3_ENDPOINT || (process.env.NODE_ENV === 'development' ? 'http://localhost:4566' : undefined),
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test',
-    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true' || process.env.NODE_ENV === 'development',
-    signedUrlExpiresInSeconds: parseInt(process.env.SIGNED_URL_TTL || '900', 10), // 15 minutes default
   },
 };
 

@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import profileRoutes from './routes/profileRoutes';
-import documentRoutes from './routes/documentRoutes';
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
 import type { ErrorRequestHandler } from 'express';
 
@@ -53,7 +52,6 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes will be added here
 app.use(`${config.server.apiPrefix}/profile`, profileRoutes);
-app.use(`${config.server.apiPrefix}/documents`, documentRoutes);
 
 // 404 handler
 app.use(notFound);

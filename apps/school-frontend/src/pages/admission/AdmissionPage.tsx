@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   UserPlus, 
-  Users, 
-  Upload,
   FileSpreadsheet,
   GraduationCap,
   ArrowRight,
@@ -50,24 +48,6 @@ const AdmissionPage: React.FC = () => {
       path: '/admission/single',
       color: 'bg-blue-500',
       benefits: ['Comprehensive data entry', 'Document upload', 'Validation checks']
-    },
-    {
-      id: 'multiple',
-      title: 'Multiple Student Admission',
-      description: 'Add multiple students quickly using a matrix form interface',
-      icon: Users,
-      path: '/admission/multiple',
-      color: 'bg-green-500',
-      benefits: ['Batch processing', 'Quick entry', 'Similar data patterns']
-    },
-    {
-      id: 'bulk',
-      title: 'Bulk Import',
-      description: 'Import student data from Excel or CSV files',
-      icon: Upload,
-      path: '/admission/bulk-import',
-      color: 'bg-purple-500',
-      benefits: ['Large scale import', 'Excel/CSV support', 'Data validation']
     },
     {
       id: 'applications',

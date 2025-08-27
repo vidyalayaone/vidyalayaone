@@ -12,6 +12,9 @@ import { getClassByIdInternal } from "../controllers/getClassByIdInternal";
 import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
 import { createClassSubjects } from "../controllers/createClassSubjects";
 import { getSubjects } from "../controllers/getSubjects";
+import { getSectionDetails } from "../controllers/getSectionDetails";
+import { getSectionStudents } from "../controllers/getSectionStudents";
+// import { getSectionTimetable } from "../controllers/getSectionTimetable";
 
 const router: Router = Router();
 
@@ -34,5 +37,10 @@ router.get('/internal/class/:classId', getClassByIdInternal);
 router.get('/subjects', getSubjects);
 router.post('/subjects/global', createGlobalSubjects); // needs to be updated
 router.post('/subjects', createClassSubjects); // needs to be updated
+
+// Section detail routes
+router.get('/:schoolId/classes/:classId/sections/:sectionId/details', getSectionDetails);
+router.get('/:schoolId/classes/:classId/sections/:sectionId/students', getSectionStudents);
+// router.get('/:schoolId/classes/:classId/sections/:sectionId/timetable', getSectionTimetable);
 
 export default router;

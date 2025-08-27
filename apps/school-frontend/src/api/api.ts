@@ -312,6 +312,34 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Section details endpoints
+  getSectionDetails: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
+    try {
+      const response = await httpClient.get(`/school/${schoolId}/classes/${classId}/sections/${sectionId}/details`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  getSectionStudents: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
+    try {
+      const response = await httpClient.get(`/school/${schoolId}/classes/${classId}/sections/${sectionId}/students`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  getSectionTimetable: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
+    try {
+      const response = await httpClient.get(`/school/${schoolId}/classes/${classId}/sections/${sectionId}/timetable`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -336,5 +364,8 @@ export const {
   getStudentById,
   createStudent,
   getSchoolSubjects,
-  createTeacher
+  createTeacher,
+  getSectionDetails,
+  getSectionStudents,
+  getSectionTimetable
 } = api;

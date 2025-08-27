@@ -116,16 +116,14 @@ const ClassesPage: React.FC = () => {
     if (schoolClass.sections.length === 1) {
       // Single section - go directly to section page
       const section = schoolClass.sections[0];
-      const sectionName = section.name.toLowerCase() === 'default' ? 'default' : section.name.toLowerCase();
-      navigate(`/classes/${schoolClass.grade.toLowerCase()}/${sectionName}`);
+      navigate(`/classes/${schoolClass.id}/${section.id}`);
     }
     // If multiple sections, the dropdown will handle navigation
   };
 
   // Handle section click
   const handleSectionClick = (schoolClass: SchoolClass, section: ClassSection) => {
-    const sectionName = section.name.toLowerCase() === 'default' ? 'default' : section.name.toLowerCase();
-    navigate(`/classes/${schoolClass.grade.toLowerCase()}/${sectionName}`);
+    navigate(`/classes/${schoolClass.id}/${section.id}`);
   };
 
   return (

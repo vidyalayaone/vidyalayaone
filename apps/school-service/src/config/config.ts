@@ -19,6 +19,16 @@ interface Config {
   };
   authServiceUrl: string;
   authServiceTimeout: number;
+  services: {
+    profile: {
+      url: string;
+      timeout: number;
+    };
+    auth: {
+      url: string;
+      timeout: number;
+    };
+  };
 }
 
 const config: Config = {
@@ -35,6 +45,16 @@ const config: Config = {
   },
   authServiceUrl: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
   authServiceTimeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
+  services: {
+    profile: {
+      url: process.env.PROFILE_SERVICE_URL || 'http://profile-service:3003',
+      timeout: parseInt(process.env.PROFILE_SERVICE_TIMEOUT || '30000', 10),
+    },
+    auth: {
+      url: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
+      timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
+    },
+  },
 };
 
 // Validate required environment variables

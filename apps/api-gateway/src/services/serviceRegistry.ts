@@ -66,6 +66,10 @@ class ServiceRegistry {
         { path: '/subjects/global', method: 'POST', isProtected: true },
         { path: '/subjects', method: 'POST', isProtected: true },
         { path: '/subjects', method: 'GET', isProtected: true },
+        // Section detail routes
+        { path: '/:schoolId/classes/:classId/sections/:sectionId/details', method: 'GET', isProtected: true },
+        { path: '/:schoolId/classes/:classId/sections/:sectionId/students', method: 'GET', isProtected: true },
+        { path: '/:schoolId/classes/:classId/sections/:sectionId/timetable', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,
@@ -88,27 +92,27 @@ class ServiceRegistry {
       timeout: config.services.profile.timeout,
     });
 
+    // Documents routed to profile-service under separate path
+    this.services.set('documents', {
+      name: 'profile-service',
+      url: config.services.profile.url,
+      path: '/api/v1/documents',
+      isProtected: true,
+      routes: [
+        { path: '/', method: 'GET', isProtected: true },
+        { path: '/upload', method: 'POST', isProtected: true },
+        { path: '/:id', method: 'GET', isProtected: true },
+      ],
+      healthPath: '/health',
+      timeout: config.services.profile.timeout,
+    });
+
     this.services.set('attendance', {
       name: 'attendance-service',
       url: config.services.attendance.url,
       path: '/api/v1/attendance',
       isProtected: true,
       routes: [
-        // Future attendance routes - all protected by default
-        { path: '/students', method: 'POST', isProtected: true },
-        { path: '/students', method: 'GET', isProtected: true },
-        { path: '/students/:id', method: 'PUT', isProtected: true },
-        { path: '/students/:id', method: 'DELETE', isProtected: true },
-        { path: '/students/bulk', method: 'POST', isProtected: true },
-        { path: '/teachers', method: 'POST', isProtected: true },
-        { path: '/teachers', method: 'GET', isProtected: true },
-        { path: '/teachers/:id', method: 'PUT', isProtected: true },
-        { path: '/teachers/:id', method: 'DELETE', isProtected: true },
-        { path: '/teachers/bulk', method: 'POST', isProtected: true },
-        { path: '/reports/students/summary', method: 'GET', isProtected: true },
-        { path: '/reports/teachers/summary', method: 'GET', isProtected: true },
-        { path: '/reports/daily', method: 'GET', isProtected: true },
-        { path: '/reports/monthly', method: 'GET', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.attendance.timeout,

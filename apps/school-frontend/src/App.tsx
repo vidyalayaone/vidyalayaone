@@ -45,7 +45,6 @@ import AttendancePage from './pages/attendance/AttendancePage';
 
 // Exams Pages
 import ExamsPage from './pages/exams/ExamsPage';
-import DocumentsPage from './pages/documents/DocumentsPage';
 import ExamDetailPage from './pages/exams/ExamDetailPage';
 import CreateExamPage from './pages/exams/CreateExamPage';
 import EditExamPage from './pages/exams/EditExamPage';
@@ -359,16 +358,6 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <TimetablePage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Documents */}
-            <Route
-              path="/documents"
-              element={
-                <ProtectedRoute>
-                  <DocumentsPage />
                 </ProtectedRoute>
               }
             />

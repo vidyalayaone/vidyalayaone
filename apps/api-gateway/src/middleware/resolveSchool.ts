@@ -16,7 +16,7 @@ export async function resolveSchool(req: Request, res: Response, next: NextFunct
     console.log(`🔍 Resolving school for host: ${host}`);
     
     // Skip school resolution for main platform domain
-    if (host === 'vidyalayaone.com' || host === 'www.vidyalayaone.com') {
+    if (host === 'vidyalayaone.com' || host === 'www.vidyalayaone.com' || host === 'localhost:8081' || host === 'localhost:3000') {
       console.log('📍 Platform domain detected, skipping school resolution');
       req.headers['x-context'] = 'platform';
       next();

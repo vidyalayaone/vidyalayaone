@@ -8,6 +8,7 @@ import { env } from '@/lib/env'
 
 interface SchoolFormData {
   name: string
+  schoolCode: string
   address: string
   city: string
   state: string
@@ -44,6 +45,7 @@ const CreateSchool: React.FC = () => {
   
   const [formData, setFormData] = useState<SchoolFormData>({
     name: '',
+    schoolCode: '',
     address: '',
     city: '',
     state: '',
@@ -158,6 +160,10 @@ const CreateSchool: React.FC = () => {
       setError('School name is required')
       return false
     }
+    if (!formData.schoolCode.trim()) {
+      setError('School code is required')
+      return false
+    }
     if (!formData.address.trim()) {
       setError('School address is required')
       return false
@@ -233,7 +239,7 @@ const CreateSchool: React.FC = () => {
         },
         level: 'mixed', // fallback level
         board: formData.boards[0] || 'CBSE',
-        schoolCode: undefined,
+        schoolCode: formData.schoolCode.trim(),
         phoneNumbers: [formData.phone.startsWith('+') ? formData.phone : `+91${formData.phone}`],
         email: formData.email || undefined,
         principalName: formData.principalName || undefined,
@@ -325,14 +331,37 @@ const CreateSchool: React.FC = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Basic Information</h3>
                   
-                  <Input
-                    label="School Name *"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="ABC Public School"
-                  />
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      School Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter school name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="schoolCode" className="block text-sm font-medium text-gray-700">
+                      School Code *
+                    </label>
+                    <input
+                      type="text"
+                      id="schoolCode"
+                      name="schoolCode"
+                      value={formData.schoolCode}
+                      onChange={handleInputChange}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter unique school code"
+                    />
+                  </div>
 
                   <Textarea
                     label="School Address *"

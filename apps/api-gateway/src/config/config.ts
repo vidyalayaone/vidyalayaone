@@ -30,7 +30,7 @@ interface Config {
     accessSecret: string;
   };
   cors: {
-    origin: string;
+    origin: string | string[];
   };
   rateLimit: {
     windowMs: number;
@@ -74,7 +74,7 @@ const config: Config = {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes

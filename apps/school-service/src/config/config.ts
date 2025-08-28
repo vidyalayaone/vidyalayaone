@@ -12,7 +12,7 @@ interface Config {
     apiPrefix: string;
   };
   cors: {
-    origin: string;
+    origin: string | string[];
   };
   database: {
     url: string;
@@ -38,7 +38,7 @@ const config: Config = {
     apiPrefix: process.env.API_PREFIX || '/api/v1',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
   },
   database: {
     url: process.env.DATABASE_URL || '',

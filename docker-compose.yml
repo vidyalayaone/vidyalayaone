@@ -55,6 +55,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
       - PORT=3001
       - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
+      - JWT_ACCESS_SECRET=your_access_secret_here
     volumes:
     - ./apps/auth-service:/app/apps/auth-service
     - ./packages:/app/packages
@@ -63,6 +65,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/auth-service/src/generated
     - /app/apps/auth-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -83,6 +89,7 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
       - PORT=3002
       - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
     volumes:
     - ./apps/school-service:/app/apps/school-service
     - ./packages:/app/packages
@@ -91,6 +98,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/school-service/src/generated
     - /app/apps/school-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -111,6 +122,7 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
       - PORT=3003
       - NODE_ENV=development
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
     volumes:
     - ./apps/profile-service:/app/apps/profile-service
     - ./packages:/app/packages
@@ -119,6 +131,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/profile-service/src/generated
     - /app/apps/profile-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -143,6 +159,7 @@ services:
       - RAZORPAY_KEY_SECRET=your_razorpay_key_secret_here
       - RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
       - SCHOOL_SERVICE_URL=http://school-service:3002
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
     volumes:
     - ./apps/payment-service:/app/apps/payment-service
     - ./packages:/app/packages
@@ -151,6 +168,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/payment-service/src/generated
     - /app/apps/payment-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -179,6 +200,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/attendance-service/src/generated
     - /app/apps/attendance-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -205,12 +230,17 @@ services:
       - PAYMENT_SERVICE_URL=http://payment-service:3005
       - ATTENDANCE_SERVICE_URL=http://attendance-service:3004
       - PROFILE_SERVICE_URL=http://profile-service:3003
-      - JWT_SECRET=your-jwt-secret-here
+      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
+      - JWT_ACCESS_SECRET=your_access_secret_here
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/api-gateway/node_modules
+      # Exclude built package dist folders
+      - /app/packages/common-middleware/dist
+      - /app/packages/common-utils/dist
+      - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -238,6 +268,44 @@ services:
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/school-frontend/node_modules
+      # Exclude built package dist folders
+      - /app/packages/common-middleware/dist
+      - /app/packages/common-utils/dist
+      - /app/packages/logger/dist
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
+  # Platform Frontend
+  platform-frontend:
+    build:
+      context: .
+      dockerfile: apps/platform-frontend/Dockerfile
+    container_name: vidyalayaone-platform-frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - api-gateway
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+      - VITE_AUTH_API_URL=http://localhost:3000/api/v1
+      - VITE_SCHOOL_API_URL=http://localhost:3000/api/v1
+      - VITE_PAYMENT_API_URL=http://localhost:3000/api/v1/payments
+      - VITE_AUTH_SERVICE_URL=http://localhost:3001
+      - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
+      - VITE_PROFILE_SERVICE_URL=http://localhost:3003
+      - VITE_PAYMENT_SERVICE_URL=http://localhost:3005
+      - VITE_ATTENDANCE_SERVICE_URL=http://localhost:3004
+    volumes:
+      - ./apps/platform-frontend:/app/apps/platform-frontend
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/platform-frontend/node_modules
+      # Exclude built package dist folders
+      - /app/packages/common-middleware/dist
+      - /app/packages/common-utils/dist
+      - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped

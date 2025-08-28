@@ -19,7 +19,7 @@ const configSchema = z.object({
     webhookSecret: z.string().min(1, 'Razorpay Webhook Secret is required'),
   }),
   cors: z.object({
-    origin: z.string().default('http://localhost:8080'),
+    origin: z.union([z.string(), z.array(z.string())]).default('http://localhost:8080'),
   }),
   services: z.object({
     schoolService: z.object({
@@ -57,7 +57,7 @@ const env = {
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET!,
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:8080'],
   },
   services: {
     schoolService: {

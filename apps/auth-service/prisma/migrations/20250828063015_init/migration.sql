@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'TEACHER', 'STUDENT');
-
--- CreateEnum
 CREATE TYPE "DeviceType" AS ENUM ('desktop', 'mobile', 'tablet');
 
 -- CreateEnum
@@ -14,8 +11,6 @@ CREATE TABLE "users" (
     "email" VARCHAR(255),
     "phone" VARCHAR(20),
     "password_hash" VARCHAR(255) NOT NULL,
-    "subdomain" TEXT,
-    "role" "Role" NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "is_phone_verified" BOOLEAN NOT NULL DEFAULT false,
     "is_email_verified" BOOLEAN NOT NULL DEFAULT false,
@@ -25,8 +20,23 @@ CREATE TABLE "users" (
     "password_changed_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "roleId" TEXT,
+    "school_id" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "roles" (
+    "id" TEXT NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "description" TEXT,
+    "permissions" TEXT[],
+    "school_id" TEXT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -63,6 +73,9 @@ CREATE UNIQUE INDEX "users_username_key" ON "users"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "refresh_tokens"("token");
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "roles"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "otps" ADD CONSTRAINT "otps_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

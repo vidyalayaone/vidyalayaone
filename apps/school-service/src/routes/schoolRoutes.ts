@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { createSchool } from "../controllers/createSchool";
 import { getSchoolById } from "../controllers/getSchoolById";
-import { updateSchool } from "../controllers/updateSchool";
+// import { updateSchool } from "../controllers/updateSchool";
 import { getSchoolBySubdomain } from "../controllers/getSchoolBySubdomain";
 import { approveSchool } from "../controllers/approveSchool";
 import { createClasses } from "../controllers/createClasses";
@@ -18,7 +18,7 @@ const router: Router = Router();
 router.post('/create', createSchool);
 router.get('/get-by-id/:schoolId', getSchoolById);
 router.get('/get-by-subdomain/:subdomain', getSchoolBySubdomain);
-router.put('/update/:schoolId', updateSchool); // needs to be updated
+// router.put('/update/:schoolId', updateSchool); // needs to be updated
 router.get('/approve/:schoolId', approveSchool);
 
 // Class and Section management routes

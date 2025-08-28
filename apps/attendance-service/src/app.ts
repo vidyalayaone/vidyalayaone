@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
+import attendanceRoutes from './routes/attendanceRoutes';
+import testRoutes from './routes/testRoutes';
 import type { ErrorRequestHandler } from 'express';
 
 const app: Application = express();
@@ -51,8 +53,13 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// TODO: Add attendance routes when ready
-// app.use(`${config.server.apiPrefix}/attendance`, attendanceRoutes);
+// Attendance routes
+app.use(`${config.server.apiPrefix}/attendance`, attendanceRoutes);
+
+// Test routes (only in development)
+if (config.server.nodeEnv === 'development') {
+  app.use(`${config.server.apiPrefix}/test`, testRoutes);
+}
 
 // 404 handler
 app.use(notFound);

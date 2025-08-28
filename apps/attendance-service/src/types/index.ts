@@ -1,3 +1,13 @@
+import type { AttendanceRecord } from '../generated/client';
+
+// API Response types
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
+}
+
 export interface AttendanceResponse<T = any> {
   success: boolean;
   data?: T;
@@ -17,6 +27,43 @@ export interface PaginatedResponse<T> {
     totalPages: number;
     hasNext: boolean;
     hasPrev: boolean;
+  };
+}
+
+// Attendance specific types
+export interface AttendanceRecordWithStudent extends AttendanceRecord {
+  student?: {
+    id: string;
+    name: string;
+    rollNumber: string;
+  };
+}
+
+export interface AttendanceStatsResponse {
+  totalStudents: number;
+  presentCount: number;
+  absentCount: number;
+  lateCount: number;
+  excusedCount: number;
+  medicalLeaveCount: number;
+  attendancePercentage: number;
+  dateRange: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
+export interface AttendanceExportData {
+  attendanceRecords: AttendanceRecord[];
+  meta: {
+    classId: string;
+    sectionId: string;
+    dateRange: {
+      startDate: string;
+      endDate: string;
+    };
+    format: 'csv' | 'excel';
+    totalRecords: number;
   };
 }
 
@@ -67,11 +114,26 @@ export interface Student {
   schoolId: string;
 }
 
+export interface StudentInfo {
+  id: string;
+  name: string;
+  rollNumber: string;
+  classId: string;
+  sectionId: string;
+  schoolId: string;
+}
+
 export interface Teacher {
   id: string;
   firstName: string;
   lastName: string;
   employeeId: string;
+  schoolId: string;
+}
+
+export interface TeacherInfo {
+  id: string;
+  name: string;
   schoolId: string;
 }
 
@@ -87,8 +149,39 @@ export interface Class {
   schoolId: string;
 }
 
+export interface ClassInfo {
+  id: string;
+  name: string;
+  schoolId: string;
+  sections: SectionInfo[];
+}
+
 export interface Section {
   id: string;
   name: string;
   classId: string;
+}
+
+export interface SectionInfo {
+  id: string;
+  name: string;
+  classId: string;
+  studentCount: number;
+}
+
+// Auth types
+export interface AuthenticatedUser {
+  id: string;
+  schoolId: string;
+  role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT';
+  permissions: string[];
+}
+
+// Request extension for auth
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedUser;
+    }
+  }
 }

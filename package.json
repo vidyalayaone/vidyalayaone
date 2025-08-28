@@ -12,7 +12,8 @@
     "build:app": "pnpm --filter @vidyalayaone/$APP build",
     "start:app": "pnpm --filter @vidyalayaone/$APP start",
     "build:packages": "pnpm run --recursive --filter \"./packages/**\" build",
-    "automate": "pnpm --filter school-frontend automate"
+    "automate": "pnpm --filter school-frontend automate",
+    "db:generate": "pnpm --filter auth-service db:generate && pnpm --filter profile-service db:generate && pnpm --filter school-service db:generate"
   },
   "keywords": [],
   "author": "",

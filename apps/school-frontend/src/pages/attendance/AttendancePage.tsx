@@ -39,29 +39,7 @@ const AttendancePage: React.FC = () => {
       </div>
 
       {/* Main Menu Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Daily Attendance */}
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200" 
-              onClick={() => navigate('/attendance/daily')}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Calendar className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Daily Attendance</CardTitle>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Take daily attendance for a specific class section with easy student marking.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {/* View Student Attendance */}
         <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200" 

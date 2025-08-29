@@ -5,6 +5,7 @@ import { getAllStudents } from '../controllers/getAllStudents';
 import { createTeacher } from '../controllers/createTeacher';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
+import { getMyTeacherId } from '../controllers/getMyTeacherId';
 import rateLimit from 'express-rate-limit';
 import { createStudentDocument } from '../controllers/documents/uploadDocument';
 import { listStudentDocuments } from '../controllers/documents/listStudentDocuments';
@@ -35,5 +36,6 @@ router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument)
 router.post('/teachers', profileLimiter, createTeacher);
 router.get('/teachers/:id', profileLimiter, getTeacher);
 router.get('/schools/teachers', profileLimiter, getAllTeachers);
+router.get('/me/teacher-id', profileLimiter, getMyTeacherId);
 
 export default router;

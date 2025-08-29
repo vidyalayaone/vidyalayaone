@@ -371,6 +371,36 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Profile service: get teacher ID for logged-in user
+  getMyTeacherId: async (): Promise<APIResponse<{ teacherId: string; userId: string; schoolId: string; firstName: string; lastName: string; employeeId: string }>> => {
+    try {
+      const response = await httpClient.get('/profile/me/teacher-id');
+      return handleResponse<{ teacherId: string; userId: string; schoolId: string; firstName: string; lastName: string; employeeId: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: mark attendance
+  markAttendance: async (data: {
+    classId: string;
+    sectionId: string;
+    attendanceDate: string;
+    attendanceTakerId: string;
+    attendanceRecords: Array<{
+      studentId: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      notes?: string;
+    }>;
+  }): Promise<APIResponse<{ recordsCreated: number; classId: string; sectionId: string; attendanceDate: string; attendanceTaker: string }>> => {
+    try {
+      const response = await httpClient.post('/attendance/mark', data);
+      return handleResponse<{ recordsCreated: number; classId: string; sectionId: string; attendanceDate: string; attendanceTaker: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -401,5 +431,7 @@ export const {
   getSectionTimetable,
   createStudentDocument,
   getStudentDocuments,
-  getStudentDocument
+  getStudentDocument,
+  getMyTeacherId,
+  markAttendance
 } = api;

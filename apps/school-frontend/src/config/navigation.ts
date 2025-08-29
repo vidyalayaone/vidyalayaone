@@ -142,6 +142,13 @@ export const allNavigationItems: NavigationGroup[] = [
         requiredPermissions: [PERMISSIONS.ATTENDANCE.VIEW]
       },
       { 
+        path: '/attendance/mark', 
+        label: 'Mark Attendance', 
+        icon: CalendarCheck,
+        description: 'Take daily attendance for class sections',
+        requiredPermissions: [PERMISSIONS.ATTENDANCE.MARK]
+      },
+      { 
         path: '/exams', 
         label: 'Exams', 
         icon: PenTool,

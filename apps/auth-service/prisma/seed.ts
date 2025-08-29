@@ -116,8 +116,6 @@ async function main() {
     
     // Attendance management
     'attendance.view',
-    'attendance.mark',
-    'attendance.edit',
     'attendance.view_reports',
     
     // Exam management

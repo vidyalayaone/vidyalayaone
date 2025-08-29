@@ -1,4 +1,4 @@
-import type { AttendanceRecord } from '../generated/client';
+import type { StudentAttendance } from '../generated/client';
 
 // API Response types
 export interface ApiResponse<T = any> {
@@ -31,7 +31,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Attendance specific types
-export interface AttendanceRecordWithStudent extends AttendanceRecord {
+export interface AttendanceRecordWithStudent extends StudentAttendance {
   student?: {
     id: string;
     name: string;
@@ -54,7 +54,7 @@ export interface AttendanceStatsResponse {
 }
 
 export interface AttendanceExportData {
-  attendanceRecords: AttendanceRecord[];
+  attendanceRecords: StudentAttendance[];
   meta: {
     classId: string;
     sectionId: string;

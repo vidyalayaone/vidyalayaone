@@ -1,14 +1,12 @@
 import { Router } from 'express';
-import {
-  markAttendance,
-  getClassAttendance,
-  getStudentAttendance,
-  getAttendanceStats,
-  updateAttendanceRecord,
-  exportAttendance,
-} from '../controllers/attendanceController';
+import { markAttendance } from '../controllers/markAttendance';
+import { getClassAttendance } from '../controllers/getClassAttendance';
+import { getStudentAttendance } from '../controllers/getStudentAttendance';
+import { getAttendanceStats } from '../controllers/getAttendanceStats';
+import { updateAttendanceRecord } from '../controllers/updateAttendanceRecord';
+import { exportAttendance } from '../controllers/exportAttendance';
 
-const router = Router();
+const router: Router = Router();
 
 // POST /api/v1/attendance/mark - Mark attendance for a class
 router.post('/mark', markAttendance);

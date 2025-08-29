@@ -1,8 +1,8 @@
-// Daily attendance page for taking attendance for a specific class section
+// Mark student attendance page for taking attendance for a specific class section
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Calendar,
   Users,
   Save,
@@ -35,6 +35,8 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import toast from 'react-hot-toast';
+import { api } from '@/api/api';
+import { useAuthStore } from '@/store/authStore';
 
 // Types
 type AttendanceStatus = 'present' | 'absent' | 'late';
@@ -44,6 +46,15 @@ interface Student {
   name: string;
   rollNumber: string;
   profilePhoto?: string;
+  firstName: string;
+  lastName: string;
+  currentClass: {
+    id: string;
+    grade: string;
+    section: string;
+    className: string;
+    academicYear: string;
+  };
 }
 
 interface StudentAttendance {
@@ -51,72 +62,22 @@ interface StudentAttendance {
   status: AttendanceStatus;
 }
 
-interface Class {
+interface ClassSection {
   id: string;
   name: string;
+  classTeacher: string | null;
+  classTeacherId: string | null;
+  totalStudents: number | null;
+  totalBoys: number | null;
+  totalGirls: number | null;
 }
 
-interface Section {
+interface SchoolClass {
   id: string;
-  name: string;
-  classId: string;
+  grade: string;
+  displayName: string;
+  sections: ClassSection[];
 }
-
-// Mock data
-const mockClasses: Class[] = [
-  { id: '1', name: 'Class 1' },
-  { id: '2', name: 'Class 2' },
-  { id: '3', name: 'Class 3' },
-  { id: '4', name: 'Class 4' },
-  { id: '5', name: 'Class 5' },
-  { id: '6', name: 'Class 6' },
-  { id: '7', name: 'Class 7' },
-  { id: '8', name: 'Class 8' },
-  { id: '9', name: 'Class 9' },
-  { id: '10', name: 'Class 10' },
-];
-
-const mockSections: Section[] = [
-  { id: '1', name: 'Section A', classId: '1' },
-  { id: '2', name: 'Section B', classId: '1' },
-  { id: '3', name: 'Section A', classId: '2' },
-  { id: '4', name: 'Section B', classId: '2' },
-  { id: '5', name: 'Section C', classId: '2' },
-  { id: '6', name: 'Section A', classId: '3' },
-  { id: '7', name: 'Section B', classId: '3' },
-  { id: '8', name: 'Section A', classId: '4' },
-  { id: '9', name: 'Section B', classId: '4' },
-  { id: '10', name: 'Section A', classId: '5' },
-];
-
-const mockStudents: Record<string, Student[]> = {
-  '1': [ // Class 1, Section A
-    { id: '1', name: 'Aarav Sharma', rollNumber: '001' },
-    { id: '2', name: 'Diya Patel', rollNumber: '002' },
-    { id: '3', name: 'Arjun Singh', rollNumber: '003' },
-    { id: '4', name: 'Ananya Gupta', rollNumber: '004' },
-    { id: '5', name: 'Vihaan Kumar', rollNumber: '005' },
-    { id: '6', name: 'Ishita Verma', rollNumber: '006' },
-    { id: '7', name: 'Reyansh Jain', rollNumber: '007' },
-    { id: '8', name: 'Saanvi Agarwal', rollNumber: '008' },
-  ],
-  '2': [ // Class 1, Section B
-    { id: '9', name: 'Kabir Mehta', rollNumber: '009' },
-    { id: '10', name: 'Myra Shah', rollNumber: '010' },
-    { id: '11', name: 'Rudra Pandey', rollNumber: '011' },
-    { id: '12', name: 'Kiara Reddy', rollNumber: '012' },
-    { id: '13', name: 'Aarush Mishra', rollNumber: '013' },
-    { id: '14', name: 'Aadhya Chopra', rollNumber: '014' },
-  ],
-  '3': [ // Class 2, Section A
-    { id: '15', name: 'Atharv Rao', rollNumber: '015' },
-    { id: '16', name: 'Navya Sinha', rollNumber: '016' },
-    { id: '17', name: 'Shaurya Bansal', rollNumber: '017' },
-    { id: '18', name: 'Prisha Malhotra', rollNumber: '018' },
-    { id: '19', name: 'Vivaan Saxena', rollNumber: '019' },
-    { id: '20', name: 'Anika Bhatt', rollNumber: '020' },
-  ],
-};
 
 // StudentAttendanceRow Component
 interface StudentAttendanceRowProps {
@@ -162,10 +123,10 @@ const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
             <span className="text-sm font-medium">
-              {student.name.split(' ').map(n => n[0]).join('')}
+              {student.firstName?.[0] || ''}{student.lastName?.[0] || ''}
             </span>
           </div>
-          <span>{student.name}</span>
+          <span>{student.name || `${student.firstName} ${student.lastName}`}</span>
         </div>
       </TableCell>
       <TableCell>{student.rollNumber}</TableCell>
@@ -200,42 +161,180 @@ const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
 };
 
 // Main Component
-const DailyAttendancePage: React.FC = () => {
+const MarkStudentAttendancePage: React.FC = () => {
   const navigate = useNavigate();
+  const { school } = useAuthStore();
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedAcademicYear] = useState<string>('2025-26');
+
+  // Classes and sections data
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [isFetchingClasses, setIsFetchingClasses] = useState<boolean>(false);
+  const [fetchClassesError, setFetchClassesError] = useState<string | null>(null);
+
+  // Teacher ID for attendance taker
+  const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [fetchingTeacherId, setFetchingTeacherId] = useState<boolean>(false);
+
+  // Transform backend class data to match our interface
+  const transformBackendClassData = (backendData: any): SchoolClass[] => {
+    return backendData.classes.map((backendClass: any) => ({
+      id: backendClass.id,
+      grade: backendClass.name,
+      displayName: backendClass.name,
+      sections: backendClass.sections.map((backendSection: any) => ({
+        id: backendSection.id,
+        name: backendSection.name,
+        classTeacher: null,
+        classTeacherId: null,
+        totalStudents: null,
+        totalBoys: null,
+        totalGirls: null,
+      }))
+    }));
+  };
+
+  // Fetch teacher ID for the logged-in user
+  useEffect(() => {
+    const fetchTeacherId = async () => {
+      setFetchingTeacherId(true);
+      try {
+        const response = await api.getMyTeacherId();
+        if (response.success && response.data) {
+          setTeacherId(response.data.teacherId);
+        } else {
+          toast.error('Failed to get teacher information. You may not have permission to mark attendance.');
+        }
+      } catch (err) {
+        console.error('Error fetching teacher ID:', err);
+        toast.error('Failed to get teacher information');
+      } finally {
+        setFetchingTeacherId(false);
+      }
+    };
+
+    fetchTeacherId();
+  }, []);
+
+  // Fetch classes and sections
+  useEffect(() => {
+    const fetchClasses = async () => {
+      if (!school?.id) return;
+
+      setIsFetchingClasses(true);
+      setFetchClassesError(null);
+
+      try {
+        const response = await api.getClassesAndSections(school.id, selectedAcademicYear);
+
+        if (response.success && response.data) {
+          const transformedData = transformBackendClassData(response.data);
+          setClasses(transformedData);
+        } else {
+          setFetchClassesError(response.message || 'Failed to fetch classes');
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        setFetchClassesError('Failed to load classes');
+      } finally {
+        setIsFetchingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [school?.id, selectedAcademicYear]);
+
+  // Get available classes
+  const availableClasses = useMemo(() => {
+    if (classes && classes.length > 0) {
+      return classes;
+    }
+    return [];
+  }, [classes]);
 
   // Get sections for selected class
-  const availableSections = selectedClass 
-    ? mockSections.filter(section => section.classId === selectedClass)
-    : [];
+  const availableSections = useMemo(() => {
+    if (classes && classes.length > 0 && selectedClass) {
+      const cls = classes.find(c => c.id === selectedClass);
+      if (cls) return cls.sections;
+      return [];
+    }
+    return [];
+  }, [classes, selectedClass]);
+
+  // Reset section when class changes
+  useEffect(() => {
+    setSelectedSection('');
+  }, [selectedClass]);
 
   // Load students when class and section are selected
   useEffect(() => {
-    if (selectedClass && selectedSection) {
+    const fetchStudents = async () => {
+      if (!selectedClass || !selectedSection || !school?.id) {
+        setStudents([]);
+        setAttendance({});
+        return;
+      }
+
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        const studentsForSection = mockStudents[selectedSection] || [];
-        setStudents(studentsForSection);
-        
-        // Initialize attendance with 'present' as default
-        const initialAttendance: Record<string, AttendanceStatus> = {};
-        studentsForSection.forEach(student => {
-          initialAttendance[student.id] = 'present';
+
+      try {
+        const response = await api.getStudentsBySchool({ 
+          academicYear: selectedAcademicYear,
+          classId: selectedClass,
+          sectionId: selectedSection
         });
-        setAttendance(initialAttendance);
+
+        if (response.success && response.data) {
+          const payload = response.data as any;
+          const users = Array.isArray(payload.students) ? payload.students : (payload.data || []);
+
+          const mappedStudents: Student[] = (users || []).map((u: any) => ({
+            id: u.id,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+            firstName: u.firstName || '',
+            lastName: u.lastName || '',
+            rollNumber: u.rollNumber || u.rollNo || '',
+            profilePhoto: u.profilePhoto || '/placeholder.svg',
+            currentClass: {
+              id: u.classId || '',
+              grade: u.currentClass || 'N/A',
+              section: u.currentSection || 'N/A',
+              className: u.currentClass || 'N/A',
+              academicYear: u.academicYear || selectedAcademicYear
+            }
+          }));
+
+          setStudents(mappedStudents);
+
+          // Initialize attendance with 'present' as default
+          const initialAttendance: Record<string, AttendanceStatus> = {};
+          mappedStudents.forEach(student => {
+            initialAttendance[student.id] = 'present';
+          });
+          setAttendance(initialAttendance);
+        } else {
+          toast.error(response.message || 'Failed to fetch students');
+          setStudents([]);
+          setAttendance({});
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        toast.error('Failed to load students');
+        setStudents([]);
+        setAttendance({});
+      } finally {
         setLoading(false);
-      }, 500);
-    } else {
-      setStudents([]);
-      setAttendance({});
-    }
-  }, [selectedClass, selectedSection]);
+      }
+    };
+
+    fetchStudents();
+  }, [selectedClass, selectedSection, school?.id, selectedAcademicYear]);
 
   // Reset section when class changes
   useEffect(() => {
@@ -255,18 +354,70 @@ const DailyAttendancePage: React.FC = () => {
       return;
     }
 
+    if (!teacherId) {
+      toast.error('Unable to identify teacher. Please refresh the page and try again.');
+      return;
+    }
+
     setSaving(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const selectedClassName = mockClasses.find(c => c.id === selectedClass)?.name;
-      const selectedSectionName = availableSections.find(s => s.id === selectedSection)?.name;
-      
-      toast.success(`Attendance saved successfully for ${selectedClassName} ${selectedSectionName}`);
-    } catch (error) {
-      toast.error('Failed to save attendance');
+      // Convert attendance status to backend format
+      const convertStatus = (status: AttendanceStatus): 'PRESENT' | 'ABSENT' | 'LEAVE' => {
+        switch (status) {
+          case 'present':
+            return 'PRESENT';
+          case 'absent':
+            return 'ABSENT';
+          case 'late':
+            return 'LEAVE'; // Using LEAVE for late status as per backend schema
+          default:
+            return 'PRESENT';
+        }
+      };
+
+      // Prepare attendance records
+      const attendanceRecords = students.map(student => ({
+        studentId: student.id,
+        status: convertStatus(attendance[student.id] || 'present'),
+        notes: attendance[student.id] === 'late' ? 'Student arrived late' : undefined
+      }));
+
+      // Format date to YYYY-MM-DD
+      const today = new Date();
+      const attendanceDate = today.toISOString().split('T')[0];
+
+      const requestData = {
+        classId: selectedClass,
+        sectionId: selectedSection,
+        attendanceDate,
+        attendanceTakerId: teacherId,
+        attendanceRecords
+      };
+
+      const response = await api.markAttendance(requestData);
+
+      if (response.success) {
+        const selectedClassObj = availableClasses.find(c => c.id === selectedClass);
+        const selectedSectionObj = availableSections.find(s => s.id === selectedSection);
+        
+        toast.success(`Attendance marked successfully for ${selectedClassObj?.displayName} ${selectedSectionObj?.name}`);
+        
+        // Reset the form
+        setSelectedClass('');
+        setSelectedSection('');
+        setStudents([]);
+        setAttendance({});
+      } else {
+        toast.error(response.message || 'Failed to mark attendance');
+      }
+    } catch (error: any) {
+      console.error('Error marking attendance:', error);
+      if (error?.response?.status === 409) {
+        toast.error('Attendance has already been marked for this class today');
+      } else {
+        toast.error('Failed to mark attendance. Please try again.');
+      }
     } finally {
       setSaving(false);
     }
@@ -282,8 +433,8 @@ const DailyAttendancePage: React.FC = () => {
   };
 
   const stats = getAttendanceStats();
-  const selectedClassName = mockClasses.find(c => c.id === selectedClass)?.name;
-  const selectedSectionName = availableSections.find(s => s.id === selectedSection)?.name;
+  const selectedClassObj = availableClasses.find(c => c.id === selectedClass);
+  const selectedSectionObj = availableSections.find(s => s.id === selectedSection);
 
   return (
     <DashboardLayout>
@@ -294,16 +445,16 @@ const DailyAttendancePage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate('/attendance')}
+              onClick={() => navigate('/dashboard')}
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Attendance</span>
+              <span>Back to Dashboard</span>
             </Button>
             <div>
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                 <Calendar className="w-8 h-8 text-primary" />
-                Daily Attendance
+                Mark Student Attendance
               </h1>
               <p className="text-muted-foreground mt-1">
                 Take attendance for {new Date().toLocaleDateString('en-US', { 
@@ -313,6 +464,18 @@ const DailyAttendancePage: React.FC = () => {
                   day: 'numeric' 
                 })}
               </p>
+              {fetchingTeacherId && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm text-muted-foreground">Verifying teacher permissions...</span>
+                </div>
+              )}
+              {!fetchingTeacherId && !teacherId && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <XCircle className="w-4 h-4 text-red-600" />
+                  <span className="text-sm text-red-600">Unable to verify teacher permissions</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -329,18 +492,21 @@ const DailyAttendancePage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="class-select">Class</Label>
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <Select value={selectedClass} onValueChange={setSelectedClass} disabled={isFetchingClasses}>
                   <SelectTrigger id="class-select">
-                    <SelectValue placeholder="Select a class" />
+                    <SelectValue placeholder={isFetchingClasses ? "Loading classes..." : "Select a class"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockClasses.map((cls) => (
+                    {availableClasses.map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
+                        {cls.displayName}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {fetchClassesError && (
+                  <p className="text-sm text-red-600">{fetchClassesError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -348,10 +514,10 @@ const DailyAttendancePage: React.FC = () => {
                 <Select 
                   value={selectedSection} 
                   onValueChange={setSelectedSection}
-                  disabled={!selectedClass}
+                  disabled={!selectedClass || availableSections.length === 0}
                 >
                   <SelectTrigger id="section-select">
-                    <SelectValue placeholder="Select a section" />
+                    <SelectValue placeholder={!selectedClass ? "Select a class first" : "Select a section"} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSections.map((section) => (
@@ -425,7 +591,7 @@ const DailyAttendancePage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>
-                  Attendance for {selectedClassName} {selectedSectionName}
+                  Attendance for {selectedClassObj?.displayName} {selectedSectionObj?.name}
                 </span>
                 {loading && (
                   <div className="flex items-center space-x-2">
@@ -467,7 +633,7 @@ const DailyAttendancePage: React.FC = () => {
                   <div className="flex justify-end pt-4">
                     <Button
                       onClick={handleSaveAttendance}
-                      disabled={saving}
+                      disabled={saving || !teacherId || fetchingTeacherId}
                       className="flex items-center space-x-2"
                       size="lg"
                     >
@@ -476,10 +642,20 @@ const DailyAttendancePage: React.FC = () => {
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           <span>Saving...</span>
                         </>
+                      ) : fetchingTeacherId ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Loading...</span>
+                        </>
+                      ) : !teacherId ? (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Teacher ID Required</span>
+                        </>
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          <span>Save Attendance</span>
+                          <span>Mark Attendance</span>
                         </>
                       )}
                     </Button>
@@ -514,4 +690,4 @@ const DailyAttendancePage: React.FC = () => {
   );
 };
 
-export default DailyAttendancePage;
+export default MarkStudentAttendancePage;

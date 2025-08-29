@@ -42,7 +42,7 @@ import ApplicationDetailPage from './pages/admission/ApplicationDetailPage';
 
 // Attendance Pages
 import AttendancePage from './pages/attendance/AttendancePage';
-import DailyAttendancePage from './pages/attendance/DailyAttendancePage';
+import MarkStudentAttendancePage from './pages/attendance/MarkStudentAttendancePage';
 
 // Exams Pages
 import ExamsPage from './pages/exams/ExamsPage';
@@ -66,6 +66,8 @@ import FeesPage from './pages/fees/FeesPage';
 import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
 import FlowRoute from './components/guards/FlowRoute';
+
+import { PERMISSIONS } from '@/utils/permissions';
 
 // Store initialization
 import { useAuthStore } from './store/authStore';
@@ -319,10 +321,10 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/attendance/daily"
+              path="/attendance/mark"
               element={
-                <ProtectedRoute>
-                  <DailyAttendancePage />
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ATTENDANCE.MARK]}>
+                  <MarkStudentAttendancePage />
                 </ProtectedRoute>
               }
             />

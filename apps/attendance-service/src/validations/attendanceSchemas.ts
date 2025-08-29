@@ -1,16 +1,17 @@
 import { z } from 'zod';
 
-// Attendance status enum
-export const AttendanceStatusEnum = z.enum(['PRESENT', 'ABSENT', 'LATE', 'EXCUSED', 'MEDICAL_LEAVE']);
+// Attendance status enum to match Prisma schema
+export const AttendanceStatusEnum = z.enum(['PRESENT', 'ABSENT', 'LEAVE']);
 
 // Mark attendance schema
 export const markAttendanceSchema = z.object({
   body: z.object({
-    classId: z.string().min(1, 'Class ID is required'),
-    sectionId: z.string().min(1, 'Section ID is required'),
+    classId: z.string().uuid('Class ID must be a valid UUID'),
+    sectionId: z.string().uuid('Section ID must be a valid UUID'),
     attendanceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+    attendanceTakerId: z.string().uuid('Teacher ID must be a valid UUID'),
     attendanceRecords: z.array(z.object({
-      studentId: z.string().min(1, 'Student ID is required'),
+      studentId: z.string().uuid('Student ID must be a valid UUID'),
       status: AttendanceStatusEnum,
       notes: z.string().optional(),
     })).min(1, 'At least one attendance record is required'),
@@ -20,8 +21,8 @@ export const markAttendanceSchema = z.object({
 // Get class attendance schema
 export const getClassAttendanceSchema = z.object({
   params: z.object({
-    classId: z.string().min(1, 'Class ID is required'),
-    sectionId: z.string().min(1, 'Section ID is required'),
+    classId: z.string().uuid('Class ID must be a valid UUID'),
+    sectionId: z.string().uuid('Section ID must be a valid UUID'),
   }),
   query: z.object({
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional(),
@@ -33,7 +34,7 @@ export const getClassAttendanceSchema = z.object({
 // Get student attendance schema
 export const getStudentAttendanceSchema = z.object({
   params: z.object({
-    studentId: z.string().min(1, 'Student ID is required'),
+    studentId: z.string().uuid('Student ID must be a valid UUID'),
   }),
   query: z.object({
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format').optional(),
@@ -46,8 +47,8 @@ export const getStudentAttendanceSchema = z.object({
 // Get attendance statistics schema
 export const getAttendanceStatsSchema = z.object({
   params: z.object({
-    classId: z.string().min(1, 'Class ID is required'),
-    sectionId: z.string().min(1, 'Section ID is required'),
+    classId: z.string().uuid('Class ID must be a valid UUID'),
+    sectionId: z.string().uuid('Section ID must be a valid UUID'),
   }),
   query: z.object({
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
@@ -58,21 +59,21 @@ export const getAttendanceStatsSchema = z.object({
 // Export attendance schema
 export const exportAttendanceSchema = z.object({
   query: z.object({
-    classId: z.string().min(1, 'Class ID is required'),
-    sectionId: z.string().min(1, 'Section ID is required'),
+    classId: z.string().uuid('Class ID must be a valid UUID').optional(),
+    sectionId: z.string().uuid('Section ID must be a valid UUID').optional(),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
-    format: z.enum(['csv', 'excel']).default('csv'),
+    format: z.enum(['csv', 'json']).default('json'),
   }),
 });
 
 // Update attendance schema
 export const updateAttendanceSchema = z.object({
   params: z.object({
-    recordId: z.string().min(1, 'Record ID is required'),
+    recordId: z.string().uuid('Record ID must be a valid UUID'),
   }),
   body: z.object({
-    status: AttendanceStatusEnum,
+    status: AttendanceStatusEnum.optional(),
     notes: z.string().optional(),
   }),
 });

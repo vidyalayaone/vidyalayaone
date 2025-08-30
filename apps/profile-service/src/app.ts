@@ -26,11 +26,11 @@ if (config.server.nodeEnv === 'development') {
   app.use(morgan('combined'));
 }
 
-// CONDITIONAL body parsing - only for POST/PUT/PATCH requests
+// CONDITIONAL body parsing - only for POST/PUT/PATCH/DELETE requests
 app.use((req, res, next) => {
   console.log(`🔍 [PROFILE SERVICE] ${req.method} ${req.url}`);
   
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
     express.json({ limit: '10mb' })(req, res, (err) => {
       if (err) return next(err);
       express.urlencoded({ extended: true, limit: '10mb' })(req, res, next);

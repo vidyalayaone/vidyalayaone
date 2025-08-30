@@ -73,10 +73,13 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { api } from '@/api/api'; // <-- add API import to fetch real students
+import { DeleteStudentsRequest } from '@/api/types';
 import { useAuthStore } from '@/store/authStore';
+import { downloadStudents } from '@/utils/downloadUtils';
+import toast from 'react-hot-toast';
 
 // Student type with enhanced fields
-type EnhancedStudent = {
+export type EnhancedStudent = {
   id: string;
   username: string;
   email: string;
@@ -357,20 +360,87 @@ const StudentsPage: React.FC = () => {
   // State for dialogs
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<EnhancedStudent | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Mock API functions
+    // Download and bulk action functions
+  const handleDownload = (format: 'excel' | 'pdf') => {
+    try {
+      let studentsToDownload: EnhancedStudent[] = [];
+      let filename = 'students';
+
+      if (selectedStudents.length > 0) {
+        // Download selected students
+        studentsToDownload = students.filter(s => selectedStudents.includes(s.id));
+        filename = `selected_students_${selectedStudents.length}`;
+      } else {
+        // Download all filtered students
+        studentsToDownload = filteredAndSortedStudents;
+        filename = 'all_students';
+      }
+
+      if (studentsToDownload.length === 0) {
+        toast.error('No students to download');
+        return;
+      }
+
+      downloadStudents(studentsToDownload, format, filename);
+      
+      const count = studentsToDownload.length;
+      const type = format === 'excel' ? 'Excel' : 'PDF';
+      toast.success(`${type} file downloaded successfully (${count} student${count > 1 ? 's' : ''})`);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file. Please try again.');
+    }
+  };
+
+  // Mock API functions (keeping for non-download actions)
   const mockBulkActions = {
     sendMessage: (studentIds: string[]) => {
       console.log('Sending message to students:', studentIds);
-      alert(`Sending messages to ${studentIds.length} students`);
+      toast.success(`Sending messages to ${studentIds.length} students`);
     },
     promoteStudents: (studentIds: string[]) => {
       console.log('Promoting students:', studentIds);
-      alert(`Promoting ${studentIds.length} students`);
-    },
-    exportData: (format: 'csv' | 'excel' | 'pdf') => {
-      console.log(`Exporting ${format} for students:`, selectedStudents.length > 0 ? selectedStudents : 'all');
-      alert(`Exporting ${format} for ${selectedStudents.length > 0 ? selectedStudents.length : 'all'} students`);
+      toast.success(`Promoting ${studentIds.length} students`);
+    }
+  };
+
+  // Delete students functionality
+  const handleDeleteStudents = async (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const deleteRequest: DeleteStudentsRequest = { studentIds };
+      const response = await api.deleteStudents(deleteRequest);
+      
+      if (response.success && response.data) {
+        const { summary, results } = response.data;
+        
+        // Remove deleted students from the local state
+        setStudents(prev => prev.filter(s => !results.deletedStudents.includes(s.id)));
+        
+        // Clear selection
+        setSelectedStudents([]);
+        
+        // Show success message
+        if (summary.successfulDeletions === summary.totalRequested) {
+          toast.success(`Successfully deleted ${summary.successfulDeletions} student${summary.successfulDeletions > 1 ? 's' : ''}`);
+        } else {
+          toast.warning(`Deleted ${summary.successfulDeletions} out of ${summary.totalRequested} students. ${summary.failedDeletions} failed.`);
+        }
+      } else {
+        toast.error(response.message || 'Failed to delete students');
+      }
+    } catch (error) {
+      console.error('Error deleting students:', error);
+      toast.error('Failed to delete students. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setBulkDeleteDialogOpen(false);
     }
   };
 
@@ -511,12 +581,23 @@ const StudentsPage: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (studentToDelete) {
-      console.log('Deleting student:', studentToDelete.id);
-      alert(`Deleting student: ${studentToDelete.firstName} ${studentToDelete.lastName}`);
+      await handleDeleteStudents([studentToDelete.id]);
       setDeleteDialogOpen(false);
       setStudentToDelete(null);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedStudents.length > 0) {
+      setBulkDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedStudents.length > 0) {
+      await handleDeleteStudents(selectedStudents);
     }
   };
 
@@ -548,6 +629,25 @@ const StudentsPage: React.FC = () => {
             <h1 className="text-3xl font-bold tracking-tight">Students</h1>
           </div>
           <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="space-x-2">
+                  <Download className="h-4 w-4" />
+                  <span>Download All</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleDownload('excel')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Download as Excel ({filteredAndSortedStudents.length} students)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Download as PDF ({filteredAndSortedStudents.length} students)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button 
               className="space-x-2"
               onClick={() => navigate('/admission')}
@@ -653,28 +753,29 @@ const StudentsPage: React.FC = () => {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
-                        Download
+                        Download Selected
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
+                      <DropdownMenuItem onClick={() => handleDownload('excel')}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Download as Excel
+                        Download as Excel ({selectedStudents.length} students)
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
+                      <DropdownMenuItem onClick={() => handleDownload('pdf')}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Download as PDF
+                        Download as PDF ({selectedStudents.length} students)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => console.log('Deactivating students:', selectedStudents)}
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Deactivate
+                    {isDeleting ? 'Deleting...' : 'Delete'}
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -850,7 +951,7 @@ const StudentsPage: React.FC = () => {
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              {student.isActive ? 'Deactivate' : 'Delete'} Student
+                              Delete Student
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -928,18 +1029,42 @@ const StudentsPage: React.FC = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently {studentToDelete?.isActive ? 'deactivate' : 'delete'} the student
+                This action cannot be undone. This will permanently delete the student
                 <strong> {studentToDelete?.firstName} {studentToDelete?.lastName}</strong> and 
-                {studentToDelete?.isActive ? ' remove their access to the system.' : ' remove all associated data from the system.'}
+                remove all associated data from the system.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
+                disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {studentToDelete?.isActive ? 'Deactivate' : 'Delete'} Student
+                {isDeleting ? 'Deleting...' : 'Delete Student'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {selectedStudents.length} Students</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete {selectedStudents.length} student{selectedStudents.length > 1 ? 's' : ''} and 
+                remove all associated data from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmBulkDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? 'Deleting...' : `Delete ${selectedStudents.length} Student${selectedStudents.length > 1 ? 's' : ''}`}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

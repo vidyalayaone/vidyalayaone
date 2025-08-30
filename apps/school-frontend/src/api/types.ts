@@ -63,6 +63,34 @@ export interface CreateDocumentRequest {
   expiryDate?: string;
 }
 
+// Delete students API types
+export interface DeleteStudentsRequest {
+  studentIds: string[];
+}
+
+export interface DeleteStudentsResponse {
+  summary: {
+    totalRequested: number;
+    successfulDeletions: number;
+    failedDeletions: number;
+    deletedUsers: number;
+    failedUserDeletions: number;
+  };
+  results: {
+    deletedStudents: string[];
+    failedDeletions: Array<{
+      studentId: string;
+      error: string;
+    }>;
+    deletedUsers: string[];
+    failedUserDeletions: Array<{
+      userId: string;
+      error: string;
+    }>;
+  };
+  message: string;
+}
+
 export interface DocumentsListResponse {
   documents: ProfileServiceDocument[];
   pagination: {

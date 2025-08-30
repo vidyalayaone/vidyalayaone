@@ -82,11 +82,13 @@ class ServiceRegistry {
       isProtected: true,
       routes: [
         { path: '/students', method: 'POST', isProtected: true },
+        { path: '/students', method: 'DELETE', isProtected: true },
         { path: '/students/:id', method: 'GET', isProtected: true },
         { path: '/schools/students', method: 'GET', isProtected: true },
         { path: '/teachers', method: 'POST', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },
+        { path: '/me/teacher-id', method: 'GET', isProtected: true },
         // Student document routes
         { path: '/students/:id/documents', method: 'POST', isProtected: true },
         { path: '/students/:id/documents', method: 'GET', isProtected: true },

@@ -17,6 +17,8 @@ import {
   PaginationParams,
   ProfileServiceStudent,
   CreateStudentRequest,
+  DeleteStudentsRequest,
+  DeleteStudentsResponse,
   ProfileServiceTeachersResponse,
   ProfileServiceTeacherDetail,
   SchoolSubjectsResponse,
@@ -296,6 +298,18 @@ export const api = {
     }
   },
 
+  // Profile service: delete students
+  deleteStudents: async (data: DeleteStudentsRequest): Promise<APIResponse<DeleteStudentsResponse>> => {
+    try {
+      const response = await httpClient.delete('/profile/students', {
+        data: data
+      });
+      return handleResponse<DeleteStudentsResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // School service: get subjects for a school
   getSchoolSubjects: async (): Promise<APIResponse<SchoolSubjectsResponse>> => {
     try {
@@ -424,6 +438,7 @@ export const {
   getStudentsBySchool,
   getStudentById,
   createStudent,
+  deleteStudents,
   getSchoolSubjects,
   createTeacher,
   getSectionDetails,

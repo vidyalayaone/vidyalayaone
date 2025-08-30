@@ -159,8 +159,8 @@ type SortOrder = 'asc' | 'desc';
 const StudentsPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // State for academic year selection
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2025-26');
+  // Academic year constant
+  const selectedAcademicYear = '2025-26';
 
   // State for filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -434,8 +434,9 @@ const StudentsPage: React.FC = () => {
           bValue = `${b.firstName} ${b.lastName}`.toLowerCase();
           break;
         case 'rollNo':
-          aValue = a.rollNo;
-          bValue = b.rollNo;
+          // Convert roll numbers to integers for proper numerical sorting
+          aValue = parseInt(a.rollNo) || 0;
+          bValue = parseInt(b.rollNo) || 0;
           break;
         case 'admissionDate':
           aValue = new Date(a.admissionDate);
@@ -467,16 +468,16 @@ const StudentsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, selectedAcademicYear]);
+  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter]);
 
-  // Reset filters when academic year changes
+  // Reset filters when component mounts
   React.useEffect(() => {
     setClassFilter('all');
     setSectionFilter('all');
     setFeeStatusFilter('all');
     setQuickFilter('all');
     setSelectedStudents([]);
-  }, [selectedAcademicYear]);
+  }, []);
 
   // Helper functions
   const handleSort = (field: SortField) => {
@@ -534,8 +535,7 @@ const StudentsPage: React.FC = () => {
         return <Badge variant="secondary">Unknown</Badge>;
     }
   };
-
-  // Update bulk actions visibility
+  
   React.useEffect(() => {
     setShowBulkActions(selectedStudents.length > 0);
   }, [selectedStudents]);
@@ -547,47 +547,8 @@ const StudentsPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-            <p className="text-muted-foreground">
-              Manage and monitor student information, fees, and academic progress
-            </p>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-muted-foreground">Academic Year</label>
-              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Select Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2024-25">2024-25</SelectItem>
-                  <SelectItem value="2025-26">2025-26</SelectItem>
-                  <SelectItem value="2026-27">2026-27</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>Export All</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('csv')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button 
               className="space-x-2"
               onClick={() => navigate('/admission')}
@@ -597,85 +558,6 @@ const StudentsPage: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        {/* Stats Section */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                Enrolled this academic year
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently attending classes
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Admissions</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.newAdmissions}</div>
-              <p className="text-xs text-muted-foreground">
-                Last 30 days
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Filter Chips */}
-        {/* <div className="flex flex-wrap gap-2">
-          <Button
-            variant={quickFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={quickFilter === 'paid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('paid')}
-            className="space-x-1"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Paid</span>
-          </Button>
-          <Button
-            variant={quickFilter === 'pending' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('pending')}
-            className="space-x-1"
-          >
-            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-            <span>Pending</span>
-          </Button>
-          {['9', '10', '11', '12'].map(grade => (
-            <Button
-              key={grade}
-              variant={quickFilter === `class-${grade}` ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickFilter(`class-${grade}`)}
-            >
-              Class {grade}
-            </Button>
-          ))}
-        </div> */}
 
         {/* Search and Filters */}
         <Card>
@@ -767,45 +649,34 @@ const StudentsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => mockBulkActions.sendMessage(selectedStudents)}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => mockBulkActions.promoteStudents(selectedStudents)}
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Promote
-                  </Button>
+                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
-                        Export
+                        Download
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('csv')}>
-                        <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Export as CSV
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Export as Excel
+                        Download as Excel
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Export as PDF
+                        Download as PDF
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => console.log('Deactivating students:', selectedStudents)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Deactivate
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -824,7 +695,7 @@ const StudentsPage: React.FC = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                Students List ({filteredAndSortedStudents.length} total, showing {currentStudents.length})
+                Total: {filteredAndSortedStudents.length}
               </CardTitle>
               {(isFetchingStudents || isFetchingClasses) && (
                 <div className="text-sm text-muted-foreground">Loading...</div>
@@ -845,6 +716,7 @@ const StudentsPage: React.FC = () => {
                       <Checkbox
                         checked={selectedStudents.length === currentStudents.length && currentStudents.length > 0}
                         onCheckedChange={handleSelectAll}
+                        className="rounded-none"
                       />
                     </TableHead>
                     <TableHead 
@@ -901,6 +773,7 @@ const StudentsPage: React.FC = () => {
                         <Checkbox
                           checked={selectedStudents.includes(student.id)}
                           onCheckedChange={() => handleSelectStudent(student.id)}
+                          className="rounded-none"
                         />
                       </TableCell>
                       <TableCell>
@@ -947,8 +820,7 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {/* {new Date(student.admissionDate).toLocaleDateString()} */}
-                          {student.admissionDate}
+                          {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString() : '-'}
                         </div>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>

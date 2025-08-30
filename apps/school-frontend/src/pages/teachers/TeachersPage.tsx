@@ -381,25 +381,6 @@ const TeachersPage: React.FC = () => {
             <h1 className="text-3xl font-bold tracking-tight">Teachers</h1>
           </div>
           <div className="flex items-center space-x-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>Download All</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => handleDownload('excel')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Download as Excel ({filteredAndSortedTeachers.length} teachers)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDownload('pdf')}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Download as PDF ({filteredAndSortedTeachers.length} teachers)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button 
               className="space-x-2"
               onClick={() => navigate('/teachers/create')}

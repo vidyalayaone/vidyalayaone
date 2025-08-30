@@ -65,6 +65,9 @@ import ProtectedRoute from './components/guards/ProtectedRoute';
 import PublicRoute from './components/guards/PublicRoute';
 import FlowRoute from './components/guards/FlowRoute';
 
+// Error Components
+import SchoolNotFoundError from './components/SchoolNotFoundError';
+
 import { PERMISSIONS } from '@/utils/permissions';
 
 // Store initialization
@@ -93,7 +96,7 @@ const queryClient = new QueryClient({
 
 
 const App: React.FC = () => {
-  const { isInitializing } = useAuthStore();
+  const { isInitializing, schoolNotFound } = useAuthStore();
   // const { school } = useAuthStore();
 
   // console.log('App initialized with school:', school);
@@ -108,6 +111,11 @@ const App: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // Show error page if school is not found
+  if (schoolNotFound) {
+    return <SchoolNotFoundError />;
   }
 
   return (

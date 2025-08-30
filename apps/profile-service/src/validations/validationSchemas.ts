@@ -172,3 +172,10 @@ export const documentParamsSchema = z.object({
   id: z.string().uuid('Invalid student ID format'),
   docId: z.string().uuid('Invalid document ID format').optional(),
 });
+
+// Delete students validation schema
+export const deleteStudentsSchema = z.object({
+  studentIds: z.array(z.string().uuid('Invalid student ID format'))
+    .min(1, 'At least one student ID is required')
+    .max(100, 'Cannot delete more than 100 students at once'),
+});

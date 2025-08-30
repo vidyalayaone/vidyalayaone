@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createStudent } from '../controllers/createStudent';
+import { deleteStudents } from '../controllers/deleteStudents';
 import { getStudent } from '../controllers/getStudent';
 import { getAllStudents } from '../controllers/getAllStudents';
 import { createTeacher } from '../controllers/createTeacher';
@@ -25,6 +26,7 @@ const profileLimiter = rateLimit({
 
 // Student routes
 router.post('/students', profileLimiter, createStudent);
+router.delete('/students', profileLimiter, deleteStudents);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
 // Student documents

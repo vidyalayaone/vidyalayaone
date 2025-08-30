@@ -86,6 +86,7 @@ class ServiceRegistry {
         { path: '/students/:id', method: 'GET', isProtected: true },
         { path: '/schools/students', method: 'GET', isProtected: true },
         { path: '/teachers', method: 'POST', isProtected: true },
+        { path: '/teachers', method: 'DELETE', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },
         { path: '/me/teacher-id', method: 'GET', isProtected: true },

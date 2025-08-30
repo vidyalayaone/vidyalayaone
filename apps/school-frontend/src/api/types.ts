@@ -785,3 +785,24 @@ export interface CreateTeacherResponse {
     temporaryPassword: string;
   };
 }
+
+// Delete Teachers Request and Response
+export interface DeleteTeachersRequest {
+  teacherIds: string[];
+}
+
+export interface DeleteTeachersResponse {
+  summary: {
+    totalRequested: number;
+    successfulDeletions: number;
+    failedDeletions: number;
+  };
+  results: {
+    deletedTeachers: string[];
+    failedTeachers: {
+      teacherId: string;
+      reason: string;
+    }[];
+  };
+  errors?: string[];
+}

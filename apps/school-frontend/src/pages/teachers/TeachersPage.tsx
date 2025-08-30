@@ -68,8 +68,11 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { Teacher, Subject } from '@/api/types';
-import { getTeachersBySchool, getSchoolSubjects } from '@/api/api';
+import { getTeachersBySchool, getSchoolSubjects, deleteTeachers } from '@/api/api';
+import { DeleteTeachersRequest } from '@/api/types';
 import { transformProfileTeachersToTeachers } from '@/utils/teacherTransform';
+import { downloadTeachers } from '@/utils/teacherDownloadUtils';
+import toast from 'react-hot-toast';
 
 const TeachersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -81,6 +84,8 @@ const TeachersPage: React.FC = () => {
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [deleteTeacherId, setDeleteTeacherId] = useState<string | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const teachersPerPage = 10;
 
@@ -146,11 +151,11 @@ const TeachersPage: React.FC = () => {
 
   // Filter and sort teachers
   const filteredAndSortedTeachers = useMemo(() => {
-    let filtered = [...filteredTeachers];
+    const filtered = [...filteredTeachers];
 
     // Sort
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number, bValue: string | number;
       
       switch (sortField) {
         case 'name':
@@ -223,50 +228,94 @@ const TeachersPage: React.FC = () => {
     }
   };
 
-  const handleDeleteTeacher = (teacherId: string) => {
-    setTeachers(prev => prev.filter(t => t.id !== teacherId));
-    setDeleteTeacherId(null);
+  const handleDeleteTeacher = (teacher: Teacher) => {
+    setDeleteTeacherId(teacher.id);
   };
 
-  const handleResetPassword = (teacherId: string) => {
-    // Mock password reset
-    console.log('Password reset for teacher:', teacherId);
-    // In real implementation, this would call an API
+  const handleDeleteTeachers = async (teacherIds: string[]) => {
+    if (teacherIds.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const deleteRequest: DeleteTeachersRequest = { teacherIds };
+      const response = await deleteTeachers(deleteRequest);
+      
+      if (response.success && response.data) {
+        const { summary, results } = response.data;
+        
+        // Remove deleted teachers from the local state
+        setTeachers(prev => prev.filter(t => !results.deletedTeachers.includes(t.id)));
+        
+        // Clear selection
+        setSelectedTeachers([]);
+        
+        // Show success message
+        if (summary.successfulDeletions === summary.totalRequested) {
+          toast.success(`Successfully deleted ${summary.successfulDeletions} teacher${summary.successfulDeletions > 1 ? 's' : ''}`);
+        } else {
+          toast.error(`Deleted ${summary.successfulDeletions} out of ${summary.totalRequested} teachers. ${summary.failedDeletions} failed.`);
+        }
+      } else {
+        toast.error(response.message || 'Failed to delete teachers');
+      }
+    } catch (error) {
+      console.error('Error deleting teachers:', error);
+      toast.error('Failed to delete teachers. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setBulkDeleteDialogOpen(false);
+      setDeleteTeacherId(null);
+    }
   };
 
-  const exportToCSV = () => {
-    const csvContent = [
-      ['Employee ID', 'Name', 'Email', 'Phone', 'Subjects', 'Classes', 'Status', 'Experience'].join(','),
-      ...filteredAndSortedTeachers.map(teacher => [
-        teacher.employeeId,
-        `${teacher.firstName} ${teacher.lastName}`,
-        teacher.email,
-        teacher.phoneNumber || '',
-        teacher.subjects.map(s => s.name).join('; '),
-        teacher.classes.length.toString(),
-        teacher.isActive ? 'Active' : 'Inactive',
-        `${teacher.experience} years`
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'teachers.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const confirmDelete = async () => {
+    if (deleteTeacherId) {
+      await handleDeleteTeachers([deleteTeacherId]);
+    }
   };
 
-  // Mock API functions for bulk actions
-  const mockBulkActions = {
-    sendMessage: (teacherIds: string[]) => {
-      console.log('Sending message to teachers:', teacherIds);
-      alert(`Sending messages to ${teacherIds.length} teachers`);
-    },
-    exportData: (format: 'excel' | 'pdf') => {
-      console.log(`Exporting ${format} for teachers:`, selectedTeachers.length > 0 ? selectedTeachers : 'all');
-      alert(`Exporting ${format} for ${selectedTeachers.length > 0 ? selectedTeachers.length : 'all'} teachers`);
+  const handleBulkDelete = () => {
+    if (selectedTeachers.length > 0) {
+      setBulkDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmBulkDelete = async () => {
+    if (selectedTeachers.length > 0) {
+      await handleDeleteTeachers(selectedTeachers);
+    }
+  };
+
+  // Download functionality
+  const handleDownload = (format: 'excel' | 'pdf') => {
+    try {
+      let teachersToDownload: Teacher[] = [];
+      let filename = 'teachers';
+
+      if (selectedTeachers.length > 0) {
+        // Download selected teachers
+        teachersToDownload = teachers.filter(t => selectedTeachers.includes(t.id));
+        filename = `selected_teachers_${selectedTeachers.length}`;
+      } else {
+        // Download all filtered teachers
+        teachersToDownload = filteredAndSortedTeachers;
+        filename = 'all_teachers';
+      }
+
+      if (teachersToDownload.length === 0) {
+        toast.error('No teachers to download');
+        return;
+      }
+
+      downloadTeachers(teachersToDownload, format, filename);
+      
+      const count = teachersToDownload.length;
+      const type = format === 'excel' ? 'Excel' : 'PDF';
+      toast.success(`${type} file downloaded successfully (${count} teacher${count > 1 ? 's' : ''})`);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file. Please try again.');
     }
   };
 
@@ -332,6 +381,25 @@ const TeachersPage: React.FC = () => {
             <h1 className="text-3xl font-bold tracking-tight">Teachers</h1>
           </div>
           <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="space-x-2">
+                  <Download className="h-4 w-4" />
+                  <span>Download All</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleDownload('excel')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Download as Excel ({filteredAndSortedTeachers.length} teachers)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Download as PDF ({filteredAndSortedTeachers.length} teachers)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button 
               className="space-x-2"
               onClick={() => navigate('/teachers/create')}
@@ -408,28 +476,29 @@ const TeachersPage: React.FC = () => {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
-                        Download
+                        Download Selected
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
+                      <DropdownMenuItem onClick={() => handleDownload('excel')}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Download as Excel
+                        Download as Excel ({selectedTeachers.length} teachers)
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
+                      <DropdownMenuItem onClick={() => handleDownload('pdf')}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Download as PDF
+                        Download as PDF ({selectedTeachers.length} teachers)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => console.log('Deactivating teachers:', selectedTeachers)}
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Deactivate
+                    {isDeleting ? 'Deleting...' : 'Delete'}
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -579,7 +648,7 @@ const TeachersPage: React.FC = () => {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
-                              onClick={() => setDeleteTeacherId(teacher.id)}
+                              onClick={() => handleDeleteTeacher(teacher)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -662,16 +731,40 @@ const TeachersPage: React.FC = () => {
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete the teacher
-                and remove their access to the system.
+                and remove all associated data from the system.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => deleteTeacherId && handleDeleteTeacher(deleteTeacherId)}
+                onClick={confirmDelete}
+                disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Delete Teacher
+                {isDeleting ? 'Deleting...' : 'Delete Teacher'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {selectedTeachers.length} Teachers</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete {selectedTeachers.length} teacher{selectedTeachers.length > 1 ? 's' : ''} and 
+                remove all associated data from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmBulkDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? 'Deleting...' : `Delete ${selectedTeachers.length} Teacher${selectedTeachers.length > 1 ? 's' : ''}`}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

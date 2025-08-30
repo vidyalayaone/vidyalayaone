@@ -62,7 +62,7 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
   const [chartModalOpen, setChartModalOpen] = useState(false);
   const [sendingReminder, setSendingReminder] = useState(false);
 
-  const loadFeeDetail = async () => {
+  const loadFeeDetail = React.useCallback(async () => {
     setLoading(true);
     try {
       const detail = await feesAPI.getStudentFeeDetail(studentId);
@@ -72,11 +72,11 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [studentId]);
 
   useEffect(() => {
     loadFeeDetail();
-  }, [studentId]);
+  }, [loadFeeDetail]);
 
   const formatCurrency = (amount: number | undefined | null) => {
     if (amount === undefined || amount === null || isNaN(amount)) {
@@ -151,6 +151,122 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
   const handleViewReceipt = (transaction: FeeTransaction) => {
     setSelectedTransaction(transaction);
     setReceiptModalOpen(true);
+  };
+
+  const handleDownloadReceipt = async (transaction: FeeTransaction) => {
+    try {
+      // Mock PDF generation for individual receipt
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate mock receipt PDF blob
+      const receiptData = generateMockReceiptPDF(transaction);
+      const blob = new Blob([receiptData], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      // Download the file
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt_${transaction.receiptNumber}_${studentId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Receipt downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to download receipt');
+    }
+  };
+
+  const generateMockReceiptPDF = (transaction: FeeTransaction): string => {
+    // Mock PDF content generation for receipt
+    return `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 400
+>>
+stream
+BT
+/F1 24 Tf
+50 750 Td
+(VIDYALAYA ONE SCHOOL) Tj
+0 -30 Td
+/F1 16 Tf
+(Fee Payment Receipt) Tj
+0 -40 Td
+/F1 12 Tf
+(Receipt No: ${transaction.receiptNumber}) Tj
+0 -20 Td
+(Date: ${formatDate(transaction.date)}) Tj
+0 -20 Td
+(Amount: ${formatCurrency(transaction.amount)}) Tj
+0 -20 Td
+(Payment Method: ${transaction.mode}) Tj
+0 -20 Td
+(Description: ${transaction.description}) Tj
+0 -20 Td
+(Receipt: ${transaction.receiptNumber || 'N/A'}) Tj
+0 -40 Td
+(Student ID: ${studentId}) Tj
+0 -20 Td
+(Generated on: ${new Date().toLocaleString('en-IN')}) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000274 00000 n 
+0000000726 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+823
+%%EOF`;
   };
 
   const loadAuditTrail = async () => {
@@ -331,7 +447,7 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                       <TableHead>Status</TableHead>
                       <TableHead>Mode</TableHead>
                       <TableHead>Proof</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="w-24">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -349,8 +465,8 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                           <TableCell>
                             <div>
                               <div className="font-medium">{transaction.description}</div>
-                              {transaction.reference && (
-                                <div className="text-sm text-muted-foreground">Ref: {transaction.reference}</div>
+                              {transaction.receiptNumber && (
+                                <div className="text-sm text-muted-foreground">Receipt: {transaction.receiptNumber}</div>
                               )}
                             </div>
                           </TableCell>
@@ -380,13 +496,26 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleViewReceipt(transaction)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewReceipt(transaction)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {transaction.receiptNumber && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleDownloadReceipt(transaction)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -480,7 +609,7 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                             <h4 className="font-medium text-green-800">{concession?.type || 'N/A'}</h4>
                             <p className="text-sm text-green-700">{concession?.description || 'No description'}</p>
                             <p className="text-xs text-green-600">
-                              Applied on {concession?.appliedDate ? formatDate(concession.appliedDate) : 'N/A'}
+                              Applied on {concession?.validFrom ? formatDate(concession.validFrom) : 'N/A'}
                             </p>
                           </div>
                           <div className="text-right">
@@ -532,11 +661,11 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Payment Method</label>
-                  <p className="text-sm">{selectedTransaction.paymentMethod.replace('_', ' ')}</p>
+                  <p className="text-sm">{selectedTransaction.mode.replace('_', ' ')}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Reference</label>
-                  <p className="text-sm font-mono">{selectedTransaction.reference || 'N/A'}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Receipt Number</label>
+                  <p className="text-sm font-mono">{selectedTransaction.receiptNumber || 'N/A'}</p>
                 </div>
                 <div className="col-span-2">
                   <label className="text-sm font-medium text-muted-foreground">Description</label>
@@ -546,7 +675,10 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
 
               {/* Receipt Footer */}
               <div className="text-center pt-4 border-t">
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={() => selectedTransaction && handleDownloadReceipt(selectedTransaction)}
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download Receipt
                 </Button>
@@ -621,7 +753,11 @@ const StudentFeesTab: React.FC<StudentFeesTabProps> = ({ studentId }) => {
                         <Eye className="w-4 h-4 mr-2" />
                         View
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDownloadReceipt(transaction)}
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>

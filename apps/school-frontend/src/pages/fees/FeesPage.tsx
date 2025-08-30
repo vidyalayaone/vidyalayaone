@@ -18,7 +18,10 @@ import {
   Eye,
   PieChart,
   BarChart3,
-  History
+  History,
+  Plus,
+  Edit,
+  Receipt
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -55,8 +58,16 @@ import {
 } from '@/components/ui/dialog';
 
 import { feesAPI, StudentFeeSummary, FeesStats, FeeAuditLog } from '@/api/mockFeesAPI';
+import { FeeSubmissionForm } from './components/FeeSubmissionForm';
+import { FeeStructureTable } from './components/FeeStructureTable';
+import { FeeStructureForm } from './components/FeeStructureForm';
+import PDFExport from './components/PDFExport';
+import { hasPermission } from '@/utils/permissions';
+import { PERMISSIONS } from '@/utils/permissions';
+import { useAuthStore } from '@/store/authStore';
 
 const FeesPage: React.FC = () => {
+  const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [students, setStudents] = useState<StudentFeeSummary[]>([]);
   const [stats, setStats] = useState<FeesStats | null>(null);
@@ -66,6 +77,20 @@ const FeesPage: React.FC = () => {
   const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [auditTrail, setAuditTrail] = useState<FeeAuditLog[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Fee management modal state
+  const [feeFormOpen, setFeeFormOpen] = useState(false);
+  const [selectedStudentForFee, setSelectedStudentForFee] = useState<{id: string, name: string} | null>(null);
+  
+  // Fee structure modal states
+  const [createStructureOpen, setCreateStructureOpen] = useState(false);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  // Permission checks
+  const canManageFees = user?.permissions?.includes(PERMISSIONS.FEE.UPDATE) || false;
+  const canViewReports = user?.permissions?.includes(PERMISSIONS.FEE.VIEW) || false;
 
   // Filters from URL params
   const searchTerm = searchParams.get('search') || '';
@@ -84,7 +109,7 @@ const FeesPage: React.FC = () => {
     setSearchParams(newParams);
   };
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [studentsData, statsData] = await Promise.all([
@@ -104,11 +129,11 @@ const FeesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, classFilter, sectionFilter, statusFilter, yearFilter]);
 
   useEffect(() => {
     loadData();
-  }, [searchTerm, classFilter, sectionFilter, statusFilter, yearFilter]);
+  }, [loadData]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -168,6 +193,37 @@ const FeesPage: React.FC = () => {
     } catch (error) {
       toast.error('Failed to load audit trail');
     }
+  };
+
+  const handleFeeSubmission = async (data: unknown) => {
+    try {
+      // Mock API call to update student fees
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Fee payment updated successfully!');
+      setFeeFormOpen(false);
+      setSelectedStudentForFee(null);
+      loadData(); // Refresh the data
+    } catch (error) {
+      toast.error('Failed to update fee payment');
+    }
+  };
+
+  const handleFeeStructureSubmission = async (data: unknown) => {
+    try {
+      // Mock API call to create fee structure
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success('Fee structure created successfully!');
+      setCreateStructureOpen(false);
+      loadData(); // Refresh the data
+    } catch (error) {
+      toast.error('Failed to create fee structure');
+    }
+  };
+
+  const renderFeeStatus = (status: string) => {
+    return getStatusBadge(status);
   };
 
   const getStatusBadge = (status: string) => {
@@ -254,10 +310,7 @@ const FeesPage: React.FC = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Excel
             </Button>
-            <Button variant="outline" onClick={() => handleExport('pdf')} disabled={exporting}>
-              <FileText className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
+            <PDFExport onExport={(options) => console.log('PDF export options:', options)} />
           </div>
         </div>
 
@@ -316,13 +369,16 @@ const FeesPage: React.FC = () => {
           </div>
         )}
 
-        <Tabs defaultValue="list" className="w-full">
-          <TabsList>
-            <TabsTrigger value="list">Student List</TabsTrigger>
-            <TabsTrigger value="charts">Analytics</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="structures" disabled={!canManageFees}>Fee Structures</TabsTrigger>
+            <TabsTrigger value="manage" disabled={!canManageFees}>Fee Management</TabsTrigger>
+            <TabsTrigger value="payments">Payment History</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="list" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-6">
             {/* Filters */}
             <Card>
               <CardHeader>
@@ -511,7 +567,247 @@ const FeesPage: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="charts" className="space-y-6">
+          {/* Fee Structures Tab - Admin Only */}
+          <TabsContent value="structures" className="space-y-6">
+            {canManageFees ? (
+              <div className="space-y-6">
+                {/* Header with Create Button */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold">Fee Structures</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Manage fee structures, categories, and academic year settings
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setCreateStructureOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Fee Structure
+                  </Button>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <DollarSign className="h-5 w-5 text-green-600" />
+                        Create Fee Structure
+                      </CardTitle>
+                      <CardDescription>
+                        Set up new fee categories and amounts for academic year
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="outline" className="w-full" onClick={() => setCreateStructureOpen(true)}>
+                        Get Started
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Users className="h-5 w-5 text-blue-600" />
+                        Bulk Assignment
+                      </CardTitle>
+                      <CardDescription>
+                        Assign fee structures to multiple students at once
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="outline" className="w-full" onClick={() => setBulkAssignOpen(true)}>
+                        Assign Fees
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <FileText className="h-5 w-5 text-purple-600" />
+                        Fee Templates
+                      </CardTitle>
+                      <CardDescription>
+                        Create reusable fee templates for different grades
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="outline" className="w-full" onClick={() => setTemplateOpen(true)}>
+                        Manage Templates
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Existing Fee Structures */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Fee Structures</CardTitle>
+                    <CardDescription>
+                      Academic Year 2024-25 fee structures by grade
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Mock fee structure data */}
+                      {[
+                        { grade: '9', students: 45, totalAmount: 125000, categories: ['Tuition', 'Transport', 'Library'] },
+                        { grade: '10', students: 52, totalAmount: 135000, categories: ['Tuition', 'Transport', 'Lab', 'Library'] },
+                        { grade: '11', students: 38, totalAmount: 145000, categories: ['Tuition', 'Transport', 'Lab', 'Library', 'Sports'] },
+                        { grade: '12', students: 41, totalAmount: 155000, categories: ['Tuition', 'Transport', 'Lab', 'Library', 'Exam'] }
+                      ].map((structure) => (
+                        <div key={structure.grade} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="space-y-1">
+                            <div className="font-medium">Grade {structure.grade}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {structure.students} students • ₹{structure.totalAmount.toLocaleString('en-IN')} total
+                            </div>
+                            <div className="flex gap-1">
+                              {structure.categories.map((category) => (
+                                <Badge key={category} variant="secondary" className="text-xs">
+                                  {category}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                  <h3 className="text-lg font-semibold mb-2">Access Restricted</h3>
+                  <p className="text-muted-foreground">
+                    You don't have permission to manage fee structures. Contact an administrator for access.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Fee Management Tab - Admin Only */}
+          <TabsContent value="manage" className="space-y-6">
+            {canManageFees ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Update Student Fees
+                    </CardTitle>
+                    <CardDescription>
+                      Select a student to update their fee payment status and record new payments
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button 
+                      onClick={() => setFeeFormOpen(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Update Fees
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Student List for Fee Management */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Students Requiring Attention</CardTitle>
+                    <CardDescription>Students with pending or overdue fees</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {students
+                        .filter(s => s.feeStatus !== 'PAID')
+                        .slice(0, 10)
+                        .map((student) => (
+                          <div key={student.studentId} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="font-medium">{student.name}</div>
+                              <Badge variant="outline">{student.class} - {student.section}</Badge>
+                              {renderFeeStatus(student.feeStatus)}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right text-sm">
+                                <div className="font-medium">₹{student.balanceDue?.toLocaleString('en-IN')}</div>
+                                <div className="text-muted-foreground">pending</div>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedStudentForFee({
+                                    id: student.studentId,
+                                    name: student.name
+                                  });
+                                  setFeeFormOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-1" />
+                                Update
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                  <h3 className="text-lg font-semibold mb-2">Access Restricted</h3>
+                  <p className="text-muted-foreground">
+                    You don't have permission to manage fees. Contact an administrator for access.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Payment History Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Receipt className="h-5 w-5" />
+                  Payment History & Receipts
+                </CardTitle>
+                <CardDescription>
+                  View detailed payment transactions and download receipts
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Receipt className="h-12 w-12 mx-auto mb-4" />
+                    <p>Select a student from the dashboard to view their detailed payment history</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Fee Status Distribution */}
               <Card>
@@ -572,7 +868,18 @@ const FeesPage: React.FC = () => {
               </Card>
             </div>
           </TabsContent>
+
         </Tabs>
+
+        {/* Fee Submission Form Modal */}
+        <FeeSubmissionForm
+          open={feeFormOpen}
+          onOpenChange={setFeeFormOpen}
+          onSubmit={handleFeeSubmission}
+          initialData={selectedStudentForFee ? {
+            studentId: selectedStudentForFee.id
+          } : undefined}
+        />
 
         {/* Bulk Reminder Modal */}
         <Dialog open={reminderModalOpen} onOpenChange={setReminderModalOpen}>
@@ -624,6 +931,13 @@ const FeesPage: React.FC = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Fee Structure Form Modal */}
+        <FeeStructureForm
+          open={createStructureOpen}
+          onOpenChange={setCreateStructureOpen}
+          onSubmit={handleFeeStructureSubmission}
+        />
       </div>
     </DashboardLayout>
   );

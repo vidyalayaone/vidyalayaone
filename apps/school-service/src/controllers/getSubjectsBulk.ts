@@ -1,21 +1,17 @@
 import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
-import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
-import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
-export async function getSubjects(req: Request, res: Response): Promise<void> {
+export async function getSubjectsBulk(req: Request, res: Response): Promise<void> {
   try {
-    const userData = getUser(req);
-    const { context, schoolId } = getSchoolContext(req);
-    console.log(userData);
+    const { subjectIds, schoolId } = req.body;
 
-    // Ensure we're in school context and have schoolId
-    if (context !== 'school') {
+    // Validate request body
+    if (!subjectIds || !Array.isArray(subjectIds)) {
       res.status(400).json({
         success: false,
-        error: { message: 'Subjects access is only allowed in school context' },
+        error: { message: 'subjectIds array is required' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -24,17 +20,7 @@ export async function getSubjects(req: Request, res: Response): Promise<void> {
     if (!schoolId) {
       res.status(400).json({
         success: false,
-        error: { message: 'School ID is required from context' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    // Check permissions
-    if (!await hasPermission(PERMISSIONS.SUBJECT.VIEW, userData)) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'You do not have permission to view subjects' },
+        error: { message: 'schoolId is required' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -55,10 +41,12 @@ export async function getSubjects(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Get all subjects associated with classes in this school
-    // Fetch subjects that are linked to classes belonging to this school
-    const schoolSubjects = await prisma.subject.findMany({
+    // Get subjects by IDs that are associated with classes in this school
+    const subjects = await prisma.subject.findMany({
       where: {
+        id: {
+          in: subjectIds
+        },
         classes: {
           some: {
             schoolId: schoolId
@@ -85,15 +73,17 @@ export async function getSubjects(req: Request, res: Response): Promise<void> {
           id: school.id,
           name: school.name
         },
-        subjects: schoolSubjects,
-        totalSubjects: schoolSubjects.length
+        subjects: subjects,
+        totalSubjects: subjects.length,
+        requestedCount: subjectIds.length,
+        foundCount: subjects.length
       },
       message: 'Subjects retrieved successfully',
       timestamp: new Date().toISOString()
     });
 
   } catch (error: any) {
-    console.error('Error fetching subjects:', error);
+    console.error('Error fetching subjects bulk:', error);
 
     // Handle Prisma errors
     if (error.code && error.code.startsWith('P')) {

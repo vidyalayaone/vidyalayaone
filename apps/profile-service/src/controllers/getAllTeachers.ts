@@ -155,6 +155,7 @@ export async function getAllTeachers(req: Request, res: Response) {
         }
       } catch (error) {
         console.warn('⚠️ Failed to fetch subject details from school service:', error);
+        
         // Continue without subject details
       }
     }

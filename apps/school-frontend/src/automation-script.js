@@ -181,7 +181,7 @@ async function createClasses() {
   
   const classesPayload = {
     schoolId: schoolData.schoolId,
-    classes: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade", "6th Grade", "7th Grade", "8th Grade", "9th Grade", "10th Grade"],
+    classes: ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"],
     academicYear: "2025-26"
   };
 
@@ -276,10 +276,10 @@ async function assignSubjectsToClasses() {
   
   // Define subject assignments based on grade level
   const getSubjectsForClass = (className) => {
-    const lowerGrades = ["1st Grade", "2nd Grade", "3rd Grade"];
-    const middleGrades = ["4th Grade", "5th Grade", "6th Grade", "7th Grade"];
-    const higherGrades = ["8th Grade", "9th Grade", "10th Grade"];
-    
+    const lowerGrades = ["1st", "2nd", "3rd"];
+    const middleGrades = ["4th", "5th", "6th", "7th"];
+    const higherGrades = ["8th", "9th", "10th"];
+
     if (lowerGrades.includes(className)) {
       return ["Mathematics", "English", "Hindi", "Science", "Art and Craft", "Physical Education"];
     } else if (middleGrades.includes(className)) {

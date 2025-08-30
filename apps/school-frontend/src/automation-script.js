@@ -146,37 +146,14 @@ async function seedRoles() {
         name: "TEACHER",
         description: "Teacher role with permissions to manage classes and students",
         permissions: [
-          "student.view",
-          "student.view_details",
-          "class.view",
-          "class.view_timetable",
-          "subject.view",
-          "attendance.view",
           "attendance.mark",
-          "exam.view",
-          "exam.grade",
-          "exam.view_results",
-          "academic_calendar.view",
-          "communication.send_message",
-          "communication.view_messages",
-          "report.view_teacher",
-          "dashboard.view_teacher"
         ]
       },
       {
         name: "STUDENT",
         description: "Student role with basic access permissions",
         permissions: [
-          "class.view",
-          "class.view_timetable",
-          "subject.view",
-          "attendance.view_own",
-          "exam.view_own_results",
-          "academic_calendar.view",
-          "fee.view_own",
-          "communication.view_messages",
-          "report.view_student",
-          "dashboard.view_student"
+        "me.view"
         ]
       }
     ]

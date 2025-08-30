@@ -1,5 +1,3 @@
-// Top navigation bar with school info, user menu, and controls
-
 import React from 'react';
 import { Bell, Menu, Search, Settings, User, LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,9 +25,6 @@ const Topbar: React.FC = () => {
   const userFullName = getUserFullName(user);
   const userInitials = getUserInitials(user);
   const roleDisplay = user ? getRoleDisplayName(user) : '';
-  
-  const unreadNotifications = notifications.filter(n => !n.id).length;
-
   const handleLogout = () => {
     logout();
   };
@@ -46,43 +41,30 @@ const Topbar: React.FC = () => {
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-50">
-      <div className="flex items-center justify-between h-full px-4 lg:px-6">
-        {/* Left Section - Sidebar Toggle & School Info */}
-        <div className="flex items-center gap-4">
+      <div className="relative flex items-center h-full px-4 lg:px-6">
+        {/* Left Section - Sidebar Toggle */}
+        <div className="flex items-center">
           <SidebarTrigger />
-          
-          <div className="hidden sm:flex items-center gap-3">
-            {school?.logo && (
-              <img 
-                src={school.logo} 
-                alt={school.name}
-                className="w-8 h-8 rounded-lg object-cover"
-              />
-            )}
-            <div>
-              <h1 className="text-sm font-semibold text-foreground">
-                {school?.name || 'School Portal'}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {school?.settings?.academicYear || 'Academic Year 2024-2025'}
-              </p>
-            </div>
-          </div>
         </div>
 
-        {/* Center Section - Search (Desktop) */}
-        <div className="hidden md:flex flex-1 max-w-md mx-6">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search students, classes, assignments..."
-              className="pl-10 bg-background/50"
+        {/* Center Section - School Info */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3">
+          {school?.logo && (
+            <img 
+              src={school.logo} 
+              alt={school.name}
+              className="w-8 h-8 rounded-lg object-cover"
             />
+          )}
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-foreground">
+              {school?.name || 'School Portal'}
+            </h1>
           </div>
         </div>
 
         {/* Right Section - Actions & User Menu */}
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           {/* Search Button (Mobile) */}
           <Button
             variant="ghost"
@@ -103,23 +85,6 @@ const Topbar: React.FC = () => {
               <Moon className="w-4 h-4" />
             ) : (
               <Sun className="w-4 h-4" />
-            )}
-          </Button>
-
-          {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-          >
-            <Bell className="w-4 h-4" />
-            {unreadNotifications > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
-              >
-                {unreadNotifications > 9 ? '9+' : unreadNotifications}
-              </Badge>
             )}
           </Button>
 
@@ -144,10 +109,7 @@ const Topbar: React.FC = () => {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {userFullName}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
+                      {user.username}
                     </p>
                     <Badge variant="secondary" className="w-fit text-xs mt-1">
                       {roleDisplay}

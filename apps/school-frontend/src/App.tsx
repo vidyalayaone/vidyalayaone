@@ -35,8 +35,6 @@ import SubjectsPage from './pages/subjects/SubjectsPage';
 // Admission Pages
 import AdmissionPage from './pages/admission/AdmissionPage';
 import SingleStudentAdmissionPage from './pages/admission/SingleStudentAdmissionPage';
-import MultipleStudentAdmissionPage from './pages/admission/MultipleStudentAdmissionPage';
-import BulkImportAdmissionPage from './pages/admission/BulkImportAdmissionPage';
 import AdmissionApplicationsPage from './pages/admission/AdmissionApplicationsPage';
 import ApplicationDetailPage from './pages/admission/ApplicationDetailPage';
 
@@ -159,42 +157,8 @@ const App: React.FC = () => {
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[]}>
                   <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Teachers Routes - Admin only */}
-            <Route
-              path="/teachers"
-              element={
-                <ProtectedRoute>
-                  <TeachersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teachers/create"
-              element={
-                <ProtectedRoute>
-                  <CreateTeacherPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teachers/:id"
-              element={
-                <ProtectedRoute>
-                  <TeacherDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teachers/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <EditTeacherPage />
                 </ProtectedRoute>
               }
             />
@@ -203,7 +167,7 @@ const App: React.FC = () => {
             <Route
               path="/students"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.STUDENT.VIEW]}>
                   <StudentsPage />
                 </ProtectedRoute>
               }
@@ -211,24 +175,58 @@ const App: React.FC = () => {
             <Route
               path="/students/:id"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.STUDENT.VIEW]}>
                   <StudentDetailPage />
                 </ProtectedRoute>
               }
             />
-            <Route
+              <Route
+                path="/students/:id/edit"
+                element={
+                  <ProtectedRoute requiredPermissions={[PERMISSIONS.STUDENT.VIEW]}>
+                    <EditStudentPage />
+                  </ProtectedRoute>
+                }
+              />
+            {/* <Route
               path="/students/:id/fees"
               element={
                 <ProtectedRoute>
                   <StudentDetailPage />
                 </ProtectedRoute>
               }
+            /> */}
+
+          {/* Teachers Routes - Admin only */}
+            <Route
+              path="/teachers"
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.TEACHER.VIEW]}>
+                  <TeachersPage />
+                </ProtectedRoute>
+              }
             />
             <Route
-              path="/students/:id/edit"
+              path="/teachers/create"
               element={
-                <ProtectedRoute>
-                  <EditStudentPage />
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.TEACHER.VIEW]}>
+                  <CreateTeacherPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teachers/:id"
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.TEACHER.VIEW]}>
+                  <TeacherDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teachers/:id/edit"
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.TEACHER.VIEW]}>
+                  <EditTeacherPage />
                 </ProtectedRoute>
               }
             />
@@ -237,7 +235,7 @@ const App: React.FC = () => {
             <Route
               path="/classes"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.CLASS.VIEW]}>
                   <ClassesPage />
                 </ProtectedRoute>
               }
@@ -245,27 +243,27 @@ const App: React.FC = () => {
             <Route
               path="/classes/:classId/:sectionId"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.SECTION.VIEW]}>
                   <ClassSectionPage />
                 </ProtectedRoute>
               }
             />
 
             {/* Subjects Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/subjects"
               element={
                 <ProtectedRoute>
                   <SubjectsPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Admission Routes - Admin only */}
             <Route
               path="/admission"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ADMISSION.VIEW]}>
                   <AdmissionPage />
                 </ProtectedRoute>
               }
@@ -273,31 +271,15 @@ const App: React.FC = () => {
             <Route
               path="/admission/single"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ADMISSION.VIEW]}>
                   <SingleStudentAdmissionPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admission/multiple"
-              element={
-                <ProtectedRoute>
-                  <MultipleStudentAdmissionPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admission/bulk-import"
-              element={
-                <ProtectedRoute>
-                  <BulkImportAdmissionPage />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/admission/applications"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ADMISSION.VIEW]}>
                   <AdmissionApplicationsPage />
                 </ProtectedRoute>
               }
@@ -305,7 +287,7 @@ const App: React.FC = () => {
             <Route
               path="/admission/applications/:id"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ADMISSION.VIEW]}>
                   <ApplicationDetailPage />
                 </ProtectedRoute>
               }
@@ -315,7 +297,7 @@ const App: React.FC = () => {
             <Route
               path="/attendance"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.ATTENDANCE.VIEW]}>
                   <AttendancePage />
                 </ProtectedRoute>
               }
@@ -330,7 +312,7 @@ const App: React.FC = () => {
             />
 
             {/* Exams Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/exams"
               element={
                 <ProtectedRoute>
@@ -361,50 +343,53 @@ const App: React.FC = () => {
                   <ExamDetailPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Timetable Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/timetable"
               element={
                 <ProtectedRoute>
                   <TimetablePage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Substitute Teacher Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/substitute-teacher"
               element={
                 <ProtectedRoute>
                   <SubstituteTeacherPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Academic Calendar Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/academic-calendar"
               element={
                 <ProtectedRoute>
+                  
                   <AcademicCalendarPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Fees Routes - Admin only */}
-            <Route
+            {/* <Route
               path="/fees"
               element={
                 <ProtectedRoute>
                   <FeesPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             {/* Root redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            <Route path="/not-found" element={<h1>Page Not Found</h1>} />
 
             {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/login" replace />} />

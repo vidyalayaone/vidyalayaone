@@ -22,9 +22,11 @@ import {
   CalendarDays,
   MessageCircle,
   DollarSign,
+  // RupeeSign,
   Library,
   Clock,
-  type LucideIcon
+  type LucideIcon,
+  IndianRupee
 } from 'lucide-react';
 
 import { PERMISSIONS } from '@/utils/permissions';
@@ -67,11 +69,7 @@ export const allNavigationItems: NavigationGroup[] = [
         label: 'Dashboard', 
         icon: LayoutDashboard,
         description: 'Overview of school activities and statistics',
-        requiredPermissions: [
-          PERMISSIONS.DASHBOARD.VIEW_ADMIN,
-          PERMISSIONS.DASHBOARD.VIEW_TEACHER,
-          PERMISSIONS.DASHBOARD.VIEW_STUDENT
-        ]
+        requiredPermissions: []
       },
       {
         path: '/students', 
@@ -106,13 +104,13 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Academic',
     items: [
-      { 
-        path: '/timetable', 
-        label: 'Timetable', 
-        icon: Calendar,
-        description: 'View and manage class schedules',
-        requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
-      },
+      // { 
+      //   path: '/timetable', 
+      //   label: 'Timetable', 
+      //   icon: Calendar,
+      //   description: 'View and manage class schedules',
+      //   requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
+      // },
       // { 
       //   path: '/subjects', 
       //   label: 'Subjects', 
@@ -148,13 +146,13 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'Take daily attendance for class sections',
         requiredPermissions: [PERMISSIONS.ATTENDANCE.MARK]
       },
-      { 
-        path: '/exams', 
-        label: 'Exams', 
-        icon: PenTool,
-        description: 'Schedule and manage examinations',
-        requiredPermissions: [PERMISSIONS.EXAM.VIEW]
-      }
+      // { 
+      //   path: '/exams', 
+      //   label: 'Exams', 
+      //   icon: PenTool,
+      //   description: 'Schedule and manage examinations',
+      //   requiredPermissions: [PERMISSIONS.EXAM.VIEW]
+      // }
     ]
   },
   {
@@ -163,8 +161,8 @@ export const allNavigationItems: NavigationGroup[] = [
       
       { 
         path: '/fees', 
-        label: 'Fee Management', 
-        icon: DollarSign,
+        label: 'Fees', 
+        icon: IndianRupee,
         description: 'Manage student fees and payments',
         requiredPermissions: [PERMISSIONS.FEE.VIEW]
       },
@@ -182,13 +180,13 @@ export const allNavigationItems: NavigationGroup[] = [
       //   description: 'Schedule and manage school events',
       //   requiredPermissions: [PERMISSIONS.ACADEMIC_CALENDAR.VIEW]
       // },
-      { 
-        path: '/substitute-teacher', 
-        label: 'Substitute Teacher', 
-        icon: Clock,
-        description: 'Manage substitute teacher assignments',
-        requiredPermissions: [PERMISSIONS.SUBSTITUTE_TEACHER.VIEW]
-      }
+      // { 
+      //   path: '/substitute-teacher', 
+      //   label: 'Substitute Teacher', 
+      //   icon: Clock,
+      //   description: 'Manage substitute teacher assignments',
+      //   requiredPermissions: [PERMISSIONS.SUBSTITUTE_TEACHER.VIEW]
+      // }
     ]
   },
   // {
@@ -239,20 +237,20 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Settings',
     items: [
-      { 
-        path: '/settings', 
-        label: 'Settings', 
-        icon: Settings,
-        description: 'System and user settings',
-        requiredPermissions: [PERMISSIONS.SCHOOL.UPDATE] // Using school update as proxy for settings
-      },
-      { 
-        path: '/user-management', 
-        label: 'User Management', 
-        icon: UserCog,
-        description: 'Manage users and their roles',
-        requiredPermissions: [PERMISSIONS.TEACHER.VIEW, PERMISSIONS.STUDENT.VIEW] // Can see users if can view teachers/students
-      }
+      // { 
+      //   path: '/settings', 
+      //   label: 'Settings', 
+      //   icon: Settings,
+      //   description: 'System and user settings',
+      //   requiredPermissions: [PERMISSIONS.SCHOOL.UPDATE] // Using school update as proxy for settings
+      // },
+      // { 
+      //   path: '/user-management', 
+      //   label: 'User Management', 
+      //   icon: UserCog,
+      //   description: 'Manage users and their roles',
+      //   requiredPermissions: [PERMISSIONS.TEACHER.VIEW, PERMISSIONS.STUDENT.VIEW] // Can see users if can view teachers/students
+      // }
     ]
   }
 ];
@@ -271,6 +269,20 @@ export function filterNavigationByPermissions(
       )
     )
   })).filter(group => group.items.length > 0); // Remove empty groups
+}
+
+// Helper function to get flat list of navigation items without groups
+export function getFlatNavigationForUser(
+  userPermissions: string[] = []
+): NavigationItem[] {
+  const filteredGroups = filterNavigationByPermissions(allNavigationItems, userPermissions);
+  const flatItems: NavigationItem[] = [];
+  
+  filteredGroups.forEach(group => {
+    flatItems.push(...group.items);
+  });
+  
+  return flatItems;
 }
 
 // Primary navigation function - permission-based only

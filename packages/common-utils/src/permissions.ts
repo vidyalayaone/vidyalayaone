@@ -100,9 +100,7 @@ export const PERMISSIONS = {
     EXPORT: "report.export",
   },
   DASHBOARD: {
-    VIEW_ADMIN: "dashboard.view_admin",
-    VIEW_TEACHER: "dashboard.view_teacher",
-    VIEW_STUDENT: "dashboard.view_student",
+    VIEW: "dashboard.view",
   },
   SCHOOL: {
     CREATE: "school.create",
@@ -117,6 +115,9 @@ export const PERMISSIONS = {
   PLATFORM: {
     LOGIN: "platform.login",
     GET_ME: "platform.get_me",
+  },
+  ME: {
+    VIEW: "me.view",
   }
 } as const;
 
@@ -128,57 +129,6 @@ export type Permission =
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS).reduce((acc, permissionGroup) => {
   return [...acc, ...Object.values(permissionGroup)];
 }, [] as string[]);
-
-// Permission groups for easier management
-export const PERMISSION_GROUPS = {
-  ADMIN_PERMISSIONS: [
-    ...Object.values(PERMISSIONS.STUDENT),
-    ...Object.values(PERMISSIONS.TEACHER),
-    ...Object.values(PERMISSIONS.CLASS),
-    ...Object.values(PERMISSIONS.SUBJECT),
-    ...Object.values(PERMISSIONS.ATTENDANCE),
-    ...Object.values(PERMISSIONS.EXAM),
-    ...Object.values(PERMISSIONS.ACADEMIC_CALENDAR),
-    ...Object.values(PERMISSIONS.ADMISSION),
-    ...Object.values(PERMISSIONS.FEE),
-    ...Object.values(PERMISSIONS.COMMUNICATION),
-    ...Object.values(PERMISSIONS.SUBSTITUTE_TEACHER),
-    ...Object.values(PERMISSIONS.REPORT),
-    PERMISSIONS.DASHBOARD.VIEW_ADMIN,
-    ...Object.values(PERMISSIONS.SCHOOL),
-  ],
-  
-  TEACHER_PERMISSIONS: [
-    PERMISSIONS.STUDENT.VIEW,
-    PERMISSIONS.STUDENT.VIEW_DETAILS,
-    PERMISSIONS.CLASS.VIEW,
-    PERMISSIONS.CLASS.VIEW_TIMETABLE,
-    PERMISSIONS.SUBJECT.VIEW,
-    PERMISSIONS.ATTENDANCE.VIEW,
-    PERMISSIONS.ATTENDANCE.MARK,
-    PERMISSIONS.EXAM.VIEW,
-    PERMISSIONS.EXAM.GRADE,
-    PERMISSIONS.EXAM.VIEW_RESULTS,
-    PERMISSIONS.ACADEMIC_CALENDAR.VIEW,
-    PERMISSIONS.COMMUNICATION.SEND_MESSAGE,
-    PERMISSIONS.COMMUNICATION.VIEW_MESSAGES,
-    PERMISSIONS.REPORT.VIEW_TEACHER,
-    PERMISSIONS.DASHBOARD.VIEW_TEACHER,
-  ],
-  
-  STUDENT_PERMISSIONS: [
-    PERMISSIONS.CLASS.VIEW,
-    PERMISSIONS.CLASS.VIEW_TIMETABLE,
-    PERMISSIONS.SUBJECT.VIEW,
-    PERMISSIONS.ATTENDANCE.VIEW_OWN,
-    PERMISSIONS.EXAM.VIEW_OWN_RESULTS,
-    PERMISSIONS.ACADEMIC_CALENDAR.VIEW,
-    PERMISSIONS.FEE.VIEW_OWN,
-    PERMISSIONS.COMMUNICATION.VIEW_MESSAGES,
-    PERMISSIONS.REPORT.VIEW_STUDENT,
-    PERMISSIONS.DASHBOARD.VIEW_STUDENT,
-  ],
-} as const;
 
 export async function hasPermission(
   permission: string,

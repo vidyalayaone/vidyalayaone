@@ -20,24 +20,6 @@ services:
     networks:
       - vidyalayaone-network
 
-  # Migration container
-  migration:
-    build:
-      context: .
-      dockerfile: Dockerfile.migration
-    container_name: vidyalayaone-migration
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      - AUTH_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
-      - SCHOOL_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
-      - PROFILE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
-      - ATTENDANCE_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/attendance_db
-    networks:
-      - vidyalayaone-network
-    restart: "no"
-
   # Auth Service
   auth-service:
     build:
@@ -48,12 +30,8 @@ services:
       - "3001:3001"
       - "5556:5556"  # Add this line for Prisma Studio
     depends_on:
-      migration:
-        condition: service_completed_successfully
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_db
-      - PORT=3001
-      - NODE_ENV=development
+      postgres:
+        condition: service_healthy
     volumes:
     - ./apps/auth-service:/app/apps/auth-service
     - ./packages:/app/packages
@@ -76,12 +54,8 @@ services:
       - "3002:3002"
       - "5557:5557"
     depends_on:
-      migration:
-        condition: service_completed_successfully
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/school_db
-      - PORT=3002
-      - NODE_ENV=development
+      postgres:
+        condition: service_healthy
     volumes:
     - ./apps/school-service:/app/apps/school-service
     - ./packages:/app/packages
@@ -104,12 +78,8 @@ services:
       - "3003:3003"
       - "5558:5558"
     depends_on:
-      migration:
-        condition: service_completed_successfully
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/profile_db
-      - PORT=3003
-      - NODE_ENV=development
+      postgres:
+        condition: service_healthy
     volumes:
     - ./apps/profile-service:/app/apps/profile-service
     - ./packages:/app/packages
@@ -132,12 +102,8 @@ services:
       - "3004:3004"
       - "5559:5559"
     depends_on:
-      migration:
-        condition: service_completed_successfully
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/attendance_db
-      - PORT=3004
-      - NODE_ENV=development
+      postgres:
+        condition: service_healthy
     volumes:
     - ./apps/attendance-service:/app/apps/attendance-service
     - ./packages:/app/packages
@@ -163,14 +129,6 @@ services:
       - school-service
       - profile-service
       - attendance-service
-    environment:
-      - PORT=3000
-      - NODE_ENV=development
-      - AUTH_SERVICE_URL=http://auth-service:3001
-      - SCHOOL_SERVICE_URL=http://school-service:3002
-      - PROFILE_SERVICE_URL=http://profile-service:3003
-      - ATTENDANCE_SERVICE_URL=http://attendance-service:3004
-      - JWT_SECRET=your-jwt-secret-here
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
       - ./packages:/app/packages
@@ -190,13 +148,6 @@ services:
       - "8080:8080"
     depends_on:
       - api-gateway
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:3000
-      - VITE_AUTH_SERVICE_URL=http://localhost:3001
-      - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
-      - VITE_PROFILE_SERVICE_URL=http://localhost:3003
-      - VITE_ATTENDANCE_SERVICE_URL=http://localhost:3004
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend
       - ./packages:/app/packages

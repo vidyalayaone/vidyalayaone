@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import PaymentService from '@/services/payment';
 import WebhookService from '@/services/webhook';
 import DatabaseService from '@/services/database';
+import axios from 'axios';
+import config from '@/config/config';
 import {
   createPaymentOrderSchema,
   verifyPaymentSchema,
@@ -26,6 +28,32 @@ import {
 class PaymentController {
   private paymentService = new PaymentService();
   private webhookService = new WebhookService();
+
+  /**
+   * Update school plan after successful payment
+   */
+  private async updateSchoolPlan(schoolId: string, plan: string): Promise<void> {
+    try {
+      // Make internal call to school service to update plan
+      await axios.patch(
+        `${config.services.schoolService.url}/api/v1/school/${schoolId}/plan`,
+        { plan },
+        {
+          timeout: config.services.schoolService.timeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Call': 'true',
+            'X-Service-Auth': 'payment-service'
+          }
+        }
+      );
+      console.log(`Updated school plan: ${schoolId} -> ${plan}`);
+    } catch (error) {
+      console.error('Error updating school plan:', error);
+      // Don't throw error as payment is already successful
+      // This is a post-payment action
+    }
+  }
 
   /**
    * Create a new payment order for school registration
@@ -93,13 +121,16 @@ class PaymentController {
         return;
       }
 
-      const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = validation.data.body;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = validation.data.body;
 
       const payment = await this.paymentService.verifyPayment({
-        razorpayOrderId,
-        razorpayPaymentId,
-        razorpaySignature,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
       });
+
+      // After successful payment verification, update school plan
+      await this.updateSchoolPlan(payment.schoolId, 'basic');
 
       // Get receipt information
       const receipts = await DatabaseService.getInstance().receiptLog.findMany({
@@ -244,7 +275,7 @@ class PaymentController {
       const response: ApiResponse<SchoolPaymentsResponse> = {
         success: true,
         data: {
-          payments: payments.map(payment => ({
+          payments: payments.map((payment: any) => ({
             id: payment.id,
             razorpayOrderId: payment.razorpayOrderId,
             razorpayPaymentId: payment.razorpayPaymentId || undefined,

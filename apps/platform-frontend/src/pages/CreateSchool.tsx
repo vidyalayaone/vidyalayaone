@@ -93,8 +93,8 @@ const CreateSchool: React.FC = () => {
       }
 
       try {
-  // Adjust to singular service base path. Using correct /school/my-school endpoint.
-  const response = await fetch(`${env.SCHOOL_API_URL}/school/my-school`, {
+  // Use auth service to get current user's school
+  const response = await fetch(`${env.AUTH_API_URL}/auth/my-school`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

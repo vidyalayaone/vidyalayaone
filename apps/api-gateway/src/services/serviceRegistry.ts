@@ -39,6 +39,7 @@ class ServiceRegistry {
         { path: '/reset-password', method: 'POST', isProtected: false },
         { path: '/refresh-token', method: 'POST', isProtected: false },
         { path: '/me', method: 'GET', isProtected: true },
+        { path: '/my-school', method: 'GET', isProtected: true },
         { path: '/logout', method: 'POST', isProtected: true },
         { path: '/update-admin-with-subdomain', method: 'POST', isProtected: true },
         { path: '/seed-roles', method: 'POST', isProtected: true },
@@ -120,7 +121,9 @@ class ServiceRegistry {
           { path: '/webhook', method: 'POST', isProtected: false },
           // Protected operational endpoints
           { path: '/orders', method: 'POST', isProtected: true },
+          { path: '/create-order', method: 'POST', isProtected: true }, // Alias for frontend
           { path: '/verify', method: 'POST', isProtected: true },
+          { path: '/verify-payment', method: 'POST', isProtected: true }, // Alias for frontend
           { path: '/orders/:orderId/status', method: 'GET', isProtected: true },
           { path: '/schools/:schoolId/payments', method: 'GET', isProtected: true },
           { path: '/refunds', method: 'POST', isProtected: true },

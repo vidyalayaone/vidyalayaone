@@ -4,6 +4,7 @@ import { getSchoolById } from "../controllers/getSchoolById";
 // import { updateSchool } from "../controllers/updateSchool";
 import { getSchoolBySubdomain } from "../controllers/getSchoolBySubdomain";
 import { approveSchool } from "../controllers/approveSchool";
+import { updateSchoolPlan } from "../controllers/updateSchoolPlan";
 import { createClasses } from "../controllers/createClasses";
 import { createSections } from "../controllers/createSections";
 import { getClassesAndSections } from "../controllers/getClassesAndSections";
@@ -22,6 +23,7 @@ router.post('/create', createSchool);
 router.get('/get-by-id/:schoolId', getSchoolById);
 router.get('/get-by-subdomain/:subdomain', getSchoolBySubdomain);
 // router.put('/update/:schoolId', updateSchool); // needs to be updated
+router.patch('/:schoolId/plan', updateSchoolPlan);
 router.get('/approve/:schoolId', approveSchool);
 
 // Class and Section management routes

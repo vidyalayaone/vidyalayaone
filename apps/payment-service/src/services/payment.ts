@@ -120,13 +120,16 @@ class PaymentService {
         },
       });
 
-      // Generate receipt
+      // Generate receipt (non-blocking)
       // Prevent duplicate receipt generation
       const existingReceipt = await this.getDB().receiptLog.findFirst({
         where: { schoolPaymentId: updatedPayment.id, receiptType: 'PAYMENT_RECEIPT' },
       });
       if (!existingReceipt) {
-        await this.generatePaymentReceipt(updatedPayment);
+        // Generate receipt asynchronously without blocking payment verification
+        this.generatePaymentReceipt(updatedPayment).catch(error => {
+          console.error('Error generating payment receipt (non-blocking):', error);
+        });
       }
 
       return updatedPayment;

@@ -155,9 +155,9 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/payment_db
       - PORT=3005
       - NODE_ENV=development
-      - RAZORPAY_KEY_ID=your_razorpay_key_id_here
-      - RAZORPAY_KEY_SECRET=your_razorpay_key_secret_here
-      - RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
+      - RAZORPAY_KEY_ID=rzp_test_RA3jdWxBNi01ne
+      - RAZORPAY_KEY_SECRET=t1JTiucxpg1HVVIrghwrjuqm
+      - RAZORPAY_WEBHOOK_SECRET=test_webhook_secret
       - SCHOOL_SERVICE_URL=http://school-service:3002
       - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
     volumes:

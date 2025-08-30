@@ -16,24 +16,12 @@ interface User {
 interface School {
   id: string
   name: string
-  address: string
+  email: string
+  phone: string[]
   city: string
   state: string
-  pincode: string
-  phone: string
-  email: string
-  website: string
-  principalName: string
-  principalPhone: string
-  studentStrength: string
-  schoolType: string
-  boards: string[]
-  establishedYear: string
   isActive: boolean
   plan: string | null
-  subdomain?: string
-  createdAt: string
-  approvedAt?: string
 }
 
 interface DashboardData {
@@ -60,7 +48,7 @@ const Dashboard: React.FC = () => {
       try {
         const user = JSON.parse(userStr)
         
-        const response = await fetch(`${env.SCHOOL_API_URL}/schools/my-school`, {
+        const response = await fetch(`${env.AUTH_API_URL}/auth/my-school`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -198,23 +186,16 @@ const Dashboard: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(school.isActive)}`}>
-                  {school.isActive ? 'Active' : 'Pending'}
+                  {school.isActive ? 'Active' : 'Pending Approval'}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">{getStatusMessage(school.isActive)}</p>
-                  {school.isActive && school.subdomain && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Access your school portal at:{' '}
-                      <a
-                        href={`https://${school.subdomain}.vidyalayaone.com`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        {school.subdomain}.vidyalayaone.com
-                      </a>
-                    </p>
-                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-muted-foreground">Payment Plan</p>
+                  <Badge variant={school.plan ? 'default' : 'secondary'}>
+                    {school.plan ? school.plan.toUpperCase() : 'PENDING'}
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -236,86 +217,80 @@ const Dashboard: React.FC = () => {
                 </div>
                 
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Address</p>
-                  <p>{school.address}</p>
-                  <p>{school.city}, {school.state} - {school.pincode}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Location</p>
+                  <p>{school.city}, {school.state}</p>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                    <p>{school.phone}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Email</p>
+                    <p className="text-sm font-medium text-muted-foreground">Contact Email</p>
                     <p>{school.email}</p>
                   </div>
-                </div>
-                
-                {school.website && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Website</p>
-                    <a href={school.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      {school.website}
-                    </a>
+                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                    <p>{Array.isArray(school.phone) ? school.phone.join(', ') : school.phone}</p>
                   </div>
-                )}
-                
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Principal</p>
-                  <p>{school.principalName}</p>
-                  {school.principalPhone && <p className="text-sm text-muted-foreground">{school.principalPhone}</p>}
                 </div>
               </CardContent>
             </Card>
 
-            {/* School Details */}
+            {/* Account Status */}
             <Card>
               <CardHeader>
-                <CardTitle>School Details</CardTitle>
+                <CardTitle>Account Status</CardTitle>
                 <CardDescription>
-                  Additional information about your school
+                  Your current plan and account details
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">School Type</p>
-                    <p>{school.schoolType}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Established</p>
-                    <p>{school.establishedYear}</p>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Current Plan</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant={school.plan ? 'default' : 'secondary'}>
+                      {school.plan ? school.plan.toUpperCase() : 'NO PLAN'}
+                    </Badge>
+                    {school.plan && (
+                      <span className="text-sm text-success">✓ Paid</span>
+                    )}
                   </div>
                 </div>
-                
-                {school.studentStrength && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Student Strength</p>
-                    <p>{school.studentStrength} students</p>
-                  </div>
-                )}
-                
-                {school.boards && school.boards.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Boards/Curriculum</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {school.boards.map((board, index) => (
-                        <Badge key={index} variant="secondary">{board}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Registration Date</p>
-                  <p>{new Date(school.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">School Status</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant={school.isActive ? 'default' : 'secondary'}>
+                      {school.isActive ? 'ACTIVE' : 'PENDING APPROVAL'}
+                    </Badge>
+                  </div>
                 </div>
-                
-                {school.approvedAt && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Approved Date</p>
-                    <p>{new Date(school.approvedAt).toLocaleDateString()}</p>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">School ID</p>
+                  <p className="font-mono text-sm">{school.id}</p>
+                </div>
+
+                {!school.plan && (
+                  <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                    <p className="text-sm font-medium text-warning">Payment Required</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Complete your payment to activate all features
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/payment')} 
+                      className="mt-2 w-full"
+                      size="sm"
+                    >
+                      Complete Payment
+                    </Button>
+                  </div>
+                )}
+
+                {school.plan && !school.isActive && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-800">Under Review</p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      Your school is being reviewed. You'll be notified once approved.
+                    </p>
                   </div>
                 )}
               </CardContent>

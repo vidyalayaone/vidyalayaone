@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import rateLimit from 'express-rate-limit';
-import PaymentController from '@/controllers/paymentController';
+import paymentController from '@/controllers/paymentController';
 import config from '@/config/config';
 
 const router: ExpressRouter = Router();
@@ -35,23 +35,25 @@ router.use('/webhook', webhookLimiter);
 router.use(apiLimiter);
 
 // Payment order routes
-router.post('/orders', PaymentController.createOrder);
-router.post('/verify', PaymentController.verifyPayment);
+router.post('/orders', paymentController.createOrder.bind(paymentController));
+router.post('/create-order', paymentController.createOrder.bind(paymentController)); // Alias for frontend compatibility
+router.post('/verify', paymentController.verifyPayment.bind(paymentController));
+router.post('/verify-payment', paymentController.verifyPayment.bind(paymentController)); // Alias for frontend compatibility
 
 // Payment status and information routes
-router.get('/orders/:orderId/status', PaymentController.getPaymentStatus);
-router.get('/schools/:schoolId/payments', PaymentController.getSchoolPayments);
+router.get('/orders/:orderId/status', paymentController.getPaymentStatus.bind(paymentController));
+router.get('/schools/:schoolId/payments', paymentController.getSchoolPayments.bind(paymentController));
 
 // Refund routes
-router.post('/refunds', PaymentController.createRefund);
+router.post('/refunds', paymentController.createRefund.bind(paymentController));
 
 // Statistics routes
-router.get('/stats', PaymentController.getPaymentStats);
+router.get('/stats', paymentController.getPaymentStats.bind(paymentController));
 
 // Receipt routes
-router.get('/receipts/:receiptId/download', PaymentController.downloadReceipt);
+router.get('/receipts/:receiptId/download', paymentController.downloadReceipt.bind(paymentController));
 
 // Webhook routes (no rate limiting applied here as it's handled above)
-router.post('/webhook', PaymentController.handleWebhook);
+router.post('/webhook', paymentController.handleWebhook.bind(paymentController));
 
 export default router;

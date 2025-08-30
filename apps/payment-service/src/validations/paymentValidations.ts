@@ -12,9 +12,10 @@ export const createPaymentOrderSchema = z.object({
 // Verify payment validation
 export const verifyPaymentSchema = z.object({
   body: z.object({
-    razorpayOrderId: z.string().min(1, 'Order ID is required'),
-    razorpayPaymentId: z.string().min(1, 'Payment ID is required'),
-    razorpaySignature: z.string().min(1, 'Signature is required'),
+    razorpay_order_id: z.string().min(1, 'Order ID is required'),
+    razorpay_payment_id: z.string().min(1, 'Payment ID is required'),
+    razorpay_signature: z.string().min(1, 'Signature is required'),
+    schoolId: z.string().uuid('Invalid school ID format').optional(),
   }),
 });
 

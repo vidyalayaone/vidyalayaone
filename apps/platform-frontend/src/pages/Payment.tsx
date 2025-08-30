@@ -99,7 +99,7 @@ const Payment: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${env.SCHOOL_API_URL}/schools/my-school`, {
+        const response = await fetch(`${env.AUTH_API_URL}/auth/my-school`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -203,9 +203,20 @@ const Payment: React.FC = () => {
       }
     } catch (error) {
       console.error('Payment verification error:', error)
+      let errorMessage = 'Payment verification failed. Please contact support.'
+      
+      if (error instanceof Error) {
+        // Try to extract meaningful error message
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.'
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+      }
+      
       setPaymentState(prev => ({ 
         ...prev, 
-        error: 'Payment verification failed. Please contact support.',
+        error: errorMessage,
         isProcessing: false 
       }))
     }
@@ -380,6 +391,18 @@ const Payment: React.FC = () => {
                   )}
 
                   <div className="border-t pt-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-blue-800 mb-2">🧪 Test Mode</h4>
+                      <p className="text-sm text-blue-700 mb-2">
+                        This is test environment. Use these test credentials:
+                      </p>
+                      <ul className="text-sm text-blue-600 space-y-1">
+                        <li><strong>UPI:</strong> success@razorpay</li>
+                        <li><strong>Card:</strong> 4111 1111 1111 1111</li>
+                        <li><strong>Expiry:</strong> 12/25, CVV: 123</li>
+                      </ul>
+                    </div>
+                    
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-semibold">Total Amount:</span>
                       <span className="text-2xl font-bold text-primary">₹{planDetails.price}</span>

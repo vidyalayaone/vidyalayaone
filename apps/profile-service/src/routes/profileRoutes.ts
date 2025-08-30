@@ -4,6 +4,7 @@ import { deleteStudents } from '../controllers/deleteStudents';
 import { getStudent } from '../controllers/getStudent';
 import { getAllStudents } from '../controllers/getAllStudents';
 import { createTeacher } from '../controllers/createTeacher';
+import { deleteTeachers } from '../controllers/deleteTeachers';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
 import { getMyTeacherId } from '../controllers/getMyTeacherId';
@@ -36,6 +37,7 @@ router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument)
 
 // Teacher routes
 router.post('/teachers', profileLimiter, createTeacher);
+router.delete('/teachers', profileLimiter, deleteTeachers);
 router.get('/teachers/:id', profileLimiter, getTeacher);
 router.get('/schools/teachers', profileLimiter, getAllTeachers);
 router.get('/me/teacher-id', profileLimiter, getMyTeacherId);

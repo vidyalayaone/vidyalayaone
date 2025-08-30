@@ -179,3 +179,10 @@ export const deleteStudentsSchema = z.object({
     .min(1, 'At least one student ID is required')
     .max(100, 'Cannot delete more than 100 students at once'),
 });
+
+// Delete teachers validation schema
+export const deleteTeachersSchema = z.object({
+  teacherIds: z.array(z.string().uuid('Invalid teacher ID format'))
+    .min(1, 'At least one teacher ID is required')
+    .max(100, 'Cannot delete more than 100 teachers at once'),
+});

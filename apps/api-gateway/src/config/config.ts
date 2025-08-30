@@ -49,19 +49,19 @@ const config: Config = {
   },
   services: {
     auth: {
-      url: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
+      url: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
     },
     school: {
-      url: process.env.SCHOOL_SERVICE_URL || 'http://localhost:3002',
-      timeout: parseInt(process.env.SCHOOL_SERVICE_URL || '30000', 10),
+      url: process.env.SCHOOL_SERVICE_URL || 'http://school-service:3002',
+      timeout: parseInt(process.env.SCHOOL_SERVICE_TIMEOUT || '30000', 10),
     },
     profile: {
-      url: process.env.PROFILE_SERVICE_URL || 'http://localhost:3003',
+      url: process.env.PROFILE_SERVICE_URL || 'http://profile-service:3003',
       timeout: parseInt(process.env.PROFILE_SERVICE_TIMEOUT || '30000', 10),
     },
     attendance: {
-      url: process.env.ATTENDANCE_SERVICE_URL || 'http://localhost:3004',
+      url: process.env.ATTENDANCE_SERVICE_URL || 'http://attendance-service:3004',
       timeout: parseInt(process.env.ATTENDANCE_SERVICE_TIMEOUT || '30000', 10),
     },
   },
@@ -80,17 +80,5 @@ const config: Config = {
     retries: parseInt(process.env.PROXY_RETRIES || '3', 10),
   },
 };
-
-// Validate required environment variables
-const requiredEnvVars = [
-  'JWT_ACCESS_SECRET',
-  'AUTH_SERVICE_URL',
-];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
 
 export default config;

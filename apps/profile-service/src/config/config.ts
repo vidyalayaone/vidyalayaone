@@ -28,34 +28,6 @@ interface Config {
   };
 }
 
-// Determine the environment and appropriate service URLs
-const getSchoolServiceUrl = (): string => {
-  // If SCHOOL_SERVICE_URL is explicitly set, use it
-  if (process.env.SCHOOL_SERVICE_URL) {
-    return process.env.SCHOOL_SERVICE_URL;
-  }
-  
-  // Check if running in Docker environment
-  // In Docker, hostname is usually the container ID, not localhost
-  const isDockerEnvironment = process.env.DATABASE_URL?.includes('@postgres:') || 
-                             process.env.HOSTNAME !== 'localhost';
-  
-  return isDockerEnvironment ? 'http://school-service:3002' : 'http://localhost:3002';
-};
-
-const getAuthServiceUrl = (): string => {
-  // If AUTH_SERVICE_URL is explicitly set, use it
-  if (process.env.AUTH_SERVICE_URL) {
-    return process.env.AUTH_SERVICE_URL;
-  }
-  
-  // Check if running in Docker environment
-  const isDockerEnvironment = process.env.DATABASE_URL?.includes('@postgres:') || 
-                             process.env.HOSTNAME !== 'localhost';
-  
-  return isDockerEnvironment ? 'http://auth-service:3001' : 'http://localhost:3001';
-};
-
 const config: Config = {
   server: {
     port: parseInt(process.env.PROFILE_SERVICE_PORT || '3003', 10),
@@ -70,11 +42,11 @@ const config: Config = {
   },
   services: {
     school: {
-      url: getSchoolServiceUrl(),
+      url: process.env.SCHOOL_SERVICE_URL || 'http://school-service:3002',
       timeout: parseInt(process.env.SCHOOL_SERVICE_TIMEOUT || '30000', 10),
     },
     auth: {
-      url: getAuthServiceUrl(),
+      url: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
     },
   },

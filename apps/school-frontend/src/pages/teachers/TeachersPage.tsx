@@ -14,7 +14,6 @@ import {
   BookOpen,
   Mail,
   Phone,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   Loader2,
@@ -68,17 +67,17 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { Teacher } from '@/api/types';
-import { getTeachersBySchool } from '@/api/api';
+import { Teacher, Subject } from '@/api/types';
+import { getTeachersBySchool, getSchoolSubjects } from '@/api/api';
 import { transformProfileTeachersToTeachers } from '@/utils/teacherTransform';
 
 const TeachersPage: React.FC = () => {
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [subjectFilter, setSubjectFilter] = useState<string>('all');
   const [genderFilter, setGenderFilter] = useState<string>('all');
   const [deleteTeacherId, setDeleteTeacherId] = useState<string | null>(null);
@@ -86,51 +85,48 @@ const TeachersPage: React.FC = () => {
   const teachersPerPage = 10;
 
   // State for sorting
-  const [sortField, setSortField] = useState<'name' | 'employeeId' | 'experience' | 'subjects'>('name');
+  const [sortField, setSortField] = useState<'name' | 'employeeId' | 'subjects'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // State for bulk operations
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
 
-  // Fetch teachers from API
+  // Fetch teachers and subjects from API
   useEffect(() => {
-    const fetchTeachers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const response = await getTeachersBySchool({
+        // Fetch teachers
+        const teachersResponse = await getTeachersBySchool({
           gender: genderFilter !== 'all' ? genderFilter : undefined,
         });
 
-        if (response.success && response.data) {
-          const transformedTeachers = transformProfileTeachersToTeachers(response.data.teachers);
+        // Fetch subjects
+        const subjectsResponse = await getSchoolSubjects();
+
+        if (teachersResponse.success && teachersResponse.data) {
+          const transformedTeachers = transformProfileTeachersToTeachers(teachersResponse.data.teachers);
           setTeachers(transformedTeachers);
         } else {
-          setError(response.message || 'Failed to fetch teachers');
+          setError(teachersResponse.message || 'Failed to fetch teachers');
+        }
+
+        if (subjectsResponse.success && subjectsResponse.data) {
+          setSubjects(subjectsResponse.data.subjects);
         }
       } catch (err) {
-        setError('Failed to fetch teachers. Please try again.');
-        console.error('Error fetching teachers:', err);
+        setError('Failed to fetch data. Please try again.');
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTeachers();
+    fetchData();
   }, [genderFilter]);
-
-  // Get unique subjects for filter
-  const allSubjects = useMemo(() => {
-    const subjects = new Set<string>();
-    teachers.forEach(teacher => {
-      teacher.subjects.forEach(subject => {
-        subjects.add(subject.name);
-      });
-    });
-    return Array.from(subjects);
-  }, [teachers]);
 
   // Filter teachers based on search and filters
   const filteredTeachers = useMemo(() => {
@@ -141,16 +137,12 @@ const TeachersPage: React.FC = () => {
         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         teacher.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Note: Since backend doesn't provide active/inactive status from profile service,
-      // we assume all returned teachers are active for now
-      const matchesStatus = statusFilter === 'all' || statusFilter === 'active';
-
       const matchesSubject = subjectFilter === 'all' ||
         teacher.subjects.some(subject => subject.name === subjectFilter);
 
-      return matchesSearch && matchesStatus && matchesSubject;
+      return matchesSearch && matchesSubject;
     });
-  }, [teachers, searchTerm, statusFilter, subjectFilter]);
+  }, [teachers, searchTerm, subjectFilter]);
 
   // Filter and sort teachers
   const filteredAndSortedTeachers = useMemo(() => {
@@ -168,10 +160,6 @@ const TeachersPage: React.FC = () => {
         case 'employeeId':
           aValue = a.employeeId.toLowerCase();
           bValue = b.employeeId.toLowerCase();
-          break;
-        case 'experience':
-          aValue = a.experience || 0;
-          bValue = b.experience || 0;
           break;
         case 'subjects':
           aValue = a.subjects.length;
@@ -195,21 +183,20 @@ const TeachersPage: React.FC = () => {
   const endIndex = startIndex + teachersPerPage;
   const currentTeachers = filteredAndSortedTeachers.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
+    // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, subjectFilter, genderFilter]);
+  }, [searchTerm, subjectFilter]);
 
   // Reset filters when component mounts
   React.useEffect(() => {
-    setStatusFilter('all');
     setSubjectFilter('all');
     setGenderFilter('all');
     setSelectedTeachers([]);
   }, []);
 
   // Helper functions
-  const handleSort = (field: 'name' | 'employeeId' | 'experience' | 'subjects') => {
+  const handleSort = (field: 'name' | 'employeeId' | 'subjects') => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -291,7 +278,7 @@ const TeachersPage: React.FC = () => {
     total: teachers.length,
     active: teachers.filter(t => t.isActive).length, // All teachers from API are considered active
     inactive: 0, // Backend doesn't provide inactive teachers in this endpoint
-    subjects: allSubjects.length
+    subjects: subjects.length
   };
 
   React.useEffect(() => {
@@ -372,20 +359,6 @@ const TeachersPage: React.FC = () => {
               </div>
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-2 sm:space-y-0">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
                   <label className="text-sm font-medium text-muted-foreground">Subject</label>
                   <Select value={subjectFilter} onValueChange={setSubjectFilter}>
                     <SelectTrigger className="w-32">
@@ -393,8 +366,8 @@ const TeachersPage: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Subjects</SelectItem>
-                      {allSubjects.map(subject => (
-                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      {subjects.map(subject => (
+                        <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -528,17 +501,6 @@ const TeachersPage: React.FC = () => {
                         <ArrowUpDown className="h-4 w-4" />
                       </div>
                     </TableHead>
-                    <TableHead>Classes</TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('experience')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Experience</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead className="w-12">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -571,7 +533,6 @@ const TeachersPage: React.FC = () => {
                             <div className="font-medium">
                               {teacher.firstName} {teacher.lastName}
                             </div>
-                            <div className="text-sm text-muted-foreground">{teacher.qualification}</div>
                           </div>
                         </div>
                       </TableCell>
@@ -598,25 +559,6 @@ const TeachersPage: React.FC = () => {
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium">{teacher.classes.length} Classes</div>
-                          {teacher.classes.some(c => c.isClassTeacher) && (
-                            <Badge variant="outline" className="text-xs">Class Teacher</Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Calendar className="w-3 h-3" />
-                          {teacher.experience} years
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="default">
-                          Active
-                        </Badge>
-                      </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -635,16 +577,13 @@ const TeachersPage: React.FC = () => {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Teacher
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleResetPassword(teacher.id)}>
-                              Reset Password
-                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onClick={() => setDeleteTeacherId(teacher.id)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Deactivate Teacher
+                              Delete Teacher
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -722,7 +661,7 @@ const TeachersPage: React.FC = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently deactivate the teacher
+                This action cannot be undone. This will permanently delete the teacher
                 and remove their access to the system.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -732,7 +671,7 @@ const TeachersPage: React.FC = () => {
                 onClick={() => deleteTeacherId && handleDeleteTeacher(deleteTeacherId)}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Deactivate Teacher
+                Delete Teacher
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

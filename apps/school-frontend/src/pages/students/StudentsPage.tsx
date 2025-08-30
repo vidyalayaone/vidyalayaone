@@ -96,7 +96,7 @@ type EnhancedStudent = {
     id: string;
     grade: string;
     section: string;
-    className: string;
+    class: string;
     academicYear: string;
   };
   parentGuardian: {
@@ -259,9 +259,8 @@ const StudentsPage: React.FC = () => {
             admissionDate: u.admissionDate || '',
             currentClass: {
               id: u.classId || '',
-              grade: u.currentClass || 'N/A',
               section: u.currentSection || 'N/A',
-              className: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
+              class: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
               academicYear: u.academicYear || selectedAcademicYear
             },
             parentGuardian: {
@@ -535,7 +534,7 @@ const StudentsPage: React.FC = () => {
         return <Badge variant="secondary">Unknown</Badge>;
     }
   };
-  
+
   React.useEffect(() => {
     setShowBulkActions(selectedStudents.length > 0);
   }, [selectedStudents]);
@@ -802,10 +801,10 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{student.currentClass.className}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {student.currentClass.academicYear}
-                          </div>
+                          <div className="font-medium">{student.currentClass.class} {student.currentClass.section }</div>
+                          {/* <div className="text-sm text-muted-foreground">
+                            {student.currentClass.section}
+                          </div> */}
                         </div>
                       </TableCell>
                       <TableCell>

@@ -12,6 +12,7 @@ import { getClassByIdInternal } from "../controllers/getClassByIdInternal";
 import { createGlobalSubjects } from "../controllers/createGlobalSubjects";
 import { createClassSubjects } from "../controllers/createClassSubjects";
 import { getSubjects } from "../controllers/getSubjects";
+import { getSubjectsBulk } from "../controllers/getSubjectsBulk";
 import { getSectionDetails } from "../controllers/getSectionDetails";
 import { getSectionStudents } from "../controllers/getSectionStudents";
 // import { getSectionTimetable } from "../controllers/getSectionTimetable";
@@ -32,6 +33,7 @@ router.get('/classes-sections/:schoolId', getClassesAndSections);
 // Internal route for other services
 router.get('/internal/classes-sections/:schoolId', getClassesAndSectionsInternal);
 router.get('/internal/class/:classId', getClassByIdInternal);
+router.post('/internal/subjects/bulk', getSubjectsBulk);
 
 // Subject management routes
 router.get('/subjects', getSubjects);

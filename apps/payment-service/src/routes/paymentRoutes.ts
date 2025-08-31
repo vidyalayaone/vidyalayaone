@@ -43,6 +43,7 @@ router.post('/verify-payment', paymentController.verifyPayment.bind(paymentContr
 // Payment status and information routes
 router.get('/orders/:orderId/status', paymentController.getPaymentStatus.bind(paymentController));
 router.get('/schools/:schoolId/payments', paymentController.getSchoolPayments.bind(paymentController));
+router.get('/schools/:schoolId/payment-status', paymentController.checkSchoolPaymentStatus.bind(paymentController));
 
 // Refund routes
 router.post('/refunds', paymentController.createRefund.bind(paymentController));

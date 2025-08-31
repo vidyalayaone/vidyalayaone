@@ -358,6 +358,72 @@ class PaymentController {
   }
 
   /**
+   * Check payment status for a school (used for recovery after window close)
+   */
+  async checkSchoolPaymentStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { schoolId } = req.params;
+
+      if (!schoolId) {
+        const response: ErrorResponse = {
+          success: false,
+          error: 'School ID is required',
+        };
+        res.status(400).json(response);
+        return;
+      }
+
+      // Get latest payment for school
+      const latestPayment = await DatabaseService.getInstance().schoolPayment.findFirst({
+        where: { schoolId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          razorpayOrderId: true,
+          razorpayPaymentId: true,
+          amount: true,
+          currency: true,
+          status: true,
+          paymentMethod: true,
+          createdAt: true,
+          paidAt: true,
+        },
+      });
+
+      if (!latestPayment) {
+        const response: ErrorResponse = {
+          success: false,
+          error: 'No payment found for this school',
+        };
+        res.status(404).json(response);
+        return;
+      }
+
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          payment: {
+            id: latestPayment.id,
+            orderId: latestPayment.razorpayOrderId,
+            paymentId: latestPayment.razorpayPaymentId,
+            amount: latestPayment.amount,
+            currency: latestPayment.currency,
+            status: latestPayment.status,
+            paymentMethod: latestPayment.paymentMethod,
+            createdAt: latestPayment.createdAt.toISOString(),
+            paidAt: latestPayment.paidAt?.toISOString(),
+          },
+        },
+        message: 'Payment status retrieved successfully',
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get payment statistics
    */
   async getPaymentStats(req: Request, res: Response, next: NextFunction): Promise<void> {

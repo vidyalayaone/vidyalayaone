@@ -1,6 +1,8 @@
 import DatabaseService from './database';
 import PaymentService from './payment';
 import RazorpayService from './razorpay';
+import axios from 'axios';
+import config from '../config/config';
 import { PaymentWebhook, PaymentStatus, PrismaClient } from '../generated/client';
 
 interface WebhookEvent {
@@ -110,6 +112,10 @@ class WebhookService {
    */
   private async handleWebhookEvent(event: WebhookEvent): Promise<void> {
     switch (event.event) {
+      case 'payment.authorized':
+        await this.handlePaymentAuthorized(event);
+        break;
+        
       case 'payment.captured':
         await this.handlePaymentCaptured(event);
         break;
@@ -128,6 +134,45 @@ class WebhookService {
       
       default:
         console.log(`Unhandled webhook event: ${event.event}`);
+    }
+  }
+
+  /**
+   * Handle payment authorized event (payment is successful but not yet captured)
+   */
+  private async handlePaymentAuthorized(event: WebhookEvent): Promise<void> {
+    try {
+      const payment = event.payload.payment?.entity;
+      if (!payment) return;
+
+      const orderId = payment.order_id;
+      if (!orderId) return;
+
+      // Find payment record
+      const paymentRecord = await this.getPaymentService().getPaymentByOrderId(orderId);
+      if (!paymentRecord) {
+        console.log(`Payment record not found for order: ${orderId}`);
+        return;
+      }
+
+      // Update payment status to ATTEMPTED (authorized but not captured)
+      if (paymentRecord.status === PaymentStatus.CREATED) {
+        await this.getDB().schoolPayment.update({
+          where: { id: paymentRecord.id },
+          data: {
+            status: PaymentStatus.ATTEMPTED,
+            razorpayPaymentId: payment.id,
+            paymentMethod: payment.method,
+            paymentMethodDetails: payment,
+            attempts: paymentRecord.attempts + 1,
+          },
+        });
+
+        console.log(`Payment authorized via webhook: ${payment.id}`);
+      }
+    } catch (error) {
+      console.error('Error handling payment authorized:', error);
+      throw error;
     }
   }
 
@@ -151,7 +196,7 @@ class WebhookService {
 
       // Update payment status if not already updated
       if (paymentRecord.status !== PaymentStatus.PAID) {
-        await this.getDB().schoolPayment.update({
+        const updatedPayment = await this.getDB().schoolPayment.update({
           where: { id: paymentRecord.id },
           data: {
             status: PaymentStatus.PAID,
@@ -162,7 +207,16 @@ class WebhookService {
           },
         });
 
-        console.log(`Payment captured via webhook: ${payment.id}`);
+        // **CRITICAL**: Update school plan after successful payment via webhook
+        // This ensures plan is updated even if frontend verification was missed
+        await this.updateSchoolPlan(paymentRecord.schoolId, 'basic');
+
+        // **NEW**: Send success notification email (optional)
+        await this.sendPaymentSuccessNotification(updatedPayment);
+
+        console.log(`[WEBHOOK] Payment captured and school plan updated: ${payment.id}`);
+      } else {
+        console.log(`[WEBHOOK] Payment already processed: ${payment.id}`);
       }
     } catch (error) {
       console.error('Error handling payment captured:', error);
@@ -297,6 +351,52 @@ class WebhookService {
         retryCount: { increment: 1 },
       },
     });
+  }
+
+  /**
+   * Send payment success notification (optional - for user communication)
+   */
+  private async sendPaymentSuccessNotification(payment: any): Promise<void> {
+    try {
+      // TODO: Implement email/SMS notification service
+      // For now, just log the event
+      console.log(`[WEBHOOK] Payment success notification triggered for payment: ${payment.id}`);
+      
+      // Future implementation could include:
+      // - Email to school admin
+      // - SMS notification
+      // - Push notification
+      // - Slack/Discord webhook
+    } catch (error) {
+      console.error('[WEBHOOK] Error sending payment notification:', error);
+      // Don't throw - this is non-critical
+    }
+  }
+
+  /**
+   * Update school plan after successful payment
+   */
+  private async updateSchoolPlan(schoolId: string, plan: string): Promise<void> {
+    try {
+      // Make internal call to school service to update plan
+      await axios.patch(
+        `${config.services.schoolService.url}/api/v1/school/${schoolId}/plan`,
+        { plan },
+        {
+          timeout: config.services.schoolService.timeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Call': 'true',
+            'X-Service-Auth': 'payment-service'
+          }
+        }
+      );
+      console.log(`[WEBHOOK] Updated school plan: ${schoolId} -> ${plan}`);
+    } catch (error) {
+      console.error('[WEBHOOK] Error updating school plan:', error);
+      // Don't throw error as webhook should still be marked as processed
+      // This is a business logic action, not a webhook processing failure
+    }
   }
 
   /**

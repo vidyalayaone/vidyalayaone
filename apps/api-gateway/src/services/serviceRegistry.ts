@@ -126,6 +126,7 @@ class ServiceRegistry {
           { path: '/verify-payment', method: 'POST', isProtected: true }, // Alias for frontend
           { path: '/orders/:orderId/status', method: 'GET', isProtected: true },
           { path: '/schools/:schoolId/payments', method: 'GET', isProtected: true },
+          { path: '/schools/:schoolId/payment-status', method: 'GET', isProtected: true },
           { path: '/refunds', method: 'POST', isProtected: true },
           { path: '/stats', method: 'GET', isProtected: true },
           { path: '/receipts/:receiptId/download', method: 'GET', isProtected: true },

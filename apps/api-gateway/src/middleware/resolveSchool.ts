@@ -12,8 +12,17 @@ interface SchoolInfo {
 export async function resolveSchool(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const host = req.headers.host || '';
+    const path = req.path || '';
     
-    console.log(`🔍 Resolving school for host: ${host}`);
+    console.log(`🔍 Resolving school for host: ${host}, path: ${path}`);
+    
+    // Skip school resolution for webhook endpoints
+    if (path.includes('/webhook')) {
+      console.log('🔗 Webhook endpoint detected, skipping school resolution');
+      req.headers['x-context'] = 'webhook';
+      next();
+      return;
+    }
     
     // Skip school resolution for main platform domain
     if (host === 'vidyalayaone.com' || host === 'www.vidyalayaone.com' || host === 'localhost:8081' || host === 'localhost:3000') {

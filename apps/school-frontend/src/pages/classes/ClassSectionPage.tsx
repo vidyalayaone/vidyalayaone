@@ -1,4 +1,4 @@
-// Individual class section page with students, timetable, and attendance tabs
+// Individual class section page with students and attendance tabs
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -6,7 +6,6 @@ import {
   ArrowLeft, 
   Edit, 
   Users, 
-  Calendar, 
   ClipboardList, 
   Search, 
   Filter,
@@ -17,9 +16,6 @@ import {
   AlertTriangle,
   ChevronRight,
   MoreHorizontal,
-  BookOpen,
-  Clock,
-  MapPin,
   FileDown,
   Printer,
   Upload,
@@ -52,15 +48,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 
 // Store imports
 import { useSectionsStore } from '@/store/sectionsStore';
@@ -85,14 +72,22 @@ const ClassSectionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGender, setSelectedGender] = useState<string>('all');
-  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-  const [newSectionName, setNewSectionName] = useState('');
 
   // Derived data
   const schoolId = school?.id;
   const sectionDetails = currentSection.details;
   const sectionStudents = currentSection.students;
-  const sectionTimetable = currentSection.timetable;
+
+  // Calculate gender-based counts
+  const boysCount = useMemo(() => {
+    if (!sectionStudents?.students) return 0;
+    return sectionStudents.students.filter(student => student.gender?.toLowerCase() === 'male').length;
+  }, [sectionStudents]);
+
+  const girlsCount = useMemo(() => {
+    if (!sectionStudents?.students) return 0;
+    return sectionStudents.students.filter(student => student.gender?.toLowerCase() === 'female').length;
+  }, [sectionStudents]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -170,15 +165,9 @@ const ClassSectionPage: React.FC = () => {
     navigate(`/students/${studentId}`);
   };
 
-  const handleRename = () => {
-    setNewSectionName(sectionDetails.section.name);
-    setIsRenameDialogOpen(true);
-  };
-
-  const handleRenameSubmit = () => {
-    // In a real app, this would update the section name via API
-    console.log('Renaming section to:', newSectionName);
-    setIsRenameDialogOpen(false);
+  const handleEditClassTeacher = () => {
+    // In a real app, this would open a dialog or navigate to edit teacher assignment
+    console.log('Edit class teacher');
   };
 
   const getAttendanceStatusColor = (status: string) => {
@@ -207,45 +196,10 @@ const ClassSectionPage: React.FC = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {sectionDetails.class.name} - Section {sectionDetails.section.name}
+                {sectionDetails.class.name} - {sectionDetails.section.name}
               </h1>
-              <p className="text-muted-foreground">
-                Class Teacher: {sectionDetails.stats.classTeacher?.name || 'Not assigned'}
-              </p>
             </div>
           </div>
-          
-          <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={handleRename}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename Section
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Rename Section</DialogTitle>
-                <DialogDescription>
-                  Enter a new name for this section.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <Input
-                  placeholder="Section name"
-                  value={newSectionName}
-                  onChange={(e) => setNewSectionName(e.target.value)}
-                />
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleRenameSubmit}>
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
 
         {/* Class Info Cards */}
@@ -271,26 +225,38 @@ const ClassSectionPage: React.FC = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Academic Year</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Boys</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold">{sectionDetails.class.academicYear}</div>
+              <div className="text-2xl font-bold">
+                {loading.students ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  boysCount
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Current academic year
+                Male students
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Subjects</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Girls</CardTitle>
+              <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{sectionDetails.stats.totalSubjects}</div>
+              <div className="text-2xl font-bold">
+                {loading.students ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  girlsCount
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Assigned to section
+                Female students
               </p>
             </CardContent>
           </Card>
@@ -301,26 +267,31 @@ const ClassSectionPage: React.FC = () => {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg font-bold truncate">
-                {sectionDetails.stats.classTeacher?.name || 'Not assigned'}
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="text-lg font-bold truncate">
+                    {sectionDetails.stats.classTeacher?.name || 'Not assigned'}
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleEditClassTeacher}
+                  className="ml-2"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Primary instructor
-              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="students">
               <Users className="mr-2 h-4 w-4" />
               Students
-            </TabsTrigger>
-            <TabsTrigger value="timetable">
-              <Calendar className="mr-2 h-4 w-4" />
-              Timetable
             </TabsTrigger>
             <TabsTrigger value="attendance">
               <ClipboardList className="mr-2 h-4 w-4" />
@@ -398,12 +369,15 @@ const ClassSectionPage: React.FC = () => {
                         <TableHead>Roll No.</TableHead>
                         <TableHead>Date of Birth</TableHead>
                         <TableHead>Gender</TableHead>
-                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredStudents.map((student) => (
-                        <TableRow key={student.id}>
+                        <TableRow 
+                          key={student.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => handleStudentClick(student.id)}
+                        >
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
@@ -429,115 +403,10 @@ const ClassSectionPage: React.FC = () => {
                               {student.gender || 'Not specified'}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleStudentClick(student.id)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Timetable Tab */}
-          <TabsContent value="timetable" className="space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Weekly Timetable</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Printer className="mr-2 h-4 w-4" />
-                    Print
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {errors.timetable && (
-                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded mb-4">
-                    {errors.timetable}
-                  </div>
-                )}
-                
-                {loading.timetable ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                      <span>Loading timetable...</span>
-                    </div>
-                  </div>
-                ) : !sectionTimetable ? (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No timetable available</h3>
-                    <p className="text-muted-foreground">
-                      Timetable has not been set up for this section yet.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {Object.entries(sectionTimetable.timetable).map(([day, periods]) => (
-                      <div key={day} className="space-y-2">
-                        <h3 className="text-lg font-semibold capitalize">{day}</h3>
-                        <div className="grid gap-2">
-                          {periods.map((period) => (
-                            <div 
-                              key={period.id} 
-                              className="p-3 rounded-lg border bg-white border-gray-200"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div className="text-sm font-medium text-muted-foreground">
-                                    Period {period.period}
-                                  </div>
-                                  <div className="text-sm font-medium text-muted-foreground">
-                                    {period.startTime} - {period.endTime}
-                                  </div>
-                                  <div className="font-medium">{period.subject}</div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {period.teacher}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
-                                    {period.room}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {sectionTimetable.metadata && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold mb-2">Break Times</h4>
-                        <div className="space-y-1">
-                          {sectionTimetable.metadata.breakTimes.map((breakTime, index) => (
-                            <div key={index} className="text-sm text-muted-foreground">
-                              <strong>{breakTime.name}:</strong> {breakTime.startTime} - {breakTime.endTime}
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Last updated: {new Date(sectionTimetable.metadata.lastUpdated).toLocaleString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
                 )}
               </CardContent>
             </Card>

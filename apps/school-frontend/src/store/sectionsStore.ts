@@ -360,13 +360,12 @@ export const useSectionsStore = create<SectionsState>()(
 
     // Fetch all section data at once
     fetchAllSectionData: async (schoolId: string, classId: string, sectionId: string, forceRefresh = false): Promise<void> => {
-      const { fetchSectionDetails, fetchSectionStudents, fetchSectionTimetable } = get();
+      const { fetchSectionDetails, fetchSectionStudents } = get();
       
       // Execute all fetches in parallel
       await Promise.allSettled([
         fetchSectionDetails(schoolId, classId, sectionId, forceRefresh),
         fetchSectionStudents(schoolId, classId, sectionId, forceRefresh),
-        fetchSectionTimetable(schoolId, classId, sectionId, forceRefresh),
       ]);
     },
 

@@ -499,6 +499,52 @@ export const api = {
     }
   },
 
+  // Attendance service: check if attendance exists for a date
+  checkAttendanceExists: async (classId: string, sectionId: string, date: string): Promise<APIResponse<{ 
+    attendanceExists: boolean; 
+    attendanceCount: number; 
+    date: string; 
+    classId: string; 
+    sectionId: string; 
+  }>> => {
+    try {
+      const response = await httpClient.get(`/attendance/check/${classId}/section/${sectionId}?date=${date}`);
+      return handleResponse<{ attendanceExists: boolean; attendanceCount: number; date: string; classId: string; sectionId: string; }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: get class attendance for a specific date
+  getClassAttendance: async (classId: string, sectionId: string, date: string): Promise<APIResponse<{
+    attendanceRecords: Array<{
+      id: string;
+      studentId: string;
+      schoolId: string;
+      classId: string;
+      sectionId: string;
+      attendanceDate: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      attendanceTakerId: string;
+      notes?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    meta: {
+      classId: string;
+      sectionId: string;
+      totalRecords: number;
+      filters: { date?: string; startDate?: string; endDate?: string; };
+    };
+  }>> => {
+    try {
+      const response = await httpClient.get(`/attendance/class/${classId}/section/${sectionId}?date=${date}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Profile service: get student applications by status
   getStudentApplications: async (): Promise<APIResponse<StudentApplicationsResponse>> => {
     try {
@@ -584,6 +630,8 @@ export const {
   getStudentDocument,
   getMyTeacherId,
   markAttendance,
+  checkAttendanceExists,
+  getClassAttendance,
   getStudentApplications,
   getStudentApplication,
   acceptStudentApplication,

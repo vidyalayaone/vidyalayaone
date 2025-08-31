@@ -146,7 +146,7 @@ async function seedRoles() {
         name: "TEACHER",
         description: "Teacher role with permissions to manage classes and students",
         permissions: [
-          "attendance.mark",
+          "attendance.mark", "class.view"
         ]
       },
       {

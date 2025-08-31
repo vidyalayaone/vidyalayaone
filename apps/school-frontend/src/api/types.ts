@@ -63,6 +63,17 @@ export interface CreateDocumentRequest {
   expiryDate?: string;
 }
 
+export interface UploadDocumentRequest {
+  name: string;
+  type: 'BIRTH_CERTIFICATE' | 'AADHAAR_CARD' | 'PAN_CARD' | 'PASSPORT' | 'VOTER_ID' | 'DRIVING_LICENSE' | 
+        'MARK_SHEET' | 'DEGREE_CERTIFICATE' | 'DIPLOMA_CERTIFICATE' | 'TRANSFER_CERTIFICATE' | 
+        'CHARACTER_CERTIFICATE' | 'EXPERIENCE_CERTIFICATE' | 'MEDICAL_CERTIFICATE' | 'VACCINATION_RECORD' | 
+        'HEALTH_CHECKUP_REPORT' | 'INCOME_CERTIFICATE' | 'FEE_RECEIPT' | 'SALARY_SLIP' | 'BANK_STATEMENT' | 
+        'PHOTO' | 'SIGNATURE' | 'CASTE_CERTIFICATE' | 'DOMICILE_CERTIFICATE' | 'RESIDENCE_PROOF' | 'OTHER';
+  description?: string;
+  expiryDate?: string;
+}
+
 // Delete students API types
 export interface DeleteStudentsRequest {
   studentIds: string[];

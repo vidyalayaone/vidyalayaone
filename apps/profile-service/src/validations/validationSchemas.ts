@@ -165,6 +165,40 @@ export const createDocumentSchema = z.object({
   expiryDate: z.string().datetime('Invalid expiry date format').optional(),
 });
 
+// Schema for file upload without URL (file will be uploaded to cloud)
+export const uploadDocumentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(255),
+  type: z.enum([
+    'BIRTH_CERTIFICATE',
+    'AADHAAR_CARD',
+    'PAN_CARD',
+    'PASSPORT',
+    'VOTER_ID',
+    'DRIVING_LICENSE',
+    'MARK_SHEET',
+    'DEGREE_CERTIFICATE',
+    'DIPLOMA_CERTIFICATE',
+    'TRANSFER_CERTIFICATE',
+    'CHARACTER_CERTIFICATE',
+    'EXPERIENCE_CERTIFICATE',
+    'MEDICAL_CERTIFICATE',
+    'VACCINATION_RECORD',
+    'HEALTH_CHECKUP_REPORT',
+    'INCOME_CERTIFICATE',
+    'FEE_RECEIPT',
+    'SALARY_SLIP',
+    'BANK_STATEMENT',
+    'PHOTO',
+    'SIGNATURE',
+    'CASTE_CERTIFICATE',
+    'DOMICILE_CERTIFICATE',
+    'RESIDENCE_PROOF',
+    'OTHER'
+  ], 'Invalid document type'),
+  description: z.string().max(1000).optional(),
+  expiryDate: z.string().datetime('Invalid expiry date format').optional(),
+});
+
 export const listDocumentsQuerySchema = z.object({
   page: z.string().regex(/^\d+$/, 'Page must be a number').optional(),
   pageSize: z.string().regex(/^\d+$/, 'Page size must be a number').optional(),

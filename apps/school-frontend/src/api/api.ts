@@ -392,6 +392,30 @@ export const api = {
     }
   },
 
+  uploadStudentDocument: async (studentId: string, file: File, data: { name: string; type: CreateDocumentRequest['type']; description?: string; expiryDate?: string }): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('name', data.name);
+      formData.append('type', data.type);
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+      if (data.expiryDate) {
+        formData.append('expiryDate', data.expiryDate);
+      }
+
+      const response = await httpClient.post(`/profile/students/${studentId}/documents/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return handleResponse<{ document: ProfileServiceDocument }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   getStudentDocuments: async (studentId: string, page: number = 1, pageSize: number = 20): Promise<APIResponse<DocumentsListResponse>> => {
     try {
       const response = await httpClient.get(`/profile/students/${studentId}/documents?page=${page}&pageSize=${pageSize}`);
@@ -471,6 +495,7 @@ export const {
   getSectionStudents,
   getSectionTimetable,
   createStudentDocument,
+  uploadStudentDocument,
   getStudentDocuments,
   getStudentDocument,
   getMyTeacherId,

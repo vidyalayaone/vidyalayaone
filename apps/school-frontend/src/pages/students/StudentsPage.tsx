@@ -99,7 +99,7 @@ export type EnhancedStudent = {
     id: string;
     grade: string;
     section: string;
-    class: string;
+    className: string;
     academicYear: string;
   };
   parentGuardian: {
@@ -156,7 +156,7 @@ interface SchoolClass {
 }
 
 // Sort types
-type SortField = 'name' | 'rollNo' | 'admissionDate' | 'feeStatus';
+type SortField = 'name' | 'rollNo' | 'admissionDate';
 type SortOrder = 'asc' | 'desc';
 
 const StudentsPage: React.FC = () => {
@@ -169,7 +169,6 @@ const StudentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState<string>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
-  const [feeStatusFilter, setFeeStatusFilter] = useState<string>('all');
   const [quickFilter, setQuickFilter] = useState<string>('all');
 
   // Students data fetched from backend (start with mock as fallback until fetch completes)
@@ -262,8 +261,9 @@ const StudentsPage: React.FC = () => {
             admissionDate: u.admissionDate || '',
             currentClass: {
               id: u.classId || '',
+              grade: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
               section: u.currentSection || 'N/A',
-              class: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
+              className: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
               academicYear: u.academicYear || selectedAcademicYear
             },
             parentGuardian: {
@@ -430,7 +430,7 @@ const StudentsPage: React.FC = () => {
         if (summary.successfulDeletions === summary.totalRequested) {
           toast.success(`Successfully deleted ${summary.successfulDeletions} student${summary.successfulDeletions > 1 ? 's' : ''}`);
         } else {
-          toast.warning(`Deleted ${summary.successfulDeletions} out of ${summary.totalRequested} students. ${summary.failedDeletions} failed.`);
+          toast.error(`Deleted ${summary.successfulDeletions} out of ${summary.totalRequested} students. ${summary.failedDeletions} failed.`);
         }
       } else {
         toast.error(response.message || 'Failed to delete students');
@@ -476,21 +476,14 @@ const StudentsPage: React.FC = () => {
       // Section filter
       const matchesSection = sectionFilter === 'all' || student.currentClass.section === sectionFilter;
 
-      // Fee status filter
-      const matchesFeeStatus = feeStatusFilter === 'all' || student.feeStatus.status === feeStatusFilter;
-
       // Quick filter
       let matchesQuickFilter = true;
-      if (quickFilter === 'paid') {
-        matchesQuickFilter = student.feeStatus.status === 'PAID';
-      } else if (quickFilter === 'pending') {
-        matchesQuickFilter = student.feeStatus.status === 'PENDING' || student.feeStatus.status === 'PARTIAL';
-      } else if (quickFilter.startsWith('class-')) {
+      if (quickFilter.startsWith('class-')) {
         const grade = quickFilter.split('-')[1];
         matchesQuickFilter = student.currentClass.grade === grade;
       }
 
-      return matchesSearch && matchesClass && matchesSection && matchesFeeStatus && matchesQuickFilter;
+      return matchesSearch && matchesClass && matchesSection && matchesQuickFilter;
     });
 
     // Sort
@@ -511,11 +504,6 @@ const StudentsPage: React.FC = () => {
           aValue = new Date(a.admissionDate);
           bValue = new Date(b.admissionDate);
           break;
-        case 'feeStatus':
-          const statusOrder = { 'OVERDUE': 0, 'PENDING': 1, 'PARTIAL': 2, 'PAID': 3 };
-          aValue = statusOrder[a.feeStatus.status as keyof typeof statusOrder] ?? 99;
-          bValue = statusOrder[b.feeStatus.status as keyof typeof statusOrder] ?? 99;
-          break;
         default:
           return 0;
       }
@@ -526,7 +514,7 @@ const StudentsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [students, searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
+  }, [students, searchTerm, classFilter, sectionFilter, quickFilter, sortField, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedStudents.length / studentsPerPage);
@@ -537,13 +525,12 @@ const StudentsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter]);
+  }, [searchTerm, classFilter, sectionFilter, quickFilter]);
 
   // Reset filters when component mounts
   React.useEffect(() => {
     setClassFilter('all');
     setSectionFilter('all');
-    setFeeStatusFilter('all');
     setQuickFilter('all');
     setSelectedStudents([]);
   }, []);
@@ -598,21 +585,6 @@ const StudentsPage: React.FC = () => {
   const confirmBulkDelete = async () => {
     if (selectedStudents.length > 0) {
       await handleDeleteStudents(selectedStudents);
-    }
-  };
-
-  const getFeeStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Paid</Badge>;
-      case 'PARTIAL':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Partial</Badge>;
-      case 'PENDING':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Pending</Badge>;
-      case 'OVERDUE':
-        return <Badge variant="destructive">Overdue</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
     }
   };
 
@@ -693,22 +665,6 @@ const StudentsPage: React.FC = () => {
                           Section {section}
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Fee Status</label>
-                  <Select value={feeStatusFilter} onValueChange={setFeeStatusFilter}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="PAID">Paid</SelectItem>
-                      <SelectItem value="PARTIAL">Partial</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="OVERDUE">Overdue</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -822,15 +778,6 @@ const StudentsPage: React.FC = () => {
                     <TableHead>Class & Section</TableHead>
                     <TableHead 
                       className="cursor-pointer"
-                      onClick={() => handleSort('feeStatus')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Fee Status</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
                       onClick={() => handleSort('admissionDate')}
                     >
                       <div className="flex items-center space-x-1">
@@ -877,20 +824,10 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{student.currentClass.class} {student.currentClass.section }</div>
+                          <div className="font-medium">{student.currentClass.className} {student.currentClass.section }</div>
                           {/* <div className="text-sm text-muted-foreground">
                             {student.currentClass.section}
                           </div> */}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {getFeeStatusBadge(student.feeStatus.status)}
-                          {student.feeStatus.pendingAmount > 0 && (
-                            <div className="text-sm text-muted-foreground">
-                              ${student.feeStatus.pendingAmount} pending
-                            </div>
-                          )}
                         </div>
                       </TableCell>
                       <TableCell>

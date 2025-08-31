@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Search, 
@@ -13,7 +13,8 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { api } from '@/api/api';
+import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
 
 // Types
 interface Student {
@@ -44,6 +48,8 @@ interface Student {
   rollNumber: string;
   className: string;
   section: string;
+  classId: string;
+  sectionId: string;
   profileImage?: string;
 }
 
@@ -55,6 +61,7 @@ interface AttendanceRecord {
   timeOut?: string;
   reason?: string;
   markedBy: string;
+  notes?: string;
 }
 
 interface StudentAttendanceStats {
@@ -65,43 +72,197 @@ interface StudentAttendanceStats {
   attendancePercentage: number;
 }
 
-// Mock data
-const mockStudents: Student[] = [
-  { id: '1', name: 'John Doe', rollNumber: 'STU001', className: 'Grade 9', section: 'A', profileImage: undefined },
-  { id: '2', name: 'Jane Smith', rollNumber: 'STU002', className: 'Grade 9', section: 'A', profileImage: undefined },
-  { id: '3', name: 'Mike Wilson', rollNumber: 'STU003', className: 'Grade 10', section: 'B', profileImage: undefined },
-  { id: '4', name: 'Sarah Brown', rollNumber: 'STU004', className: 'Grade 11', section: 'A', profileImage: undefined },
-  { id: '5', name: 'Alex Johnson', rollNumber: 'STU005', className: 'Grade 9', section: 'B', profileImage: undefined },
-  { id: '6', name: 'Emily Davis', rollNumber: 'STU006', className: 'Grade 10', section: 'A', profileImage: undefined },
-  { id: '7', name: 'David Miller', rollNumber: 'STU007', className: 'Grade 11', section: 'B', profileImage: undefined },
-  { id: '8', name: 'Lisa Anderson', rollNumber: 'STU008', className: 'Grade 12', section: 'A', profileImage: undefined },
-];
+// Types for classes and sections (from backend)
+interface ClassSection {
+  id: string;
+  name: string;
+  classTeacher: string | null;
+  classTeacherId: string | null;
+  totalStudents: number | null;
+  totalBoys: number | null;
+  totalGirls: number | null;
+}
 
-const mockAttendanceRecords: Record<string, AttendanceRecord[]> = {
-  '1': [
-    { id: '1', date: '2025-08-19', status: 'PRESENT', timeIn: '08:15', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-    { id: '2', date: '2025-08-18', status: 'PRESENT', timeIn: '08:10', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-    { id: '3', date: '2025-08-17', status: 'PRESENT', timeIn: '08:45', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-    { id: '4', date: '2025-08-16', status: 'ABSENT', reason: 'Sick', markedBy: 'Mrs. Johnson' },
-    { id: '5', date: '2025-08-15', status: 'PRESENT', timeIn: '08:12', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-    { id: '6', date: '2025-08-14', status: 'LEAVE', reason: 'Medical appointment', markedBy: 'Mrs. Johnson' },
-    { id: '7', date: '2025-08-13', status: 'PRESENT', timeIn: '08:08', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-    { id: '8', date: '2025-08-12', status: 'PRESENT', timeIn: '08:20', timeOut: '15:30', markedBy: 'Mrs. Johnson' },
-  ]
-};
+interface ClassData {
+  grade: string;
+  academicYear: string;
+  sections: ClassSection[];
+}
 
 interface ViewStudentAttendanceProps {
   onBack: () => void;
 }
 
 const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack }) => {
+  // Auth store
+  const { school } = useAuthStore();
+  
+  // Component state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedSection, setSelectedSection] = useState<string>('all');
+  const [selectedAcademicYear] = useState('2025-26');
   const [sortField, setSortField] = useState<'name' | 'rollNumber' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Data state
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<ClassData[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord[]>>({});
+
+  // Loading states
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
+
+  // Error states
+  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [classesError, setClassesError] = useState<string | null>(null);
+
+  // Transform backend class data
+  const transformBackendClassData = (backendData: any): ClassData[] => {
+    if (!backendData || !Array.isArray(backendData)) return [];
+    
+    return backendData.map((classItem: any) => ({
+      grade: classItem.grade || classItem.name || 'Unknown',
+      academicYear: classItem.academicYear || selectedAcademicYear,
+      sections: (classItem.sections || []).map((section: any) => ({
+        id: section.id,
+        name: section.name,
+        classTeacher: section.classTeacher,
+        classTeacherId: section.classTeacherId,
+        totalStudents: section.totalStudents || null,
+        totalBoys: section.totalBoys || null,
+        totalGirls: section.totalGirls || null,
+      }))
+    }));
+  };
+
+  // Fetch classes and sections
+  useEffect(() => {
+    const fetchClasses = async () => {
+      if (!school?.id) return;
+
+      setIsLoadingClasses(true);
+      setClassesError(null);
+
+      try {
+        const response = await api.getClassesAndSections(school.id, selectedAcademicYear);
+
+        if (response.success && response.data) {
+          const transformedData = transformBackendClassData(response.data);
+          setClasses(transformedData);
+        } else {
+          setClassesError(response.message || 'Failed to fetch classes');
+          toast.error('Failed to load classes and sections');
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        setClassesError('Failed to load classes');
+        toast.error('Failed to load classes and sections');
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [school?.id, selectedAcademicYear]);
+
+  // Fetch students
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!school?.id) return;
+
+      setIsLoadingStudents(true);
+      setStudentsError(null);
+
+      try {
+        const response = await api.getStudentsBySchool({ 
+          academicYear: selectedAcademicYear,
+          classId: selectedClass !== 'all' ? selectedClass : undefined,
+          sectionId: selectedSection !== 'all' ? selectedSection : undefined
+        });
+
+        if (response.success && response.data) {
+          const payload = response.data as any;
+          const users = Array.isArray(payload.students) ? payload.students : (payload.data || []);
+
+          const mappedStudents: Student[] = (users || []).map((u: any) => ({
+            id: u.id,
+            name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+            rollNumber: u.rollNumber || u.admissionNumber || '',
+            className: u.currentClass || 'N/A',
+            section: u.currentSection || 'N/A',
+            classId: u.classId || '',
+            sectionId: u.sectionId || '',
+            profileImage: u.profilePhoto || undefined,
+          }));
+
+          setStudents(mappedStudents);
+        } else {
+          setStudentsError(response.message || 'Failed to fetch students');
+          toast.error('Failed to load students');
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        setStudentsError('Failed to load students');
+        toast.error('Failed to load students');
+      } finally {
+        setIsLoadingStudents(false);
+      }
+    };
+
+    fetchStudents();
+  }, [school?.id, selectedAcademicYear, selectedClass, selectedSection]);
+
+  // Fetch attendance for selected student
+  useEffect(() => {
+    const fetchStudentAttendance = async () => {
+      if (!selectedStudent) return;
+
+      setIsLoadingAttendance(true);
+
+      try {
+        // Get current month's start and end dates
+        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        
+        const startDate = startOfMonth.toISOString().split('T')[0];
+        const endDate = endOfMonth.toISOString().split('T')[0];
+
+        const response = await api.getStudentAttendance(selectedStudent.id, startDate, endDate);
+
+        if (response.success && response.data) {
+          const records = response.data.attendanceRecords || [];
+          const mappedRecords: AttendanceRecord[] = records.map((record: any) => ({
+            id: record.id,
+            date: record.attendanceDate,
+            status: record.status,
+            timeIn: undefined, // Backend doesn't provide this yet
+            timeOut: undefined, // Backend doesn't provide this yet
+            reason: record.notes || undefined,
+            markedBy: record.attendanceTakerId, // This should be mapped to teacher name
+            notes: record.notes,
+          }));
+
+          setAttendanceRecords({
+            [selectedStudent.id]: mappedRecords
+          });
+        } else {
+          toast.error('Failed to load attendance records');
+        }
+      } catch (err) {
+        console.error('Error fetching attendance:', err);
+        toast.error('Failed to load attendance records');
+      } finally {
+        setIsLoadingAttendance(false);
+      }
+    };
+
+    fetchStudentAttendance();
+  }, [selectedStudent, currentDate]);
 
   // Calendar helper functions
   const getDaysInMonth = (date: Date) => {
@@ -122,7 +283,7 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
   };
 
   const getAttendanceForDate = (studentId: string, date: string) => {
-    const records = mockAttendanceRecords[studentId] || [];
+    const records = attendanceRecords[studentId] || [];
     return records.find(record => record.date === date);
   };
 
@@ -168,18 +329,28 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
 
   // Get unique classes and sections for filters
   const uniqueClasses = useMemo(() => {
-    const classes = Array.from(new Set(mockStudents.map(student => student.className)));
-    return classes.sort();
-  }, []);
+    return classes.map(c => ({ id: c.grade, name: c.grade })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [classes]);
 
   const uniqueSections = useMemo(() => {
-    const sections = Array.from(new Set(mockStudents.map(student => student.section)));
-    return sections.sort();
-  }, []);
+    if (selectedClass === 'all') {
+      // Get all sections from all classes
+      const allSections = classes.flatMap(c => c.sections);
+      const uniqueSectionNames = Array.from(new Set(allSections.map(s => s.name)));
+      return uniqueSectionNames.sort().map(name => ({ id: name, name }));
+    } else {
+      // Get sections for selected class
+      const selectedClassData = classes.find(c => c.grade === selectedClass);
+      if (selectedClassData) {
+        return selectedClassData.sections.map(s => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+    return [];
+  }, [classes, selectedClass]);
 
   // Filter students based on search term, class, and section
   const filteredStudents = useMemo(() => {
-    let filtered = mockStudents.filter(student => {
+    let filtered = students.filter(student => {
       const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -214,7 +385,7 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
     }
 
     return filtered;
-  }, [searchTerm, selectedClass, selectedSection, sortField, sortDirection]);
+  }, [students, searchTerm, selectedClass, selectedSection, sortField, sortDirection]);
 
   // Handle sorting
   const handleSort = (field: 'name' | 'rollNumber') => {
@@ -236,7 +407,7 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
 
   // Calculate attendance statistics for selected student
   const calculateStats = (studentId: string): StudentAttendanceStats => {
-    const records = mockAttendanceRecords[studentId] || [];
+    const records = attendanceRecords[studentId] || [];
     const totalDays = records.length;
     const presentDays = records.filter(r => r.status === 'PRESENT').length;
     const absentDays = records.filter(r => r.status === 'ABSENT').length;
@@ -279,7 +450,7 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
   };
 
   if (selectedStudent) {
-    const studentRecords = mockAttendanceRecords[selectedStudent.id] || [];
+    const studentRecords = attendanceRecords[selectedStudent.id] || [];
     const stats = calculateStats(selectedStudent.id);
 
     return (
@@ -405,60 +576,69 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
             </div>
           </CardHeader>
           <CardContent>
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* Day Headers */}
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 bg-gray-50 rounded">
-                  {day}
-                </div>
-              ))}
-              
-              {/* Empty cells for days before month starts */}
-              {Array.from({ length: getFirstDayOfMonth(currentDate) }, (_, index) => (
-                <div key={`empty-${index}`} className="p-3 h-12"></div>
-              ))}
-              
-              {/* Calendar days */}
-              {Array.from({ length: getDaysInMonth(currentDate) }, (_, index) => {
-                const day = index + 1;
-                const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                const cellStyle = getDateCellStyle(cellDate, selectedStudent.id);
-                const cellContent = getDateCellContent(cellDate, selectedStudent.id);
-                
-                return (
-                  <div
-                    key={day}
-                    className={`p-3 h-12 rounded text-center flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${cellStyle}`}
-                    title={`${cellDate.toLocaleDateString()} - ${isWeekend(cellDate) ? 'School Closed' : getAttendanceForDate(selectedStudent.id, formatDate(cellDate))?.status || 'No Record'}`}
-                  >
-                    {cellContent}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Compact Legend */}
-            <div className="mt-4 pt-3 border-t">
-              <div className="flex items-center justify-center gap-6 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
-                  <span>Present</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-                  <span>Absent</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div>
-                  <span>Leave</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-gray-100 border border-gray-200 rounded"></div>
-                  <span>School Closed</span>
-                </div>
+            {isLoadingAttendance ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading attendance records...</span>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day Headers */}
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                    <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 bg-gray-50 rounded">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Empty cells for days before month starts */}
+                  {Array.from({ length: getFirstDayOfMonth(currentDate) }, (_, index) => (
+                    <div key={`empty-${index}`} className="p-3 h-12"></div>
+                  ))}
+                  
+                  {/* Calendar days */}
+                  {Array.from({ length: getDaysInMonth(currentDate) }, (_, index) => {
+                    const day = index + 1;
+                    const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                    const cellStyle = getDateCellStyle(cellDate, selectedStudent.id);
+                    const cellContent = getDateCellContent(cellDate, selectedStudent.id);
+                    
+                    return (
+                      <div
+                        key={day}
+                        className={`p-3 h-12 rounded text-center flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${cellStyle}`}
+                        title={`${cellDate.toLocaleDateString()} - ${isWeekend(cellDate) ? 'School Closed' : getAttendanceForDate(selectedStudent.id, formatDate(cellDate))?.status || 'No Record'}`}
+                      >
+                        {cellContent}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Compact Legend */}
+                <div className="mt-4 pt-3 border-t">
+                  <div className="flex items-center justify-center gap-6 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
+                      <span>Present</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
+                      <span>Absent</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-yellow-100 border border-yellow-200 rounded"></div>
+                      <span>Leave</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-gray-100 border border-gray-200 rounded"></div>
+                      <span>School Closed</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -505,11 +685,18 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
-                  {uniqueClasses.map((className) => (
-                    <SelectItem key={className} value={className}>
-                      {className}
+                  {isLoadingClasses ? (
+                    <SelectItem value="loading" disabled>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading...
                     </SelectItem>
-                  ))}
+                  ) : (
+                    uniqueClasses.map((className) => (
+                      <SelectItem key={className.id} value={className.id}>
+                        {className.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -522,11 +709,18 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sections</SelectItem>
-                  {uniqueSections.map((section) => (
-                    <SelectItem key={section} value={section}>
-                      Section {section}
+                  {isLoadingClasses ? (
+                    <SelectItem value="loading" disabled>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Loading...
                     </SelectItem>
-                  ))}
+                  ) : (
+                    uniqueSections.map((section) => (
+                      <SelectItem key={section.id} value={section.id}>
+                        Section {section.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -543,78 +737,92 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
           </p>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => handleSort('rollNumber')}
-                      className="h-auto p-0 font-medium text-left justify-start"
-                    >
-                      Roll No
-                      {getSortIcon('rollNumber')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => handleSort('name')}
-                      className="h-auto p-0 font-medium text-left justify-start"
-                    >
-                      Student Name
-                      {getSortIcon('name')}
-                    </Button>
-                  </TableHead>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Class & Section</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map((student) => (
-                  <TableRow 
-                    key={student.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => setSelectedStudent(student)}
-                  >
-                    <TableCell className="font-medium">{student.rollNumber}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={student.profileImage} />
-                          <AvatarFallback className="text-sm">
-                            {student.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{student.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{student.id}</TableCell>
-                    <TableCell>{student.className} - {student.section}</TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedStudent(student);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredStudents.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No students found matching your search.</p>
+          {isLoadingStudents ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading students...</span>
             </div>
+          ) : studentsError ? (
+            <div className="text-center py-8">
+              <p className="text-red-500 mb-2">Error loading students</p>
+              <p className="text-muted-foreground text-sm">{studentsError}</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => handleSort('rollNumber')}
+                          className="h-auto p-0 font-medium text-left justify-start"
+                        >
+                          Roll No
+                          {getSortIcon('rollNumber')}
+                        </Button>
+                      </TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => handleSort('name')}
+                          className="h-auto p-0 font-medium text-left justify-start"
+                        >
+                          Student Name
+                          {getSortIcon('name')}
+                        </Button>
+                      </TableHead>
+                      <TableHead>Student ID</TableHead>
+                      <TableHead>Class & Section</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStudents.map((student) => (
+                      <TableRow 
+                        key={student.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedStudent(student)}
+                      >
+                        <TableCell className="font-medium">{student.rollNumber}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={student.profileImage} />
+                              <AvatarFallback className="text-sm">
+                                {student.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{student.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{student.id}</TableCell>
+                        <TableCell>{student.className} - {student.section}</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedStudent(student);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {filteredStudents.length === 0 && !isLoadingStudents && (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No students found matching your search.</p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

@@ -35,7 +35,7 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
   const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema as any),
     defaultValues: {
       username: '',
       password: '',

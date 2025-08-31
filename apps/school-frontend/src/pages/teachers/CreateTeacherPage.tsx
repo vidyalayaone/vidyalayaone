@@ -507,7 +507,7 @@ const CreateTeacherPage: React.FC = () => {
                   name="salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Salary (Optional)</FormLabel>
+                      <FormLabel>Salary (in ₹ per month)(Optional)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 

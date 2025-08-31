@@ -104,7 +104,9 @@ export function transformProfileTeacherDetailToTeacher(profileTeacherDetail: Pro
     dateOfBirth: teacher.dateOfBirth || 'N/A',
     gender: teacher.gender || 'MALE',
     bloodGroup: teacher.bloodGroup,
-    maritalStatus: teacher.maritalStatus || 'SINGLE'
+    maritalStatus: teacher.maritalStatus || 'SINGLE',
+    religion: teacher.religion,
+    category: teacher.category
   };
 }
 

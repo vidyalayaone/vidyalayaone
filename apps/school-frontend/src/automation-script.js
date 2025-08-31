@@ -207,13 +207,30 @@ async function createClasses() {
 async function createSections() {
   console.log('\n🏛️ === STEP 5: CREATE SECTIONS ===');
   
+  // Function to randomly determine section names for a class
+  const getRandomSections = () => {
+    const sectionTypes = [
+      ["Default"], // Type 1: default only
+      ["A", "B"],  // Type 2: A, B
+      ["A", "B", "C"] // Type 3: A, B, C
+    ];
+    
+    // Randomly pick one of the three types
+    const randomType = Math.floor(Math.random() * 3);
+    return sectionTypes[randomType];
+  };
+  
   const sectionsPayload = {
     schoolId: schoolData.schoolId,
     academicYear: "2025-26",
-    sections: schoolData.classes.map(classItem => ({
-      className: classItem.name,
-      sectionNames: ["A", "B", "C"]
-    }))
+    sections: schoolData.classes.map(classItem => {
+      const sectionNames = getRandomSections();
+      console.log(`📝 Class ${classItem.name} will have sections: ${sectionNames.join(', ')}`);
+      return {
+        className: classItem.name,
+        sectionNames: sectionNames
+      };
+    })
   };
 
   try {

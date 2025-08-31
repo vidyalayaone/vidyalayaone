@@ -96,7 +96,8 @@ export const createStudentSchema = z.object({
 });
 
 export const updateStudentSchema = createStudentSchema.partial().extend({
-  id: z.string().uuid('Invalid student ID format'),
+  // Make id optional since it should come from URL params, not the request body
+  id: z.string().uuid('Invalid student ID format').optional(),
 });
 
 // Teacher validation schemas
@@ -123,7 +124,8 @@ export const createTeacherSchema = z.object({
 });
 
 export const updateTeacherSchema = createTeacherSchema.partial().extend({
-  id: z.string().uuid('Invalid teacher ID format'),
+  // Make id optional since it should come from URL params, not the request body
+  id: z.string().uuid('Invalid teacher ID format').optional(),
 });
 
 // Document validation schemas

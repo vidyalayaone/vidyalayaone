@@ -17,7 +17,8 @@ import {
   MapPin,
   FileText,
   Download,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -43,31 +44,30 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { AdmissionApplication, applicationAPI } from '@/api/mockAdmissionApplicationAPI';
+import { api } from '@/api/api';
+import { ProfileServiceStudent, StudentApplicationsResponse } from '@/api/types';
+import toast from 'react-hot-toast';
 
 const AdmissionApplicationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState<AdmissionApplication[]>([]);
+  const [applicationsData, setApplicationsData] = useState<StudentApplicationsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [sourceFilter, setSourceFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('pending');
 
   // Load applications
   const loadApplications = async () => {
     setLoading(true);
     try {
-      const apps = await applicationAPI.getApplications({
-        search: searchTerm,
-        status: statusFilter,
-        priority: priorityFilter,
-        source: sourceFilter
-      });
-      setApplications(apps);
+      const response = await api.getStudentApplications();
+      if (response.success) {
+        setApplicationsData(response.data);
+      } else {
+        toast.error('Failed to load applications');
+      }
     } catch (error) {
       console.error('Error loading applications:', error);
+      toast.error('Error loading applications');
     } finally {
       setLoading(false);
     }
@@ -75,13 +75,38 @@ const AdmissionApplicationsPage: React.FC = () => {
 
   useEffect(() => {
     loadApplications();
-  }, [searchTerm, statusFilter, priorityFilter, sourceFilter]);
+  }, []);
 
-  // Filter applications based on active tab
+  // Filter applications based on active tab and search term
   const filteredApplications = useMemo(() => {
-    if (activeTab === 'all') return applications;
-    return applications.filter(app => app.status === activeTab.toUpperCase().replace('-', '_'));
-  }, [applications, activeTab]);
+    if (!applicationsData) return [];
+    
+    let applications: ProfileServiceStudent[] = [];
+    
+    switch (activeTab) {
+      case 'pending':
+        applications = applicationsData.pendingStudents;
+        break;
+      case 'accepted':
+        applications = applicationsData.acceptedStudents;
+        break;
+      case 'rejected':
+        applications = applicationsData.rejectedStudents;
+        break;
+      default:
+        applications = [];
+    }
+
+    if (searchTerm) {
+      return applications.filter(app => 
+        app.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.admissionNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return applications;
+  }, [applicationsData, activeTab, searchTerm]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -92,18 +117,11 @@ const AdmissionApplicationsPage: React.FC = () => {
             Pending
           </Badge>
         );
-      case 'UNDER_REVIEW':
-        return (
-          <Badge variant="outline" className="border-yellow-300 text-yellow-800 bg-yellow-50">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            Under Review
-          </Badge>
-        );
-      case 'APPROVED':
+      case 'ACCEPTED':
         return (
           <Badge variant="outline" className="border-green-300 text-green-800 bg-green-50">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Approved
+            Accepted
           </Badge>
         );
       case 'REJECTED':
@@ -118,31 +136,9 @@ const AdmissionApplicationsPage: React.FC = () => {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'HIGH':
-        return <Badge variant="destructive">High</Badge>;
-      case 'MEDIUM':
-        return <Badge variant="outline" className="border-yellow-300 text-yellow-800">Medium</Badge>;
-      case 'LOW':
-        return <Badge variant="secondary">Low</Badge>;
-      default:
-        return <Badge variant="secondary">{priority}</Badge>;
-    }
-  };
-
-  const getSourceBadge = (source: string) => {
-    switch (source) {
-      case 'ONLINE_PORTAL':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-300">Online</Badge>;
-      case 'WALK_IN':
-        return <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300">Walk-in</Badge>;
-      case 'REFERRAL':
-        return <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">Referral</Badge>;
-      default:
-        return <Badge variant="secondary">{source}</Badge>;
-    }
-  };
+  // Remove unused functions since the new data structure doesn't have priority/source
+  // const getPriorityBadge = ... (removed)
+  // const getSourceBadge = ... (removed)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -154,119 +150,58 @@ const AdmissionApplicationsPage: React.FC = () => {
     });
   };
 
+  const formatDateOnly = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   const handleViewApplication = (id: string) => {
     navigate(`/admission/applications/${id}`);
   };
 
-  // Count applications by status
+  // Count applications by status from the summary
   const statusCounts = useMemo(() => {
+    if (!applicationsData) return { pending: 0, accepted: 0, rejected: 0 };
+    
     return {
-      all: applications.length,
-      pending: applications.filter(app => app.status === 'PENDING').length,
-      'under-review': applications.filter(app => app.status === 'UNDER_REVIEW').length,
-      approved: applications.filter(app => app.status === 'APPROVED').length,
-      rejected: applications.filter(app => app.status === 'REJECTED').length,
+      pending: applicationsData.summary.totalPending,
+      accepted: applicationsData.summary.totalAccepted,
+      rejected: applicationsData.summary.totalRejected,
     };
-  }, [applications]);
+  }, [applicationsData]);
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/admission')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Admission</span>
+            </Button>
             <h1 className="text-3xl font-bold tracking-tight">Admission Applications</h1>
-            <p className="text-muted-foreground">
-              Review and manage student admission applications
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={loadApplications} disabled={loading}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
           </div>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by application number, student name, or parent email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Priority</SelectItem>
-                    <SelectItem value="HIGH">High</SelectItem>
-                    <SelectItem value="MEDIUM">Medium</SelectItem>
-                    <SelectItem value="LOW">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Sources</SelectItem>
-                    <SelectItem value="ONLINE_PORTAL">Online</SelectItem>
-                    <SelectItem value="WALK_IN">Walk-in</SelectItem>
-                    <SelectItem value="REFERRAL">Referral</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
         {/* Applications Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all" className="flex items-center gap-2">
-              All ({statusCounts.all})
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Pending ({statusCounts.pending})
             </TabsTrigger>
-            <TabsTrigger value="under-review" className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Review ({statusCounts['under-review']})
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="flex items-center gap-2">
+            <TabsTrigger value="accepted" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              Approved ({statusCounts.approved})
+              Accepted ({statusCounts.accepted})
             </TabsTrigger>
             <TabsTrigger value="rejected" className="flex items-center gap-2">
               <XCircle className="w-4 h-4" />
@@ -289,28 +224,24 @@ const AdmissionApplicationsPage: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Application</TableHead>
                         <TableHead>Student</TableHead>
-                        <TableHead>Submitted By</TableHead>
-                        <TableHead>Class</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Source</TableHead>
+                        <TableHead>Guardian</TableHead>
+                        <TableHead>Date of Birth</TableHead>
+                        <TableHead>Application Date</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="w-12"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loading ? (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8">
+                          <TableCell colSpan={5} className="text-center py-8">
                             <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                             Loading applications...
                           </TableCell>
                         </TableRow>
                       ) : filteredApplications.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8">
+                          <TableCell colSpan={5} className="text-center py-8">
                             <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                             <p className="text-muted-foreground">No applications found.</p>
                           </TableCell>
@@ -323,77 +254,50 @@ const AdmissionApplicationsPage: React.FC = () => {
                             onClick={() => handleViewApplication(application.id)}
                           >
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{application.applicationNumber}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {application.documents.length} documents
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
                               <div className="flex items-center space-x-3">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage src="/placeholder.svg" />
+                                  <AvatarImage src={application.profilePhoto || "/placeholder.svg"} />
                                   <AvatarFallback>
-                                    {application.studentData.firstName[0]}{application.studentData.lastName[0]}
+                                    {application.firstName[0]}{application.lastName[0]}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
                                   <div className="font-medium">
-                                    {application.studentData.firstName} {application.studentData.lastName}
+                                    {application.firstName} {application.lastName}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    {application.studentData.dateOfBirth}
+                                    {application.gender} • {application.category}
                                   </div>
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <div className="font-medium">{application.submittedBy.name}</div>
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  {application.submittedBy.email}
-                                </div>
-                                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Phone className="w-3 h-3" />
-                                  {application.submittedBy.phone}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">Grade {application.studentData.grade}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  Section {application.studentData.section}
-                                </div>
+                                {application.guardians?.length > 0 ? (
+                                  <>
+                                    <div className="font-medium">{application.guardians[0].guardian.firstName} {application.guardians[0].guardian.lastName}</div>
+                                    <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                      <Phone className="w-3 h-3" />
+                                      {application.guardians[0].guardian.phone || 'N/A'}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-sm text-muted-foreground">No guardian info</div>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
-                                {formatDate(application.submittedAt)}
+                                {application.dateOfBirth ? formatDateOnly(application.dateOfBirth) : 'N/A'}
                               </div>
                             </TableCell>
                             <TableCell>
-                              {getPriorityBadge(application.priority)}
+                              <div className="text-sm">
+                                {formatDate(application.createdAt)}
+                              </div>
                             </TableCell>
                             <TableCell>
-                              {getSourceBadge(application.source)}
-                            </TableCell>
-                            <TableCell>
-                              {getStatusBadge(application.status)}
-                            </TableCell>
-                            <TableCell>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewApplication(application.id);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              {getStatusBadge(application.status || 'PENDING')}
                             </TableCell>
                           </TableRow>
                         ))

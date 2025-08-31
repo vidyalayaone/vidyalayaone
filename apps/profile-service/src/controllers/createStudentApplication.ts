@@ -1,114 +1,47 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
+import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { createStudentSchema } from '../validations/validationSchemas';
-import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
-import { authService } from '../services/authService';
 
 const { prisma } = DatabaseService;
 
-// Helper function to generate username (alphanumeric, lowercase only)
-const generateUsername = (firstName: string, lastName: string, admissionNumber: string): string => {
-  const baseUsername = `${firstName}${lastName}${admissionNumber}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric characters
-    .substring(0, 15); // Limit to 15 characters
-  
-  // Add a random suffix to ensure uniqueness
-  const randomSuffix = Math.floor(Math.random() * 999).toString().padStart(3, '0');
-  return `${baseUsername}${randomSuffix}`;
-};
-
-// Helper function to generate temporary password
-const generateTemporaryPassword = (): string => {
-  const length = 8;
-  const charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let password = '';
-  
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length));
-  }
-  
-  return password;
-};
-
-export const createStudent = async (req: Request, res: Response) => {
+export const createStudentApplication = async (req: Request, res: Response) => {
   try {
-    // Validate input
-    const validation = validateInput(createStudentSchema, req.body, res);
+    // Validate input - create a simplified schema for applications
+    const applicationSchema = createStudentSchema.omit({
+      classId: true,
+      sectionId: true,
+      academicYear: true,
+      rollNumber: true,
+      admissionNumber: true,
+      admissionDate: true
+    });
+    
+    const validation = validateInput(applicationSchema, req.body, res);
     if (!validation.success) return;
     
     const {
       firstName,
       lastName,
-      admissionNumber,
       bloodGroup,
       category,
       religion,
-      admissionDate,
       dateOfBirth,
       gender,
       address,
       contactInfo,
       parentInfo,
       documents,
-      classId,
-      sectionId,
-      academicYear,
-      rollNumber,
     } = validation.data;
 
-    // Generate user credentials
-    const username = generateUsername(firstName, lastName, admissionNumber);
-    const password = generateTemporaryPassword();
-    const { email, primaryPhone } = contactInfo;
-
-    // Get school context and user information
-    const { context, schoolId } = getSchoolContext(req);
-    const user = getUser(req);
-
-    // Only allow admin users to create students and only in school context
-    if (context !== 'school') {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Student creation is only allowed in school context' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
+    // Get school context for public application
+    const { schoolId } = getSchoolContext(req);
+    
+    // For public applications, we need schoolId from the subdomain context
     if (!schoolId) {
       res.status(400).json({
         success: false,
-        error: { message: 'School ID is required from context' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if(!hasPermission(PERMISSIONS.STUDENT.CREATE, user)) {
-      res.status(403).json({
-        success: false,
-        error: { message: 'User does not have permission to create students' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    // Check if admission number already exists for the school
-    const existingAdmissionNumber = await prisma.student.findUnique({
-      where: {
-        admissionNumber_schoolId: {
-          admissionNumber,
-          schoolId
-        }
-      }
-    });
-
-    if (existingAdmissionNumber) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'Admission number already exists for this school' },
+        error: { message: 'School not found. Please ensure you are accessing the correct school portal.' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -166,51 +99,24 @@ export const createStudent = async (req: Request, res: Response) => {
       return;
     }
 
-    let createdUserId: string | null = null;
-
     try {
-      // Step 1: Create user in auth service first
-        // Create user in auth service
-        const userCreationResult = await authService.createUserForStudent({
-          username,
-          email,
-          phone: primaryPhone,
-          password,
-          firstName,
-          lastName,
-          schoolId,
-          roleName: 'STUDENT'
-        });      if (!userCreationResult.success || !userCreationResult.data?.user?.id) {
-        res.status(400).json({
-          success: false,
-          error: { message: userCreationResult.error?.message || 'Failed to create user account' },
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-
-      createdUserId = userCreationResult.data.user.id;
-
-      // Step 2: Create student with guardians, enrollment, and documents in a transaction
+      // Create student application with guardians and documents in a transaction
       const result = await prisma.$transaction(async (tx) => {
-        // Create student
+        // Create student with status PENDING and userId as null
         const student = await tx.student.create({
           data: {
-            userId: createdUserId!,
-            admissionNumber,
             schoolId,
             firstName,
             lastName,
             bloodGroup,
             category,
             religion,
-            admissionDate: new Date(admissionDate),
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
             gender,
             address,
             contactInfo: contactInfo,
             profilePhoto: null, // Set to null for now, can be updated later
-            status: 'ACCEPTED', // Set initial status to ACCEPTED
+            status: 'PENDING', // Set status to PENDING for applications
           },
         });
 
@@ -241,18 +147,8 @@ export const createStudent = async (req: Request, res: Response) => {
 
         await Promise.all(guardianPromises);
 
-        // Create enrollment
-        const enrollment = await tx.studentEnrollment.create({
-          data: {
-            studentId: student.id,
-            schoolId,
-            classId,
-            sectionId,
-            academicYear,
-            rollNumber,
-            isCurrent: true,
-          },
-        });
+        // Note: No enrollment is created for applications
+        // Enrollment will be handled separately when the application is approved
 
         // Create documents if provided
         if (documents && documents.length > 0) {
@@ -268,7 +164,7 @@ export const createStudent = async (req: Request, res: Response) => {
                 mimeType: doc.mimeType,
                 fileSize: doc.fileSize ? BigInt(doc.fileSize) : null,
                 studentId: student.id,
-                uploadedBy: user.id,
+                uploadedBy: null, // No user context in unprotected route
                 isVerified: false,
               },
             });
@@ -277,7 +173,7 @@ export const createStudent = async (req: Request, res: Response) => {
           await Promise.all(documentPromises);
         }
 
-        return { student, enrollment };
+        return { student };
       });
 
       // Fetch the complete student data with relations
@@ -289,9 +185,6 @@ export const createStudent = async (req: Request, res: Response) => {
               guardian: true,
             },
           },
-          enrollments: {
-            where: { isCurrent: true },
-          },
           documents: true,
         },
       });
@@ -300,24 +193,14 @@ export const createStudent = async (req: Request, res: Response) => {
         success: true,
         data: {
           student: createdStudent,
-          message: 'Student created successfully',
+          message: 'Student application submitted successfully and is pending approval',
         },
         timestamp: new Date().toISOString(),
       });
 
     } catch (transactionError) {
-      console.error('❌ Transaction failed, attempting rollback:', transactionError);
+      console.error('❌ Transaction failed:', transactionError);
       
-      // Rollback: Delete the created user from auth service if it was created
-      if (createdUserId) {
-        try {
-          await authService.deleteUser(createdUserId);
-          console.log('✅ Successfully rolled back user creation');
-        } catch (rollbackError) {
-          console.error('❌ Failed to rollback user creation:', rollbackError);
-        }
-      }
-
       // Handle specific Prisma errors
       if (transactionError instanceof Error && 'code' in transactionError && transactionError.code === 'P2002') {
         res.status(400).json({
@@ -330,17 +213,17 @@ export const createStudent = async (req: Request, res: Response) => {
 
       res.status(500).json({
         success: false,
-        error: { message: 'Internal server error while creating student. All changes have been rolled back.' },
+        error: { message: 'Internal server error while creating student application' },
         timestamp: new Date().toISOString()
       });
     }
 
   } catch (error) {
-    console.error('Error creating student:', error);
+    console.error('Error creating student application:', error);
     
     res.status(500).json({
       success: false,
-      error: { message: 'Internal server error while creating student' },
+      error: { message: 'Internal server error while creating student application' },
       timestamp: new Date().toISOString()
     });
   }

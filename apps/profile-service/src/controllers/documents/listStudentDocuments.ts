@@ -54,6 +54,11 @@ export async function listStudentDocuments(req: Request, res: Response) {
       return;
     }
 
+    if (student.status !== 'ACCEPTED') {
+      res.status(403).json({ success: false, error: { message: 'Access denied. Student is not in ACCEPTED status' }, timestamp: new Date().toISOString() });
+      return;
+    }
+
     if (student.schoolId !== schoolId) {
       res.status(403).json({ success: false, error: { message: 'Access denied. Student does not belong to your school' }, timestamp: new Date().toISOString() });
       return;

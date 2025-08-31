@@ -477,10 +477,8 @@ async function createStudents() {
       parentInfo: {
         fatherName: `Mr ${lastName}`,
         fatherPhone: phone,
-        fatherEmail: `father.${lastName.toLowerCase()}${i}@example.com`,
         motherName: `Mrs ${lastName}`,
-        motherPhone: phone,
-        motherEmail: `mother.${lastName.toLowerCase()}${i}@example.com`
+        motherPhone: phone
       },
       classId: classId,
       sectionId: section.id,

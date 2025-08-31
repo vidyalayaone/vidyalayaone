@@ -25,7 +25,7 @@ interface ClassSectionMap {
 
 export async function getAllStudents(req: Request, res: Response) {
   try {
-    const { 
+    const {
       academicYear = '2025-26',
       category = 'all',
       classId = 'all',
@@ -129,6 +129,7 @@ export async function getAllStudents(req: Request, res: Response) {
     // Build the where clause for students based on filters
     const studentWhereClause: any = {
       schoolId,
+      status: 'ACCEPTED', // Only include accepted students
       enrollments: {
         some: {
           isCurrent: true,

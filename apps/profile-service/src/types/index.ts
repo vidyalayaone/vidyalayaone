@@ -48,12 +48,10 @@ export interface Student {
   motherName?: string;
   guardianName?: string;
   guardianPhone?: string;
-  guardianEmail?: string;
   guardianRelation?: string;
   isActive: boolean;
   profilePicture?: string;
   bloodGroup?: string;
-  medicalInfo?: string;
   transportInfo?: string;
   createdAt: Date;
   updatedAt: Date;

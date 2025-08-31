@@ -13,11 +13,11 @@ import {
   MapPin,
   Phone,
   Heart,
-  AlertTriangle
+  AlertTriangle,
+  School
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,23 +40,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { admissionAPI, mockFormData, type StudentData } from '@/api/mockAdmissionAPI';
-import { createStudent } from '@/api/api';
-import type { CreateStudentRequest } from '@/api/types';
-import { useAuthStore } from '@/store/authStore';
-import { useClassesStore } from '@/store/classesStore';
+import { createStudentApplication } from '@/api/api';
+import type { CreateStudentApplicationRequest } from '@/api/types';
 
 // Form validation schema
-const singleAdmissionSchema = z.object({
+const publicApplicationSchema = z.object({
   // Basic Info
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  admissionNumber: z.string().min(1, 'Admission number is required'),
-  admissionDate: z.string().min(1, 'Admission date is required'),
-  classId: z.string().min(1, 'Class is required'),
-  sectionId: z.string().min(1, 'Section is required'),
-  rollNumber: z.string().optional(),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
   bloodGroup: z.string().optional(),
@@ -87,57 +89,24 @@ const singleAdmissionSchema = z.object({
   documents: z.array(z.any()).optional(),
 });
 
-type SingleAdmissionFormData = z.infer<typeof singleAdmissionSchema>;
+type PublicApplicationFormData = z.infer<typeof publicApplicationSchema>;
 
-const SingleStudentAdmissionPage: React.FC = () => {
+const PublicApplicationPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [uploadedDocuments, setUploadedDocuments] = useState<File[]>([]);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-  // Auth and classes store
-  const { school } = useAuthStore();
-  const classesFromStore = useClassesStore(state => state.classes);
-  const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
-  const classesStoreLoading = useClassesStore(state => state.isLoading);
-
-  // Fetch classes and sections for the current school
-  React.useEffect(() => {
-    if (!school?.id) return;
-    fetchClassesAndSections(school.id, '2025-26').catch(console.error);
-  }, [school?.id, fetchClassesAndSections]);
-
-  // Show loading or error state if school is not available
-  if (!school?.id) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-muted-foreground">Loading school information...</h2>
-            <p className="text-sm text-muted-foreground mt-2">Please wait while we load your school details.</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  // Get available sections for selected class
-  const availableSections = React.useMemo(() => {
-    if (!selectedClassId || !classesFromStore) return [];
-    const selectedClass = classesFromStore.find(cls => cls.id === selectedClassId);
-    return selectedClass?.sections || [];
-  }, [selectedClassId, classesFromStore]);
-
-  const form = useForm<SingleAdmissionFormData>({
-    resolver: zodResolver(singleAdmissionSchema as any),
+  const form = useForm<PublicApplicationFormData>({
+    resolver: zodResolver(publicApplicationSchema as any),
     defaultValues: {
       gender: 'MALE',
       country: 'India',
-      admissionDate: new Date().toISOString().split('T')[0], // Keep as YYYY-MM-DD for form input
     },
   });
 
-  const onSubmit = async (data: SingleAdmissionFormData) => {
+  const onSubmit = async (data: PublicApplicationFormData) => {
+    console.log('Form submission started with data:', data);
     setIsSubmitting(true);
     
     try {
@@ -164,15 +133,13 @@ const SingleStudentAdmissionPage: React.FC = () => {
       };
 
       // Transform form data to match backend API structure
-      const createStudentData: CreateStudentRequest = {
+      const createStudentData: CreateStudentApplicationRequest = {
         // Basic student info
         firstName: data.firstName,
         lastName: data.lastName,
-        admissionNumber: data.admissionNumber,
         bloodGroup: data.bloodGroup,
         category: data.category,
         religion: data.religion,
-        admissionDate: formatDateToISO(data.admissionDate)!,
         dateOfBirth: formatDateToISO(data.dateOfBirth),
         gender: data.gender,
         
@@ -202,12 +169,6 @@ const SingleStudentAdmissionPage: React.FC = () => {
           guardianRelation: data.guardianRelation,
         },
         
-        // Enrollment info
-        classId: data.classId,
-        sectionId: data.sectionId,
-        academicYear: '2025-26', // Use constant value
-        rollNumber: data.rollNumber,
-        
         // Documents (if any)
         documents: uploadedDocuments.map(doc => ({
           name: doc.name,
@@ -218,16 +179,17 @@ const SingleStudentAdmissionPage: React.FC = () => {
         })),
       };
 
-      const result = await createStudent(createStudentData);
+      const result = await createStudentApplication(createStudentData);
       
       if (result.success) {
-        toast.success(result.message || 'Student admitted successfully!');
-        navigate('/admission');
+        toast.success(result.message || 'Application submitted successfully! We will contact you soon.');
+        // Show success dialog instead of directly navigating
+        setShowSuccessDialog(true);
       } else {
-        toast.error(result.message || 'Failed to admit student. Please try again.');
+        toast.error(result.message || 'Failed to submit application. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating student:', error);
+      console.error('Error creating student application:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -235,7 +197,12 @@ const SingleStudentAdmissionPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/admission');
+    navigate('/login');
+  };
+
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    navigate('/login');
   };
 
   const onDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,10 +230,10 @@ const SingleStudentAdmissionPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -275,16 +242,20 @@ const SingleStudentAdmissionPage: React.FC = () => {
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Admission
+              Back to Login
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Manual Admission</h1>
+            <div className="flex items-center gap-3">
+              <School className="w-8 h-8 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">School Admission Application</h1>
+                <p className="text-muted-foreground">Apply for admission to our school</p>
+              </div>
             </div>
           </div>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
             {/* Basic Information Section */}
             <Card>
               <CardHeader>
@@ -317,37 +288,6 @@ const SingleStudentAdmissionPage: React.FC = () => {
                         <FormLabel>Last Name *</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter last name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="admissionNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Admission Number *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter admission number" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Unique identifier for the student
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="admissionDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Admission Date *</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -454,117 +394,6 @@ const SingleStudentAdmissionPage: React.FC = () => {
                     )}
                   />
                 </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Class Assignment</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="classId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Class *</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              setSelectedClassId(value);
-                              // Reset section when class changes
-                              form.setValue('sectionId', '');
-                            }} 
-                            value={field.value}
-                            disabled={classesStoreLoading}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={classesStoreLoading ? "Loading classes..." : "Select class"} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {!classesFromStore || classesFromStore.length === 0 ? (
-                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                  {classesStoreLoading ? "Loading classes..." : "No classes available"}
-                                </div>
-                              ) : (
-                                classesFromStore.map((cls) => (
-                                  <SelectItem key={cls.id} value={cls.id}>
-                                    {cls.displayName || cls.grade}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sectionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Section *</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value}
-                            disabled={!selectedClassId || availableSections.length === 0}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue 
-                                  placeholder={
-                                    !selectedClassId 
-                                      ? "Select class first" 
-                                      : availableSections.length === 0 
-                                        ? "No sections available" 
-                                        : "Select section"
-                                  } 
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {!selectedClassId ? (
-                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                  Select class first
-                                </div>
-                              ) : availableSections.length === 0 ? (
-                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                  No sections available for selected class
-                                </div>
-                              ) : (
-                                availableSections.map((section) => (
-                                  <SelectItem key={section.id} value={section.id}>
-                                    Section {section.name}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="rollNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Roll Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter roll number" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            Optional: Will be assigned if not provided
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
@@ -577,7 +406,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
                 </CardTitle>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <User className="w-4 h-4" />
-                  Email and phone number will be used to automatically create a user account
+                  This information will be used to contact you regarding the application
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -592,7 +421,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
                           <Input type="email" placeholder="Enter email address" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Used for both user account login and communication
+                          Used for application updates and communication
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -609,7 +438,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
                           <Input placeholder="Enter phone number" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Main contact number (will be used for user account)
+                          Primary contact number
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -900,7 +729,7 @@ const SingleStudentAdmissionPage: React.FC = () => {
                             </div>
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
                               onClick={() => removeDocument(index)}
                             >
@@ -911,57 +740,65 @@ const SingleStudentAdmissionPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* Document Guidelines */}
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium mb-2">Document Guidelines</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Academic transcripts and certificates</li>
-                      <li>• Birth certificate or age proof</li>
-                      <li>• Identity proof (Aadhar card, passport, etc.)</li>
-                      <li>• Address proof</li>
-                      <li>• Previous school transfer certificate (if applicable)</li>
-                      <li>• Medical certificates (if any)</li>
-                      <li>• Passport-size photographs</li>
-                    </ul>
-                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 pt-6">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleBack}
-                disabled={isSubmitting}
-              >
+            {/* Submit Button */}
+            <div className="flex justify-end gap-4">
+              <Button type="button" variant="outline" onClick={handleBack}>
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="flex items-center gap-2"
+                className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                onClick={() => {
+                  console.log('Submit button clicked');
+                  console.log('Form errors:', form.formState.errors);
+                  console.log('Form values:', form.getValues());
+                }}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    Admitting Student...
+                    <Save className="w-4 h-4 mr-2 animate-pulse" />
+                    Submitting Application...
                   </>
                 ) : (
                   <>
-                    <Save className="w-4 h-4" />
-                    Admit Student
+                    <Save className="w-4 h-4 mr-2" />
+                    Submit Application
                   </>
                 )}
               </Button>
             </div>
           </form>
         </Form>
+
+        {/* Success Dialog */}
+        <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-center text-green-600">
+                Application Submitted Successfully! 🎉
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                Thank you for your application! We have received your submission and will contact you soon regarding the next steps in the admission process.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="justify-center">
+              <AlertDialogAction 
+                onClick={handleSuccessDialogClose}
+                className="bg-gradient-primary hover:opacity-90 transition-opacity"
+              >
+                OK
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
-export default SingleStudentAdmissionPage;
+export default PublicApplicationPage;

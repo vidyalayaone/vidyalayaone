@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createStudent } from '../controllers/createStudent';
+import { createStudentApplication } from '../controllers/createStudentApplication';
 import { updateStudent } from '../controllers/updateStudent';
 import { deleteStudents } from '../controllers/deleteStudents';
 import { getStudent } from '../controllers/getStudent';
@@ -9,6 +10,7 @@ import { deleteTeachers } from '../controllers/deleteTeachers';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
 import { getMyTeacherId } from '../controllers/getMyTeacherId';
+import { getStudentApplications } from '../controllers/getStudentApplications';
 import rateLimit from 'express-rate-limit';
 import { uploadStudentDocument } from '../controllers/documents/uploadDocument';
 import { listStudentDocuments } from '../controllers/documents/listStudentDocuments';
@@ -28,10 +30,12 @@ const profileLimiter = rateLimit({
 
 // Student routes
 router.post('/students', profileLimiter, createStudent);
+router.post('/students/apply', createStudentApplication); // Unprotected route for student applications
 router.patch('/students/:id', profileLimiter, updateStudent);
 router.delete('/students', profileLimiter, deleteStudents);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
+router.get('/schools/student-applications', profileLimiter, getStudentApplications);
 // Student documents
 router.post('/students/:id/documents/upload', profileLimiter, uploadSingle, handleUploadErrors, uploadStudentDocument);
 router.get('/students/:id/documents', profileLimiter, listStudentDocuments);

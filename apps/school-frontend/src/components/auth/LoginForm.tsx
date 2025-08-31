@@ -117,6 +117,12 @@ const LoginForm: React.FC = () => {
             >
               Forgot your password?
             </Link>
+            <Link
+              to="/apply"
+              className="text-sm text-primary hover:text-primary-hover transition-colors"
+            >
+              Apply for admission
+            </Link>
           </div>
 
           <Button

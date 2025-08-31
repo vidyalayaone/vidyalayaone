@@ -79,19 +79,25 @@ class ServiceRegistry {
       name: 'profile-service',
       url: config.services.profile.url,
       path: '/api/v1/profile',
-      isProtected: true,
+      isProtected: false,
       routes: [
+        // Student routes
         { path: '/students', method: 'POST', isProtected: true },
+        { path: '/students/apply', method: 'POST', isProtected: false }, // Unprotected route for student applications
+        { path: '/students/:id', method: 'PATCH', isProtected: true },
         { path: '/students', method: 'DELETE', isProtected: true },
         { path: '/students/:id', method: 'GET', isProtected: true },
         { path: '/schools/students', method: 'GET', isProtected: true },
+        { path: '/schools/student-applications', method: 'GET', isProtected: true },
+
+        // Teacher routes
         { path: '/teachers', method: 'POST', isProtected: true },
         { path: '/teachers', method: 'DELETE', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },
         { path: '/me/teacher-id', method: 'GET', isProtected: true },
         // Student document routes
-        { path: '/students/:id/documents', method: 'POST', isProtected: true },
+        { path: '/students/:id/documents/upload', method: 'POST', isProtected: true },
         { path: '/students/:id/documents', method: 'GET', isProtected: true },
         { path: '/students/:id/documents/:docId', method: 'GET', isProtected: true },
       ],

@@ -34,6 +34,8 @@ const generateTemporaryPassword = (): string => {
 
 export const acceptStudentApplication = async (req: Request, res: Response) => {
   try {
+
+    
     const { id } = req.params;
 
     // Validate student ID parameter
@@ -142,7 +144,7 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
 
     try {
       // Step 1: Create user in auth service if not already created
-      let userId = student.userId;
+      let userId = null;
       
       if (!userId) {
         // Get primary contact info for user creation
@@ -174,6 +176,9 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
           schoolId,
           roleName: 'STUDENT'
         });
+
+        console.log('function started XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx');
+        console.log('User creation result:', userCreationResult);
 
         if (!userCreationResult.success || !userCreationResult.data?.user?.id) {
           res.status(400).json({

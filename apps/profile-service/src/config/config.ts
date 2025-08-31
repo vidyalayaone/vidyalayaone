@@ -26,6 +26,9 @@ interface Config {
     school: ServiceConfig;
     auth: ServiceConfig;
   };
+  googleCloud: {
+    bucketName: string;
+  };
 }
 
 const config: Config = {
@@ -49,6 +52,9 @@ const config: Config = {
       url: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
       timeout: parseInt(process.env.AUTH_SERVICE_TIMEOUT || '30000', 10),
     },
+  },
+  googleCloud: {
+    bucketName: process.env.GOOGLE_CLOUD_BUCKET_NAME || '',
   },
 };
 

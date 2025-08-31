@@ -60,8 +60,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import StudentFeesTab from '@/components/students/StudentFeesTab';
-import { getStudentById, createStudentDocument, getStudentDocuments, deleteStudents } from '@/api/api';
-import type { ProfileServiceStudent, CreateDocumentRequest, DeleteStudentsRequest, DeleteStudentsResponse } from '@/api/types';
+import { getStudentById, uploadStudentDocument, getStudentDocuments, deleteStudents } from '@/api/api';
+import type { ProfileServiceStudent, UploadDocumentRequest, DeleteStudentsRequest, DeleteStudentsResponse } from '@/api/types';
 import toast from 'react-hot-toast';
 
 // Mock student data according to the new JSON shape
@@ -81,7 +81,7 @@ const StudentDetailPage: React.FC = () => {
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [documentName, setDocumentName] = useState('');
-  const [documentType, setDocumentType] = useState<CreateDocumentRequest['type']>('OTHER');
+  const [documentType, setDocumentType] = useState<UploadDocumentRequest['type']>('OTHER');
   const [documentDescription, setDocumentDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -181,17 +181,6 @@ const StudentDetailPage: React.FC = () => {
     }
   }, [id]);
 
-  // Handle file upload to a storage service (mock for now)
-  const uploadFileToStorage = async (file: File): Promise<string> => {
-    // For now, return a mock URL. In production, you'd upload to GCS/S3
-    // and return the actual URL
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`https://storage.example.com/documents/${Date.now()}-${file.name}`);
-      }, 1000);
-    });
-  };
-
   // Handle document upload
   const handleUploadDocument = async () => {
     if (!selectedFile || !documentName || !id) {
@@ -201,20 +190,14 @@ const StudentDetailPage: React.FC = () => {
 
     setUploadingDocument(true);
     try {
-      // Upload file to storage first
-      const fileUrl = await uploadFileToStorage(selectedFile);
-      
-      // Create document record
-      const documentData: CreateDocumentRequest = {
+      // Create document data for the upload
+      const documentData: UploadDocumentRequest = {
         name: documentName,
         type: documentType,
-        url: fileUrl,
         description: documentDescription || undefined,
-        mimeType: selectedFile.type,
-        fileSize: selectedFile.size,
       };
 
-      const response = await createStudentDocument(id, documentData);
+      const response = await uploadStudentDocument(id, selectedFile, documentData);
       if (response.success) {
         toast.success('Document uploaded successfully');
         setUploadDocumentDialogOpen(false);
@@ -797,7 +780,7 @@ const StudentDetailPage: React.FC = () => {
               
               <div>
                 <Label htmlFor="document-type">Document Type *</Label>
-                <Select value={documentType} onValueChange={(value: CreateDocumentRequest['type']) => setDocumentType(value)}>
+                <Select value={documentType} onValueChange={(value: UploadDocumentRequest['type']) => setDocumentType(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select document type" />
                   </SelectTrigger>

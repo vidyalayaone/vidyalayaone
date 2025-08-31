@@ -10,12 +10,12 @@ import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
 import { getMyTeacherId } from '../controllers/getMyTeacherId';
 import rateLimit from 'express-rate-limit';
-import { createStudentDocument } from '../controllers/documents/uploadDocument';
+import { uploadStudentDocument } from '../controllers/documents/uploadDocument';
 import { listStudentDocuments } from '../controllers/documents/listStudentDocuments';
 import { getStudentDocument } from '../controllers/documents/getStudentDocument';
+import { uploadSingle, handleUploadErrors } from '../middleware/upload';
 
 const router: Router = Router();
-
 const profileLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
@@ -33,7 +33,7 @@ router.delete('/students', profileLimiter, deleteStudents);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
 // Student documents
-router.post('/students/:id/documents', profileLimiter, createStudentDocument);
+router.post('/students/:id/documents/upload', profileLimiter, uploadSingle, handleUploadErrors, uploadStudentDocument);
 router.get('/students/:id/documents', profileLimiter, listStudentDocuments);
 router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument);
 

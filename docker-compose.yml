@@ -35,8 +35,6 @@ services:
     volumes:
     - ./apps/auth-service:/app/apps/auth-service
     - ./packages:/app/packages
-    - /app/node_modules
-    - /app/apps/auth-service/node_modules
     # Exclude generated Prisma client from volume mount
     - /app/apps/auth-service/src/generated
     - /app/apps/auth-service/node_modules/.prisma
@@ -59,8 +57,6 @@ services:
     volumes:
     - ./apps/school-service:/app/apps/school-service
     - ./packages:/app/packages
-    - /app/node_modules
-    - /app/apps/school-service/node_modules
     # Exclude generated Prisma client from volume mount
     - /app/apps/school-service/src/generated
     - /app/apps/school-service/node_modules/.prisma
@@ -83,8 +79,6 @@ services:
     volumes:
     - ./apps/profile-service:/app/apps/profile-service
     - ./packages:/app/packages
-    - /app/node_modules
-    - /app/apps/profile-service/node_modules
     # Exclude generated Prisma client from volume mount
     - /app/apps/profile-service/src/generated
     - /app/apps/profile-service/node_modules/.prisma
@@ -107,8 +101,6 @@ services:
     volumes:
     - ./apps/attendance-service:/app/apps/attendance-service
     - ./packages:/app/packages
-    - /app/node_modules
-    - /app/apps/attendance-service/node_modules
     # Exclude generated Prisma client from volume mount
     - /app/apps/attendance-service/src/generated
     - /app/apps/attendance-service/node_modules/.prisma
@@ -132,8 +124,6 @@ services:
     volumes:
       - ./apps/api-gateway:/app/apps/api-gateway
       - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/api-gateway/node_modules
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -151,8 +141,6 @@ services:
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend
       - ./packages:/app/packages
-      - /app/node_modules
-      - /app/apps/school-frontend/node_modules
     networks:
       - vidyalayaone-network
     restart: unless-stopped

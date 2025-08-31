@@ -24,6 +24,7 @@ export async function fetchUserByUsernameAndContext(res: Response, prisma: any, 
     });
     
     console.log('User fetched by username:', tempUser);
+    console.log('School ID:', schoolId);
     
     user = await prisma.user.findFirst({
       where: { username, schoolId },

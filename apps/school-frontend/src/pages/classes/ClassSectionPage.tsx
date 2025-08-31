@@ -6,7 +6,6 @@ import {
   ArrowLeft, 
   Edit, 
   Users, 
-  ClipboardList, 
   Search, 
   Filter,
   Download,
@@ -32,7 +31,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -71,7 +69,6 @@ const ClassSectionPage: React.FC = () => {
   } = useSectionsStore();
 
   // Local state
-  const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGender, setSelectedGender] = useState<string>('all');
   const [showAssignTeacherDialog, setShowAssignTeacherDialog] = useState(false);
@@ -174,16 +171,6 @@ const ClassSectionPage: React.FC = () => {
 
   const handleAssignTeacherSuccess = (teacher: { id: string; name: string }) => {
     updateClassTeacher(teacher.id, teacher.name);
-  };
-
-  const getAttendanceStatusColor = (status: string) => {
-    switch (status) {
-      case 'PRESENT': return 'text-green-600 bg-green-50';
-      case 'ABSENT': return 'text-red-600 bg-red-50';
-      case 'LATE': return 'text-yellow-600 bg-yellow-50';
-      case 'EXCUSED': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
   };
 
   return (
@@ -292,154 +279,117 @@ const ClassSectionPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="students">
-              <Users className="mr-2 h-4 w-4" />
-              Students
-            </TabsTrigger>
-            <TabsTrigger value="attendance">
-              <ClipboardList className="mr-2 h-4 w-4" />
-              Attendance
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Students Tab */}
-          <TabsContent value="students" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Filters</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  
-                  <Select value={selectedGender} onValueChange={setSelectedGender}>
-                    <SelectTrigger className="w-full sm:w-48">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filter by Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Genders</SelectItem>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
+        {/* Student Filters */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Student Filters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <Select value={selectedGender} onValueChange={setSelectedGender}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Students List</CardTitle>
-                {errors.students && (
-                  <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                    {errors.students}
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                {loading.students ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                      <span>Loading students...</span>
-                    </div>
-                  </div>
-                ) : filteredStudents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No students found</h3>
-                    <p className="text-muted-foreground">
-                      {sectionStudents?.students.length === 0 
-                        ? 'No students are enrolled in this section yet.' 
-                        : 'No students match your search criteria.'}
-                    </p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Roll No.</TableHead>
-                        <TableHead>Date of Birth</TableHead>
-                        <TableHead>Gender</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredStudents.map((student) => (
-                        <TableRow 
-                          key={student.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => handleStudentClick(student.id)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={student.profileImage} />
-                                <AvatarFallback>
-                                  {student.firstName.charAt(0)}{student.lastName.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">{student.firstName} {student.lastName}</div>
-                                <div className="text-sm text-muted-foreground">{student.email}</div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{student.rollNumber || '-'}</TableCell>
-                          <TableCell>
-                            {student.dateOfBirth 
-                              ? new Date(student.dateOfBirth).toLocaleDateString() 
-                              : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {student.gender || 'Not specified'}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Attendance Tab */}
-          <TabsContent value="attendance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Attendance Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <ClipboardList className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Attendance Coming Soon</h3>
-                  <p className="text-muted-foreground">
-                    Attendance tracking and management features will be available soon.
-                  </p>
-                  <Button variant="outline" className="mt-4">
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    Mark Attendance
-                  </Button>
+        {/* Students List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Students List</CardTitle>
+            {errors.students && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {errors.students}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            {loading.students ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  <span>Loading students...</span>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No students found</h3>
+                <p className="text-muted-foreground">
+                  {sectionStudents?.students.length === 0 
+                    ? 'No students are enrolled in this section yet.' 
+                    : 'No students match your search criteria.'}
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Roll No.</TableHead>
+                    <TableHead>Date of Birth</TableHead>
+                    <TableHead>Gender</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.map((student) => (
+                    <TableRow 
+                      key={student.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleStudentClick(student.id)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={student.profileImage} />
+                            <AvatarFallback>
+                              {student.firstName.charAt(0)}{student.lastName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium">{student.firstName} {student.lastName}</div>
+                            <div className="text-sm text-muted-foreground">{student.email}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{student.rollNumber || '-'}</TableCell>
+                      <TableCell>
+                        {student.dateOfBirth 
+                          ? new Date(student.dateOfBirth).toLocaleDateString() 
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {student.gender || 'Not specified'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Assign Class Teacher Dialog */}

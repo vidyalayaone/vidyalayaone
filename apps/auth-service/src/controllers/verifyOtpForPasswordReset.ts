@@ -26,9 +26,9 @@ export async function verifyOtpForPasswordReset(req: Request, res: Response) {
     if (!validation.success) return;
 
     const { username, otp } = validation.data;
-    const { context, subdomain } = getSchoolContext(req);
+    const { context, schoolId } = getSchoolContext(req);
 
-    const user = await fetchUserByUsernameAndContext(res, prisma, username, context, subdomain);
+    const user = await fetchUserByUsernameAndContext(res, prisma, username, context, schoolId);
     if (!user) {
       res.status(401).json({
         success: false,

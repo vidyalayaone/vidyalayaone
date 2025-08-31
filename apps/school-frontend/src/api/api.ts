@@ -545,6 +545,39 @@ export const api = {
     }
   },
 
+  // Attendance service: get student attendance records within a date range
+  getStudentAttendance: async (studentId: string, startDate?: string, endDate?: string): Promise<APIResponse<{
+    attendanceRecords: Array<{
+      id: string;
+      studentId: string;
+      schoolId: string;
+      classId: string;
+      sectionId: string;
+      attendanceDate: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      attendanceTakerId: string;
+      notes?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    meta: {
+      studentId: string;
+      totalRecords: number;
+      filters: { startDate?: string; endDate?: string; };
+    };
+  }>> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('startDate', startDate);
+      if (endDate) queryParams.append('endDate', endDate);
+      
+      const response = await httpClient.get(`/attendance/student/${studentId}?${queryParams.toString()}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Profile service: get student applications by status
   getStudentApplications: async (): Promise<APIResponse<StudentApplicationsResponse>> => {
     try {
@@ -632,6 +665,7 @@ export const {
   markAttendance,
   checkAttendanceExists,
   getClassAttendance,
+  getStudentAttendance,
   getStudentApplications,
   getStudentApplication,
   acceptStudentApplication,

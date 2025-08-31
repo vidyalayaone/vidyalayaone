@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Edit, 
   Trash2, 
   Mail,
   Phone,
   MapPin,
-  Calendar,
   User,
-  DollarSign,
   GraduationCap,
   Users,
   ArrowLeft
@@ -19,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import {
   Table,
   TableBody,
@@ -38,7 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import StudentFeesTab from '@/components/students/StudentFeesTab';
+
 import { getStudentById, deleteStudents } from '@/api/api';
 import type { ProfileServiceStudent, DeleteStudentsRequest, DeleteStudentsResponse } from '@/api/types';
 import toast from 'react-hot-toast';
@@ -49,9 +47,7 @@ import toast from 'react-hot-toast';
 const StudentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
   const [student, setStudent] = useState<ProfileServiceStudent | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -133,19 +129,6 @@ const StudentDetailPage: React.FC = () => {
     return student.profilePhoto || '/placeholder.svg';
   };
 
-  // Check if we came from fees page and should open fees tab
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const tabParam = urlParams.get('tab');
-    if (tabParam) {
-      setActiveTab(tabParam);
-    }
-    // Check if URL path ends with /fees
-    if (location.pathname.endsWith('/fees')) {
-      setActiveTab('fees');
-    }
-  }, [location]);
-
   // Fetch student data based on ID
   useEffect(() => {
     const fetchStudent = async () => {
@@ -225,41 +208,6 @@ const StudentDetailPage: React.FC = () => {
     }
   };
 
-  const handleMarkAsPaid = () => {
-    console.log('Marking fee as paid for student:', id);
-    // Here you would call the API to mark fee as paid
-  };
-
-  const getStatusBadge = () => {
-    const currentEnrollment = getCurrentEnrollment(student);
-    const status = currentEnrollment ? 'Active' : 'Inactive';
-    if (status === 'Active') {
-      return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
-    } else {
-      return <Badge variant="secondary">Inactive</Badge>;
-    }
-  };
-
-  const getCurrentClassInfo = () => {
-    const currentEnrollment = getCurrentEnrollment(student);
-    if (currentEnrollment) {
-      // Use className and sectionName if available, otherwise fallback to IDs
-      const className = currentEnrollment.className || currentEnrollment.classId;
-      const sectionName = currentEnrollment.sectionName || currentEnrollment.sectionId;
-      return `${className} - ${sectionName}`;
-    }
-    return 'N/A';
-  };
-
-  const getCurrentRollNumber = () => {
-    const currentEnrollment = getCurrentEnrollment(student);
-    return currentEnrollment?.rollNumber || 'N/A';
-  };
-
-  const getFeeStatusBadge = () => {
-    return <Badge variant="outline" className="border-blue-300 text-blue-800">Not Available</Badge>;
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -295,16 +243,8 @@ const StudentDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="basic">Basic Information</TabsTrigger>
-            <TabsTrigger value="fees">Fees</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          </TabsList>
-
-          {/* Basic Information Tab */}
-          <TabsContent value="basic" className="space-y-6">
+        {/* Basic Information Section */}
+        <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Personal Information Card */}
               <Card>
@@ -395,7 +335,12 @@ const StudentDetailPage: React.FC = () => {
                       </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">Roll Number</TableCell>
-                        <TableCell className="font-medium">{getCurrentRollNumber()}</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const currentEnrollment = getCurrentEnrollment(student);
+                            return currentEnrollment?.rollNumber || 'N/A';
+                          })()}
+                        </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell className="font-medium">Admission Number</TableCell>
@@ -543,30 +488,7 @@ const StudentDetailPage: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Fees Tab */}
-          <TabsContent value="fees" className="space-y-6">
-            <StudentFeesTab studentId={student.id} />
-          </TabsContent>
-
-          {/* Attendance Tab */}
-          <TabsContent value="attendance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Attendance Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-16">
-                  <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-muted-foreground">Attendance Charts Coming Soon</p>
-                  <p className="text-sm text-muted-foreground">This section will display attendance analytics and charts</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-        </Tabs>
+          </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

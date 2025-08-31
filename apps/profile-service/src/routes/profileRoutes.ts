@@ -5,6 +5,9 @@ import { updateStudent } from '../controllers/updateStudent';
 import { deleteStudents } from '../controllers/deleteStudents';
 import { getStudent } from '../controllers/getStudent';
 import { getAllStudents } from '../controllers/getAllStudents';
+import { getStudentApplication } from '../controllers/getStudentApplication';
+import { acceptStudentApplication } from '../controllers/acceptStudentApplication';
+import { rejectStudentApplication } from '../controllers/rejectStudentApplication';
 import { createTeacher } from '../controllers/createTeacher';
 import { deleteTeachers } from '../controllers/deleteTeachers';
 import { getTeacher } from '../controllers/getTeacher';
@@ -36,6 +39,12 @@ router.delete('/students', profileLimiter, deleteStudents);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
 router.get('/schools/student-applications', profileLimiter, getStudentApplications);
+
+// Student application management routes
+router.get('/student-applications/:id', profileLimiter, getStudentApplication);
+router.post('/student-applications/:id/accept', profileLimiter, acceptStudentApplication);
+router.post('/student-applications/:id/reject', profileLimiter, rejectStudentApplication);
+
 // Student documents
 router.post('/students/:id/documents/upload', profileLimiter, uploadSingle, handleUploadErrors, uploadStudentDocument);
 router.get('/students/:id/documents', profileLimiter, listStudentDocuments);

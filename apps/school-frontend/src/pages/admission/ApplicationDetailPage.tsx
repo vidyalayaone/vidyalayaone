@@ -1,39 +1,37 @@
-// Individual Admission Application Review Page
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  FileText, 
-  Download, 
-  Edit,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Clock,
-  Save,
-  Eye
-} from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import * as z from 'zod';
+import { 
+  ArrowLeft, 
+  Save, 
+  User, 
+  GraduationCap, 
+  Phone, 
+  Users, 
+  MapPin,
+  Check,
+  X,
+  Calendar,
+  Hash
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,827 +41,685 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Progress } from '@/components/ui/progress';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 
-import { AdmissionApplication, applicationAPI } from '@/api/mockAdmissionApplicationAPI';
-import { StudentData } from '@/api/mockAdmissionAPI';
+import { 
+  getStudentApplication, 
+  acceptStudentApplication, 
+  rejectStudentApplication 
+} from '@/api/api';
+import type { ProfileServiceStudent } from '@/api/types';
+import { useClassesStore } from '@/store/classesStore';
+import { useAuthStore } from '@/store/authStore';
 
-const reviewSchema = z.object({
-  reviewNotes: z.string().optional(),
-  rejectionReason: z.string().optional(),
+// Form validation schema for accepting application
+const acceptApplicationSchema = z.object({
+  admissionNumber: z.string().min(1, 'Admission number is required'),
+  admissionDate: z.string().min(1, 'Admission date is required'),
+  classId: z.string().min(1, 'Class is required'),
+  sectionId: z.string().min(1, 'Section is required'),
+  rollNumber: z.string().optional(),
 });
 
-type ReviewFormData = z.infer<typeof reviewSchema>;
+// Form validation schema for rejecting application
+const rejectApplicationSchema = z.object({
+  reason: z.string().min(1, 'Rejection reason is required').max(500, 'Reason is too long'),
+});
+
+type AcceptApplicationFormData = z.infer<typeof acceptApplicationSchema>;
+type RejectApplicationFormData = z.infer<typeof rejectApplicationSchema>;
 
 const ApplicationDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [application, setApplication] = useState<AdmissionApplication | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [docsVerified, setDocsVerified] = useState(false);
-  const [feeVerified, setFeeVerified] = useState(false);
+  const { id } = useParams<{ id: string }>();
+  const [student, setStudent] = useState<ProfileServiceStudent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
 
-  // Form for student data editing
-  const studentForm = useForm<StudentData>({
-    defaultValues: {}
-  });
+  // Auth and classes store
+  const { school } = useAuthStore();
+  const classesFromStore = useClassesStore(state => state.classes);
+  const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
+  const classesStoreLoading = useClassesStore(state => state.isLoading);
 
-  // Form for review notes
-  const reviewForm = useForm<ReviewFormData>({
-    resolver: zodResolver(reviewSchema as any),
+  // Accept form
+  const acceptForm = useForm<AcceptApplicationFormData>({
+    resolver: zodResolver(acceptApplicationSchema as any),
     defaultValues: {
-      reviewNotes: '',
-      rejectionReason: ''
-    }
+      admissionDate: new Date().toISOString().split('T')[0], // Today's date
+    },
   });
 
-  // Load application
+  // Reject form
+  const rejectForm = useForm<RejectApplicationFormData>({
+    resolver: zodResolver(rejectApplicationSchema as any),
+  });
+
+  // Fetch classes and sections for the current school
   useEffect(() => {
-    const loadApplication = async () => {
-      if (!id) return;
-      
-      setLoading(true);
+    if (!school?.id) return;
+    fetchClassesAndSections(school.id, '2025-26').catch(console.error);
+  }, [school?.id, fetchClassesAndSections]);
+
+  // Get available sections for selected class
+  const availableSections = React.useMemo(() => {
+    if (!selectedClassId) return [];
+    const selectedClass = classesFromStore.find(cls => cls.id === selectedClassId);
+    return selectedClass?.sections || [];
+  }, [selectedClassId, classesFromStore]);
+
+  // Fetch student application data
+  useEffect(() => {
+    const fetchStudentApplication = async () => {
+      if (!id) {
+        toast.error('Student ID not found');
+        navigate('/admission/applications');
+        return;
+      }
+
+      setIsLoading(true);
       try {
-        const app = await applicationAPI.getApplicationById(id);
-        if (app) {
-          setApplication(app);
-          studentForm.reset(app.studentData);
-          reviewForm.reset({
-            reviewNotes: app.reviewNotes || '',
-            rejectionReason: app.rejectionReason || ''
-          });
+        const response = await getStudentApplication(id);
+        if (response.success && response.data) {
+          setStudent(response.data.student);
         } else {
-          toast.error('Application not found');
+          toast.error('Failed to load student application');
           navigate('/admission/applications');
         }
       } catch (error) {
-        console.error('Error loading application:', error);
-        toast.error('Failed to load application');
+        console.error('Error fetching student application:', error);
+        toast.error('Failed to load student application');
+        navigate('/admission/applications');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    loadApplication();
-  }, [id, navigate, studentForm, reviewForm]);
+    fetchStudentApplication();
+  }, [id, navigate]);
 
-  const handleSaveStudentData = async () => {
-    if (!application) return;
-
-    setSaving(true);
-    try {
-      const formData = studentForm.getValues();
-      const updatedApp = await applicationAPI.updateApplicationData(application.id, formData);
-      setApplication(updatedApp);
-      setEditing(false);
-      toast.success('Student data updated successfully');
-    } catch (error) {
-      console.error('Error updating student data:', error);
-      toast.error('Failed to update student data');
-    } finally {
-      setSaving(false);
+  // Helper functions for extracting student data
+  const getContactPhone = (student: ProfileServiceStudent): string => {
+    if (student.contactInfo?.phone) {
+      return student.contactInfo.phone;
     }
+    if (student.contactInfo?.primaryPhone) {
+      return student.contactInfo.primaryPhone;
+    }
+    return '';
   };
 
-  const handleApprove = async () => {
-    if (!application) return;
-
-    setSaving(true);
-    try {
-      const reviewData = reviewForm.getValues();
-      const updatedApp = await applicationAPI.updateApplicationStatus(
-        application.id, 
-        'APPROVED',
-        reviewData.reviewNotes
-      );
-      setApplication(updatedApp);
-      setApproveDialogOpen(false);
-      toast.success('Application approved successfully');
-    } catch (error) {
-      console.error('Error approving application:', error);
-      toast.error('Failed to approve application');
-    } finally {
-      setSaving(false);
+  const getContactEmail = (student: ProfileServiceStudent): string => {
+    if (student.contactInfo?.email) {
+      return student.contactInfo.email;
     }
+    return '';
   };
 
-  const handleReject = async () => {
-    if (!application) return;
+  const getAddressString = (student: ProfileServiceStudent): string => {
+    if (student.address && typeof student.address === 'object') {
+      const addr = student.address;
+      const parts = [
+        addr.street,
+        addr.city,
+        addr.state,
+        addr.pincode
+      ].filter(Boolean);
+      return parts.join(', ') || '';
+    }
+    return student.address || '';
+  };
 
-    const reviewData = reviewForm.getValues();
-    if (!reviewData.rejectionReason?.trim()) {
-      toast.error('Please provide a rejection reason');
+  const getFatherGuardian = (student: ProfileServiceStudent) => {
+    const fatherRelation = student.guardians.find(sg => 
+      sg.relation?.toLowerCase() === 'father'
+    );
+    return fatherRelation?.guardian || null;
+  };
+
+  const getMotherGuardian = (student: ProfileServiceStudent) => {
+    const motherRelation = student.guardians.find(sg => 
+      sg.relation?.toLowerCase() === 'mother'
+    );
+    return motherRelation?.guardian || null;
+  };
+
+  const getGuardian = (student: ProfileServiceStudent) => {
+    const guardianRelation = student.guardians.find(sg => 
+      sg.relation?.toLowerCase() !== 'father' && sg.relation?.toLowerCase() !== 'mother'
+    );
+    return guardianRelation?.guardian || null;
+  };
+
+  // Handle accept application
+  const onAccept = async (data: AcceptApplicationFormData) => {
+    if (!id || !student) {
+      toast.error('Student ID not found');
       return;
     }
 
-    setSaving(true);
+    setIsAccepting(true);
     try {
-      const updatedApp = await applicationAPI.updateApplicationStatus(
-        application.id, 
-        'REJECTED',
-        reviewData.reviewNotes,
-        reviewData.rejectionReason
-      );
-      setApplication(updatedApp);
-      setRejectDialogOpen(false);
-      toast.success('Application rejected');
+      const response = await acceptStudentApplication(id, {
+        admissionNumber: data.admissionNumber,
+        admissionDate: new Date(data.admissionDate).toISOString(),
+        classId: data.classId,
+        sectionId: data.sectionId,
+        rollNumber: data.rollNumber,
+      });
+
+      if (response.success) {
+        toast.success(response.data?.message || 'Student application accepted successfully!');
+        navigate('/admission/applications');
+      } else {
+        toast.error(response.message || 'Failed to accept application');
+      }
+    } catch (error) {
+      console.error('Error accepting application:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  // Handle reject application
+  const onReject = async (data: RejectApplicationFormData) => {
+    if (!id || !student) {
+      toast.error('Student ID not found');
+      return;
+    }
+
+    setIsRejecting(true);
+    try {
+      const response = await rejectStudentApplication(id, {
+        reason: data.reason,
+      });
+
+      if (response.success) {
+        toast.success(response.data?.message || 'Student application rejected successfully!');
+        navigate('/admission/applications');
+      } else {
+        toast.error(response.message || 'Failed to reject application');
+      }
     } catch (error) {
       console.error('Error rejecting application:', error);
-      toast.error('Failed to reject application');
+      toast.error('An unexpected error occurred');
     } finally {
-      setSaving(false);
+      setIsRejecting(false);
+      setShowRejectDialog(false);
     }
   };
 
-  const handleStartReview = async () => {
-    if (!application) return;
-
-    try {
-      const updatedApp = await applicationAPI.updateApplicationStatus(
-        application.id, 
-        'UNDER_REVIEW'
-      );
-      setApplication(updatedApp);
-      toast.success('Application moved to under review');
-    } catch (error) {
-      console.error('Error updating application status:', error);
-      toast.error('Failed to update application status');
-    }
-  };
-
-  const moveToFeeVerification = async () => {
-    if (!application) return;
-    try {
-      const updatedApp = await applicationAPI.updateApplicationStatus(application.id, 'FEE_VERIFICATION');
-      setApplication(updatedApp);
-      toast.success('Moved to fee verification');
-    } catch (e) {
-      toast.error('Failed to move to fee verification');
-    }
-  };
-
-  const markFeeAsVerified = async () => {
-    if (!application) return;
-    try {
-      const updated = await applicationAPI.markFeeVerified(application.id);
-      setApplication(updated);
-      setFeeVerified(true);
-      toast.success('Fee verified');
-    } catch (e) {
-      toast.error('Failed to mark fee as verified');
-    }
-  };
-
-  const moveToDocumentVerification = async () => {
-    if (!application) return;
-    try {
-      const updatedApp = await applicationAPI.updateApplicationStatus(application.id, 'DOCUMENT_VERIFICATION');
-      setApplication(updatedApp);
-      toast.success('Moved to document verification');
-    } catch (e) {
-      toast.error('Failed to move to document verification');
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const Pill: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => (
-      <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${className || ''}`}>{children}</span>
-    );
-    switch (status) {
-      case 'PENDING':
-        return (
-          <Pill className="border-orange-300 text-orange-800 bg-orange-50">
-            <Clock className="w-3 h-3 mr-1" /> Pending
-          </Pill>
-        );
-      case 'UNDER_REVIEW':
-        return (
-          <Pill className="border-yellow-300 text-yellow-800 bg-yellow-50">
-            <AlertTriangle className="w-3 h-3 mr-1" /> Under Review
-          </Pill>
-        );
-      case 'FEE_VERIFICATION':
-        return (
-          <Pill className="border-blue-300 text-blue-800 bg-blue-50">
-            <FileText className="w-3 h-3 mr-1" /> Fee Verification
-          </Pill>
-        );
-      case 'DOCUMENT_VERIFICATION':
-        return (
-          <Pill className="border-teal-300 text-teal-800 bg-teal-50">
-            <FileText className="w-3 h-3 mr-1" /> Document Verification
-          </Pill>
-        );
-      case 'APPROVED':
-        return (
-          <Pill className="border-green-300 text-green-800 bg-green-50">
-            <CheckCircle className="w-3 h-3 mr-1" /> Approved
-          </Pill>
-        );
-      case 'REJECTED':
-        return (
-          <Pill className="border-red-300 text-red-800 bg-red-50">
-            <XCircle className="w-3 h-3 mr-1" /> Rejected
-          </Pill>
-        );
-      default:
-        return <Pill>{status}</Pill>;
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading application...</p>
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-muted-foreground">Loading student application...</p>
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (!application) {
+  if (!student) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Application not found</p>
-            <Button onClick={() => navigate('/admission/applications')} className="mt-4">
-              Back to Applications
-            </Button>
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground">Student application not found</p>
+              <Button onClick={() => navigate('/admission/applications')}>
+                Back to Applications
+              </Button>
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
   }
+
+  const father = getFatherGuardian(student);
+  const mother = getMotherGuardian(student);
+  const guardian = getGuardian(student);
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => navigate('/admission/applications')}
+              className="flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back to Applications
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Application {application.applicationNumber}
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                Application Details
               </h1>
               <p className="text-muted-foreground">
-                Submitted {formatDate(application.submittedAt)}
+                {student.firstName} {student.lastName}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {getStatusBadge(application.status)}
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant={
+                student.status === 'PENDING' ? 'secondary' : 
+                student.status === 'ACCEPTED' ? 'default' : 
+                'destructive'
+              }
+            >
+              {student.status}
+            </Badge>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        {(application.status === 'PENDING' || application.status === 'UNDER_REVIEW' || application.status === 'FEE_VERIFICATION' || application.status === 'DOCUMENT_VERIFICATION') && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <h3 className="font-semibold">Review Actions</h3>
-                  <p className="text-sm text-muted-foreground">Take action on this admission application</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {application.status === 'PENDING' && (
-                    <Button variant="outline" onClick={handleStartReview} disabled={saving}>
-                      <Eye className="w-4 h-4 mr-2" /> Start Review
-                    </Button>
-                  )}
-                  {application.status === 'UNDER_REVIEW' && (
-                    <Button variant="outline" onClick={moveToFeeVerification} disabled={saving}>
-                      <FileText className="w-4 h-4 mr-2" /> Move to Fee Verification
-                    </Button>
-                  )}
-                  {application.status === 'FEE_VERIFICATION' && (
-                    <Button variant="outline" onClick={moveToDocumentVerification} disabled={!application.feeVerified}>
-                      <FileText className="w-4 h-4 mr-2" /> Move to Document Verification
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setApproveDialogOpen(true)}
-                    disabled={saving || !docsVerified || !feeVerified || !(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'))}
-                    className="border-green-300 text-green-800 hover:bg-green-50"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" /> Approve
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setRejectDialogOpen(true)}
-                    disabled={saving}
-                    className="border-red-300 text-red-800 hover:bg-red-50"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" /> Reject
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Application Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Student Information */}
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="student-info">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="student-info">Student Info</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="review">Review</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="student-info" className="mt-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Student Information</CardTitle>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditing(!editing)}
-                      disabled={application.status === 'APPROVED' || application.status === 'REJECTED'}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      {editing ? 'Cancel' : 'Edit'}
-                    </Button>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback className="text-lg">
-                          {application.studentData.firstName[0]}{application.studentData.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          {application.studentData.firstName} {application.studentData.lastName}
-                        </h3>
-                        <p className="text-muted-foreground">
-                          Grade {application.studentData.grade}, Section {application.studentData.section}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>First Name</Label>
-                        {editing ? (
-                          <Input 
-                            {...studentForm.register('firstName')}
-                            className="mt-1"
-                          />
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">{application.studentData.firstName}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>Last Name</Label>
-                        {editing ? (
-                          <Input 
-                            {...studentForm.register('lastName')}
-                            className="mt-1"
-                          />
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">{application.studentData.lastName}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>Date of Birth</Label>
-                        {editing ? (
-                          <Input 
-                            type="date"
-                            {...studentForm.register('dateOfBirth')}
-                            className="mt-1"
-                          />
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">{application.studentData.dateOfBirth}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>Gender</Label>
-                        {editing ? (
-                          <Select 
-                            value={studentForm.watch('gender')}
-                            onValueChange={(value) => studentForm.setValue('gender', value as any)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="MALE">Male</SelectItem>
-                              <SelectItem value="FEMALE">Female</SelectItem>
-                              <SelectItem value="OTHER">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">{application.studentData.gender}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>Blood Group</Label>
-                        {editing ? (
-                          <Input 
-                            {...studentForm.register('bloodGroup')}
-                            className="mt-1"
-                          />
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">{application.studentData.bloodGroup || 'N/A'}</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>Grade</Label>
-                        {editing ? (
-                          <Select 
-                            value={studentForm.watch('grade')}
-                            onValueChange={(value) => studentForm.setValue('grade', value)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="9">Grade 9</SelectItem>
-                              <SelectItem value="10">Grade 10</SelectItem>
-                              <SelectItem value="11">Grade 11</SelectItem>
-                              <SelectItem value="12">Grade 12</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <p className="mt-1 p-2 bg-muted rounded">Grade {application.studentData.grade}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {editing && (
-                      <div className="flex space-x-2">
-                        <Button onClick={handleSaveStudentData} disabled={saving}>
-                          <Save className="w-4 h-4 mr-2" />
-                          {saving ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                        <Button variant="outline" onClick={() => setEditing(false)}>
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="contact" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Student Contact */}
-                    <div>
-                      <h4 className="font-semibold mb-3">Student Contact</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center space-x-3">
-                          <Mail className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">Email</p>
-                            <p>{application.studentData.email || 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <Phone className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">Phone</p>
-                            <p>{application.studentData.phoneNumber || 'N/A'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Parents Contact */}
-                    <div>
-                      <h4 className="font-semibold mb-3">Parents/Guardian</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h5 className="font-medium mb-2">Father</h5>
-                          <div className="space-y-2">
-                            <p><strong>Name:</strong> {application.studentData.fatherName}</p>
-                            <p><strong>Phone:</strong> {application.studentData.fatherPhone || 'N/A'}</p>
-                            <p><strong>Email:</strong> {application.studentData.fatherEmail || 'N/A'}</p>
-                            <p><strong>Occupation:</strong> {application.studentData.fatherOccupation || 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div>
-                          <h5 className="font-medium mb-2">Mother</h5>
-                          <div className="space-y-2">
-                            <p><strong>Name:</strong> {application.studentData.motherName}</p>
-                            <p><strong>Phone:</strong> {application.studentData.motherPhone || 'N/A'}</p>
-                            <p><strong>Email:</strong> {application.studentData.motherEmail || 'N/A'}</p>
-                            <p><strong>Occupation:</strong> {application.studentData.motherOccupation || 'N/A'}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Address */}
-                    <div>
-                      <h4 className="font-semibold mb-3">Address</h4>
-                      <div className="flex items-start space-x-3">
-                        <MapPin className="w-5 h-5 text-muted-foreground mt-1" />
-                        <div>
-                          <p>{application.studentData.street}</p>
-                          <p>{application.studentData.city}, {application.studentData.state} {application.studentData.postalCode}</p>
-                          <p>{application.studentData.country}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Emergency Contact */}
-                    <div>
-                      <h4 className="font-semibold mb-3">Emergency Contact</h4>
-                      <div className="space-y-2">
-                        <p><strong>Name:</strong> {application.studentData.emergencyContactName}</p>
-                        <p><strong>Relation:</strong> {application.studentData.emergencyContactRelation}</p>
-                        <p><strong>Phone:</strong> {application.studentData.emergencyContactPhone}</p>
-                        <p><strong>Email:</strong> {application.studentData.emergencyContactEmail || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="documents" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Documents ({application.documents.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {application.documents.length === 0 ? (
-                      <div className="text-center py-8">
-                        <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <p className="text-muted-foreground">No documents uploaded</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {application.documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <FileText className="w-8 h-8 text-blue-600" />
-                              <div>
-                                <p className="font-medium">{doc.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {doc.type.replace('_', ' ')} • Uploaded {formatDate(doc.uploadedAt)}
-                                </p>
-                              </div>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="review" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Review</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Fee Status Widget */}
-                    <div className="rounded-lg border p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">Fee Status</h4>
-                        {(() => {
-                          const pu = !!(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'));
-          return (
-                            <div className="flex gap-2">
-                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${application.feeVerified ? 'bg-muted text-foreground' : 'bg-background'}`}>
-            {application.feeVerified ? 'Paid' : 'Pending'}
-                              </span>
-                              <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${pu ? 'bg-muted text-foreground' : 'bg-background'}`}>
-                                {pu ? 'Proof Uploaded' : 'No Proof'}
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="p-3 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Total Fee</p>
-                          <p className="font-medium">₹{(application.feeTotalAmount ?? 42000).toLocaleString('en-IN')}</p>
-                        </div>
-                        <div className="p-3 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Admission Fee</p>
-                          <p className="font-medium">₹{(application.feeAdmissionAmount ?? 10000).toLocaleString('en-IN')}</p>
-                        </div>
-                        <div className="p-3 rounded bg-muted/30">
-                          <p className="text-xs text-muted-foreground">Paid Amount</p>
-                          <p className="font-medium">₹{(application.feePaidAmount ?? 10000).toLocaleString('en-IN')}</p>
-                        </div>
-                      </div>
-            {!application.feeVerified && (
-                        <div className="flex gap-2">
-              <Button variant="outline" disabled={!(application.feeProofUploaded || application.documents.some(d => d.type === 'FEE_PROOF'))} onClick={markFeeAsVerified}>
-                            <CheckCircle className="w-4 h-4 mr-2" /> Mark Fee Verified
-                          </Button>
-                        </div>
-                      )}
-                      {application.feeVerified && application.feeVerifiedBy && application.feeVerifiedAt && (
-                        <p className="text-xs text-muted-foreground">
-                          Fee verified by <span className="font-medium">{application.feeVerifiedBy}</span> on {new Date(application.feeVerifiedAt).toLocaleString('en-IN')}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Admin Verification Checklist */}
-                    <div className="rounded-lg border p-4 space-y-3">
-                      <h4 className="font-semibold">Admin Verification</h4>
-                      <div className="flex items-center gap-2">
-                        <Checkbox id="docsVerified" checked={docsVerified} onCheckedChange={(v) => setDocsVerified(!!v)} />
-                        <Label htmlFor="docsVerified">Documents verified</Label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox id="feeVerified" checked={application.feeVerified || feeVerified} onCheckedChange={(v) => setFeeVerified(!!v)} />
-                        <Label htmlFor="feeVerified">Fee proof verified</Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Approve becomes available only after both are verified.</p>
-                    </div>
-
-                    {/* Review Notes */}
-                    <div>
-                      <Label htmlFor="reviewNotes">Review Notes</Label>
-                      <Textarea id="reviewNotes" placeholder="Add notes about this application..." {...reviewForm.register('reviewNotes')} className="mt-1" rows={4} />
-                    </div>
-
-                    {application.reviewedAt && (
-                      <div className="p-4 bg-muted rounded-lg">
-                        <p className="text-sm"><strong>Reviewed by:</strong> {application.reviewedBy}</p>
-                        <p className="text-sm"><strong>Reviewed on:</strong> {new Date(application.reviewedAt).toLocaleString('en-IN')}</p>
-                        {application.reviewNotes && (<p className="text-sm mt-2"><strong>Notes:</strong> {application.reviewNotes}</p>)}
-                        {application.rejectionReason && (<p className="text-sm mt-2"><strong>Rejection Reason:</strong> {application.rejectionReason}</p>)}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Student Information */}
           <div className="space-y-6">
-            {/* Application Summary */}
+            {/* Personal Information Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Application Summary</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-blue-600" />
+                  Personal Information
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Application Number</p>
-                  <p className="font-medium">{application.applicationNumber}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">First Name</label>
+                    <p className="font-medium">{student.firstName}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Last Name</label>
+                    <p className="font-medium">{student.lastName}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  {getStatusBadge(application.status)}
+                
+                {student.dateOfBirth && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Date of Birth</label>
+                    <p className="font-medium">{new Date(student.dateOfBirth).toLocaleDateString()}</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {student.gender && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Gender</label>
+                      <p className="font-medium">{student.gender}</p>
+                    </div>
+                  )}
+                  {student.bloodGroup && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Blood Group</label>
+                      <p className="font-medium">{student.bloodGroup}</p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Priority</p>
-                  <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${application.priority === 'HIGH' ? 'border-red-300 text-red-800 bg-red-50' : 'bg-muted text-foreground'}`}>
-                    {application.priority}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Source</p>
-                  <span className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium">
-                    {application.source.replace('_', ' ')}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Submitted By</p>
-                  <p className="font-medium">{application.submittedBy.name}</p>
-                  <p className="text-sm">{application.submittedBy.type}</p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {student.category && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Category</label>
+                      <p className="font-medium">{student.category}</p>
+                    </div>
+                  )}
+                  {student.religion && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Religion</label>
+                      <p className="font-medium">{student.religion}</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Medical Information */}
-            {(application.studentData.allergies || application.studentData.chronicConditions || application.studentData.medications) && (
+            {/* Contact Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5 text-green-600" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Phone Number</label>
+                  <p className="font-medium">{getContactPhone(student) || 'Not provided'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Email Address</label>
+                  <p className="font-medium">{getContactEmail(student) || 'Not provided'}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Address</label>
+                  <p className="font-medium">{getAddressString(student) || 'Not provided'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Parents/Guardians Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-orange-600" />
+                  Parents/Guardians Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Father's Information */}
+                {father && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 border-b pb-1">Father's Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Name</label>
+                        <p className="font-medium">{father.firstName} {father.lastName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Phone</label>
+                        <p className="font-medium">{father.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mother's Information */}
+                {mother && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 border-b pb-1">Mother's Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Name</label>
+                        <p className="font-medium">{mother.firstName} {mother.lastName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Phone</label>
+                        <p className="font-medium">{mother.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Guardian's Information */}
+                {guardian && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-700 border-b pb-1">Guardian's Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Name</label>
+                        <p className="font-medium">{guardian.firstName} {guardian.lastName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Phone</label>
+                        <p className="font-medium">{guardian.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Action Forms */}
+          <div className="space-y-6">
+            {student.status === 'PENDING' && (
+              <>
+                {/* Accept Application Form */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-green-600" />
+                      Accept Application
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Form {...acceptForm}>
+                      <form onSubmit={acceptForm.handleSubmit(onAccept)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={acceptForm.control}
+                            name="admissionNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Admission Number *</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Enter admission number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={acceptForm.control}
+                            name="admissionDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Admission Date *</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={acceptForm.control}
+                            name="classId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Class *</FormLabel>
+                                <Select
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    setSelectedClassId(value);
+                                    acceptForm.setValue('sectionId', '');
+                                  }}
+                                  value={field.value}
+                                  disabled={classesStoreLoading}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={classesStoreLoading ? "Loading..." : "Select class"} />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {classesFromStore.map((cls) => (
+                                      <SelectItem key={cls.id} value={cls.id}>
+                                        {cls.displayName}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={acceptForm.control}
+                            name="sectionId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Section *</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                  disabled={!selectedClassId || availableSections.length === 0}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue
+                                        placeholder={
+                                          !selectedClassId
+                                            ? "Select class first"
+                                            : availableSections.length === 0
+                                              ? "No sections available"
+                                              : "Select section"
+                                        }
+                                      />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {availableSections.map((section) => (
+                                      <SelectItem key={section.id} value={section.id}>
+                                        Section {section.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={acceptForm.control}
+                          name="rollNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Roll Number (Optional)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter roll number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button
+                          type="submit"
+                          disabled={isAccepting}
+                          className="w-full flex items-center gap-2"
+                        >
+                          {isAccepting ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                              Accepting...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4" />
+                              Accept Application
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+
+                <Separator />
+
+                {/* Reject Application */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <X className="h-5 w-5 text-red-600" />
+                      Reject Application
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="w-full">
+                          <X className="h-4 w-4 mr-2" />
+                          Reject Application
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reject Application</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Please provide a reason for rejecting this application. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Form {...rejectForm}>
+                          <FormField
+                            control={rejectForm.control}
+                            name="reason"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rejection Reason *</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Enter reason for rejection..."
+                                    className="min-h-[100px]"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </Form>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={rejectForm.handleSubmit(onReject)}
+                            disabled={isRejecting}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {isRejecting ? 'Rejecting...' : 'Reject Application'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {student.status !== 'PENDING' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Medical Information</CardTitle>
+                  <CardTitle>Application Status</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {application.studentData.allergies && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Allergies</p>
-                      <p className="text-sm">{application.studentData.allergies}</p>
-                    </div>
-                  )}
-                  {application.studentData.chronicConditions && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Chronic Conditions</p>
-                      <p className="text-sm">{application.studentData.chronicConditions}</p>
-                    </div>
-                  )}
-                  {application.studentData.medications && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Medications</p>
-                      <p className="text-sm">{application.studentData.medications}</p>
-                    </div>
-                  )}
+                <CardContent>
+                  <div className="text-center space-y-4">
+                    <Badge
+                      variant={student.status === 'ACCEPTED' ? 'default' : 'destructive'}
+                      className="text-lg px-4 py-2"
+                    >
+                      {student.status}
+                    </Badge>
+                    <p className="text-muted-foreground">
+                      This application has already been {student.status.toLowerCase()}.
+                    </p>
+                    {student.admissionNumber && student.status === 'ACCEPTED' && (
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Hash className="h-4 w-4" />
+                          <span className="font-medium">Admission Number:</span>
+                        </div>
+                        <p className="text-lg font-mono">{student.admissionNumber}</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}
           </div>
         </div>
-
-        {/* Approval Dialog */}
-        <AlertDialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Approve Application</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to approve this admission application for{' '}
-                <strong>{application.studentData.firstName} {application.studentData.lastName}</strong>?
-                This will add the student to the school system.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleApprove}
-                className="bg-green-600 hover:bg-green-700"
-                disabled={saving}
-              >
-                {saving ? 'Approving...' : 'Approve Application'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Rejection Dialog */}
-        <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reject Application</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to reject this admission application for{' '}
-                <strong>{application.studentData.firstName} {application.studentData.lastName}</strong>?
-                Please provide a reason for rejection.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="p-4">
-              <Label htmlFor="rejectionReasonDialog">Rejection Reason (Required)</Label>
-              <Textarea
-                id="rejectionReasonDialog"
-                placeholder="Please provide a clear reason for rejection..."
-                {...reviewForm.register('rejectionReason')}
-                className="mt-1"
-                rows={3}
-              />
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleReject}
-                className="bg-red-600 hover:bg-red-700"
-                disabled={saving}
-              >
-                {saving ? 'Rejecting...' : 'Reject Application'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </DashboardLayout>
   );

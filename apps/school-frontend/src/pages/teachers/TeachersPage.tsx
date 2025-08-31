@@ -591,10 +591,6 @@ const TeachersPage: React.FC = () => {
         </TableCell>
         <TableCell>
           <div className="flex items-center space-x-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={teacher.avatar} alt={`${teacher.firstName} ${teacher.lastName}`} />
-              <AvatarFallback>{getInitials(teacher.firstName, teacher.lastName)}</AvatarFallback>
-            </Avatar>
             <div>
               <div className="font-medium">
                 {teacher.firstName} {teacher.lastName}

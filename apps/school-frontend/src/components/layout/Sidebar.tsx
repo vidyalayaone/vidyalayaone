@@ -31,7 +31,7 @@ const AppSidebar: React.FC = () => {
   
   const navigation = user ? getFlatNavigationForUser(user.permissions || []) : [];
   const userInitials = getUserInitials(user);
-  const userFullName = getUserFullName(user);
+  const username = user ? user.username : 'Unknown User';
   const roleDisplay = user ? getRoleDisplayName(user) : '';
 
   // Check if a path is active
@@ -100,6 +100,38 @@ const AppSidebar: React.FC = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* User Section Footer */}
+      <SidebarFooter className="px-2 py-4 border-t border-sidebar-border">
+        <div className="space-y-2">
+          {/* User Info */}
+          {user && (
+            <div className={`flex items-center gap-3 px-3 py-2 ${collapsed ? 'justify-center' : ''}`}>
+              
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate text-sidebar-foreground">
+                    {username}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "sm"}
+            onClick={handleLogout}
+            className={`w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+              collapsed ? 'px-2' : 'px-3'
+            }`}
+          >
+            <LogOut className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Logout</span>}
+          </Button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 };

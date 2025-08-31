@@ -156,6 +156,7 @@ export async function getAllStudents(req: Request, res: Response) {
         admissionNumber: true,
         firstName: true,
         lastName: true,
+        dateOfBirth: true,
         profilePhoto: true,
         admissionDate: true,
         enrollments: {

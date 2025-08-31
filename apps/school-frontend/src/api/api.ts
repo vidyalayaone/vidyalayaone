@@ -27,6 +27,7 @@ import {
   ProfileServiceTeacherDetail,
   SchoolSubjectsResponse,
   CreateTeacherRequest,
+  UpdateTeacherRequest,
   CreateTeacherResponse,
   CreateDocumentRequest,
   DocumentsListResponse,
@@ -366,6 +367,16 @@ export const api = {
     }
   },
 
+  // Profile service: update an existing teacher
+  updateTeacher: async (id: string, data: UpdateTeacherRequest): Promise<APIResponse<{ teacher: ProfileServiceTeacherDetail['teacher'] }>> => {
+    try {
+      const response = await httpClient.patch(`/profile/teachers/${id}`, data);
+      return handleResponse<{ teacher: ProfileServiceTeacherDetail['teacher'] }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Section details endpoints
   getSectionDetails: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
     try {
@@ -550,6 +561,7 @@ export const {
   deleteTeachers,
   getSchoolSubjects,
   createTeacher,
+  updateTeacher,
   getSectionDetails,
   getSectionStudents,
   getSectionTimetable,

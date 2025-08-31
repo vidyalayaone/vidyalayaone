@@ -9,6 +9,7 @@ import { getStudentApplication } from '../controllers/getStudentApplication';
 import { acceptStudentApplication } from '../controllers/acceptStudentApplication';
 import { rejectStudentApplication } from '../controllers/rejectStudentApplication';
 import { createTeacher } from '../controllers/createTeacher';
+import { updateTeacher } from '../controllers/updateTeacher';
 import { deleteTeachers } from '../controllers/deleteTeachers';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
@@ -52,6 +53,7 @@ router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument)
 
 // Teacher routes
 router.post('/teachers', profileLimiter, createTeacher);
+router.patch('/teachers/:id', profileLimiter, updateTeacher);
 router.delete('/teachers', profileLimiter, deleteTeachers);
 router.get('/teachers/:id', profileLimiter, getTeacher);
 router.get('/schools/teachers', profileLimiter, getAllTeachers);

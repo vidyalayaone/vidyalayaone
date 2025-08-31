@@ -130,6 +130,7 @@ interface SectionsState {
   fetchSectionStudents: (schoolId: string, classId: string, sectionId: string, forceRefresh?: boolean) => Promise<void>;
   fetchSectionTimetable: (schoolId: string, classId: string, sectionId: string, forceRefresh?: boolean) => Promise<void>;
   fetchAllSectionData: (schoolId: string, classId: string, sectionId: string, forceRefresh?: boolean) => Promise<void>;
+  updateClassTeacher: (teacherId: string, teacherName: string) => void;
   
   // Cache management
   clearCache: (type?: 'details' | 'students' | 'timetable') => void;
@@ -397,6 +398,31 @@ export const useSectionsStore = create<SectionsState>()(
           students: null,
           timetable: null,
         }
+      });
+    },
+
+    // Update class teacher in current section details
+    updateClassTeacher: (teacherId: string, teacherName: string): void => {
+      set((state) => {
+        if (!state.currentSection.details) return state;
+        
+        return {
+          ...state,
+          currentSection: {
+            ...state.currentSection,
+            details: {
+              ...state.currentSection.details,
+              section: {
+                ...state.currentSection.details.section,
+                classTeacherId: teacherId,
+              },
+              stats: {
+                ...state.currentSection.details.stats,
+                classTeacher: { id: teacherId, name: teacherName },
+              },
+            },
+          },
+        };
       });
     },
 

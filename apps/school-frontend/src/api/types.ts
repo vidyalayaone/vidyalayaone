@@ -853,3 +853,26 @@ export interface DeleteTeachersResponse {
   };
   errors?: string[];
 }
+
+// Assign class teacher types
+export interface AssignClassTeacherRequest {
+  sectionId: string;
+  teacherId: string;
+}
+
+export interface AssignClassTeacherResponse {
+  section: {
+    id: string;
+    name: string;
+    classTeacherId: string;
+    class: {
+      id: string;
+      name: string;
+      academicYear: string;
+    };
+    school: {
+      id: string;
+      name: string;
+    };
+  };
+}

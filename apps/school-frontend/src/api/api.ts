@@ -31,7 +31,9 @@ import {
   CreateTeacherResponse,
   CreateDocumentRequest,
   DocumentsListResponse,
-  ProfileServiceDocument
+  ProfileServiceDocument,
+  AssignClassTeacherRequest,
+  AssignClassTeacherResponse
 } from './types';
 
 // Import mock API for fallback
@@ -405,6 +407,16 @@ export const api = {
     }
   },
 
+  // School service: assign class teacher to a section
+  assignClassTeacher: async (data: AssignClassTeacherRequest): Promise<APIResponse<AssignClassTeacherResponse>> => {
+    try {
+      const response = await httpClient.put('/school/sections/assign-class-teacher', data);
+      return handleResponse<AssignClassTeacherResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Student Documents endpoints
   createStudentDocument: async (studentId: string, data: CreateDocumentRequest): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
     try {
@@ -565,6 +577,7 @@ export const {
   getSectionDetails,
   getSectionStudents,
   getSectionTimetable,
+  assignClassTeacher,
   createStudentDocument,
   uploadStudentDocument,
   getStudentDocuments,

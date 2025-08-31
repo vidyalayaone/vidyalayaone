@@ -48,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AssignClassTeacherDialog from '@/components/dialogs/AssignClassTeacherDialog';
 
 // Store imports
 import { useSectionsStore } from '@/store/sectionsStore';
@@ -65,13 +66,15 @@ const ClassSectionPage: React.FC = () => {
     errors,
     fetchAllSectionData,
     clearCurrentSection,
-    clearErrors
+    clearErrors,
+    updateClassTeacher
   } = useSectionsStore();
 
   // Local state
   const [activeTab, setActiveTab] = useState('students');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGender, setSelectedGender] = useState<string>('all');
+  const [showAssignTeacherDialog, setShowAssignTeacherDialog] = useState(false);
 
   // Derived data
   const schoolId = school?.id;
@@ -166,8 +169,11 @@ const ClassSectionPage: React.FC = () => {
   };
 
   const handleEditClassTeacher = () => {
-    // In a real app, this would open a dialog or navigate to edit teacher assignment
-    console.log('Edit class teacher');
+    setShowAssignTeacherDialog(true);
+  };
+
+  const handleAssignTeacherSuccess = (teacher: { id: string; name: string }) => {
+    updateClassTeacher(teacher.id, teacher.name);
   };
 
   const getAttendanceStatusColor = (status: string) => {
@@ -435,6 +441,17 @@ const ClassSectionPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Assign Class Teacher Dialog */}
+      {sectionDetails && (
+        <AssignClassTeacherDialog
+          open={showAssignTeacherDialog}
+          onOpenChange={setShowAssignTeacherDialog}
+          sectionId={sectionDetails.section.id}
+          currentTeacher={sectionDetails.stats.classTeacher}
+          onAssignSuccess={handleAssignTeacherSuccess}
+        />
+      )}
     </DashboardLayout>
   );
 };

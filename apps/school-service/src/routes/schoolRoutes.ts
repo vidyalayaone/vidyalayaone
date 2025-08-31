@@ -15,6 +15,7 @@ import { getSubjects } from "../controllers/getSubjects";
 import { getSubjectsBulk } from "../controllers/getSubjectsBulk";
 import { getSectionDetails } from "../controllers/getSectionDetails";
 import { getSectionStudents } from "../controllers/getSectionStudents";
+import { assignClassTeacher } from "../controllers/assignClassTeacher";
 // import { getSectionTimetable } from "../controllers/getSectionTimetable";
 
 const router: Router = Router();
@@ -28,6 +29,7 @@ router.get('/approve/:schoolId', approveSchool);
 // Class and Section management routes
 router.post('/classes', createClasses);
 router.post('/sections', createSections);
+router.put('/sections/assign-class-teacher', assignClassTeacher);
 router.get('/classes-sections/:schoolId', getClassesAndSections);
 
 // Internal route for other services

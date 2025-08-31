@@ -70,6 +70,7 @@ class ServiceRegistry {
         { path: '/:schoolId/classes/:classId/sections/:sectionId/details', method: 'GET', isProtected: true },
         { path: '/:schoolId/classes/:classId/sections/:sectionId/students', method: 'GET', isProtected: true },
         { path: '/:schoolId/classes/:classId/sections/:sectionId/timetable', method: 'GET', isProtected: true },
+        { path: '/sections/assign-class-teacher', method: 'PUT', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,
@@ -121,29 +122,6 @@ class ServiceRegistry {
       healthPath: '/health',
       timeout: config.services.attendance.timeout,
     });
-
-    // Future services - fully protected at gateway
-    // this.services.set('users', {
-    //   name: 'user-service',
-    //   url: config.services.users?.url || 'http://localhost:3002',
-    //   path: '/api/v1/users',
-    //   isProtected: true, // All routes protected at gateway
-    //   healthPath: '/health',
-    //   timeout: 30000,
-    // });
-
-    // this.services.set('exams', {
-    //   name: 'exam-service',
-    //   url: config.services.exams?.url || 'http://localhost:3003',
-    //   path: '/api/v1/exams',
-    //   isProtected: true, // All routes protected at gateway
-    //   routes: [
-    //     // Override default protection for specific routes if needed
-    //     { path: '/public-results', method: 'GET', isProtected: false },
-    //   ],
-    //   healthPath: '/health',
-    //   timeout: 30000,
-    // });
   }
 
   getService(name: string): ServiceConfig | undefined {

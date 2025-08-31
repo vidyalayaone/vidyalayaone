@@ -78,6 +78,15 @@ export async function uploadStudentDocument(req: Request, res: Response) {
 			return;
 		}
 
+		if (student.status !== 'ACCEPTED') {
+			res.status(403).json({ 
+				success: false,
+				error: { message: 'Cannot upload document. Student is not in ACCEPTED status' },
+				timestamp: new Date().toISOString() 
+			});
+			return;
+		}
+
 		if (student.schoolId !== schoolId) {
 			res.status(403).json({ 
 				success: false, 

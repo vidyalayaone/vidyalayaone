@@ -41,7 +41,6 @@ export const updateStudent = async (req: Request, res: Response) => {
       address,
       contactInfo,
       parentInfo,
-      medicalInfo,
       classId,
       sectionId,
       academicYear,
@@ -133,13 +132,6 @@ export const updateStudent = async (req: Request, res: Response) => {
           // Update address and contactInfo as JSON fields
           ...(address && { address }),
           ...(contactInfo && { contactInfo }),
-          // Store medicalInfo in metaData if provided
-          ...(medicalInfo && { 
-            metaData: {
-              // Store the medical info directly, existing metadata would be preserved by Prisma
-              medicalInfo
-            } 
-          }),
         },
         include: {
           guardians: {
@@ -172,7 +164,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.fatherName.split(' ')[0] || undefined,
                 lastName: parentInfo.fatherName.split(' ').slice(1).join(' ') || undefined,
                 phone: parentInfo.fatherPhone || undefined,
-                email: parentInfo.fatherEmail || undefined,
               },
             });
           } else {
@@ -182,7 +173,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.fatherName.split(' ')[0],
                 lastName: parentInfo.fatherName.split(' ').slice(1).join(' ') || '',
                 phone: parentInfo.fatherPhone,
-                email: parentInfo.fatherEmail,
               },
             });
 
@@ -191,7 +181,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 studentId: id,
                 guardianId: newGuardian.id,
                 relation: 'Father',
-                metaData: { occupation: parentInfo.fatherOccupation },
               },
             });
           }
@@ -212,7 +201,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.motherName.split(' ')[0] || undefined,
                 lastName: parentInfo.motherName.split(' ').slice(1).join(' ') || undefined,
                 phone: parentInfo.motherPhone || undefined,
-                email: parentInfo.motherEmail || undefined,
               },
             });
           } else {
@@ -222,7 +210,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.motherName.split(' ')[0],
                 lastName: parentInfo.motherName.split(' ').slice(1).join(' ') || '',
                 phone: parentInfo.motherPhone,
-                email: parentInfo.motherEmail,
               },
             });
 
@@ -231,7 +218,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 studentId: id,
                 guardianId: newGuardian.id,
                 relation: 'Mother',
-                metaData: { occupation: parentInfo.motherOccupation },
               },
             });
           }
@@ -252,7 +238,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.guardianName.split(' ')[0] || undefined,
                 lastName: parentInfo.guardianName.split(' ').slice(1).join(' ') || undefined,
                 phone: parentInfo.guardianPhone || undefined,
-                email: parentInfo.guardianEmail || undefined,
               },
             });
           } else {
@@ -262,7 +247,6 @@ export const updateStudent = async (req: Request, res: Response) => {
                 firstName: parentInfo.guardianName.split(' ')[0],
                 lastName: parentInfo.guardianName.split(' ').slice(1).join(' ') || '',
                 phone: parentInfo.guardianPhone,
-                email: parentInfo.guardianEmail,
               },
             });
 

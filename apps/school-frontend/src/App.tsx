@@ -35,6 +35,7 @@ import SubjectsPage from './pages/subjects/SubjectsPage';
 // Admission Pages
 import AdmissionPage from './pages/admission/AdmissionPage';
 import SingleStudentAdmissionPage from './pages/admission/SingleStudentAdmissionPage';
+import PublicApplicationPage from './pages/admission/PublicApplicationPage';
 import AdmissionApplicationsPage from './pages/admission/AdmissionApplicationsPage';
 import ApplicationDetailPage from './pages/admission/ApplicationDetailPage';
 
@@ -138,6 +139,15 @@ const App: React.FC = () => {
               element={
                 <PublicRoute>
                   <ForgotPasswordPage />
+                </PublicRoute>
+              }
+            />
+
+            <Route
+              path="/apply"
+              element={
+                <PublicRoute>
+                  <PublicApplicationPage />
                 </PublicRoute>
               }
             />

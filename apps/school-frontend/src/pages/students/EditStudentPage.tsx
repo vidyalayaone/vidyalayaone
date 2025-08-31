@@ -52,10 +52,8 @@ const editStudentSchema = z.object({
   // Parents/Guardians Information
   fatherName: z.string().optional(),
   fatherPhone: z.string().optional(),
-  fatherOccupation: z.string().optional(),
   motherName: z.string().optional(),
   motherPhone: z.string().optional(),
-  motherOccupation: z.string().optional(),
   guardianName: z.string().optional(),
   guardianPhone: z.string().optional(),
   guardianOccupation: z.string().optional(),
@@ -111,10 +109,8 @@ const EditStudentPage: React.FC = () => {
       emailAddress: '',
       fatherName: '',
       fatherPhone: '',
-      fatherOccupation: '',
       motherName: '',
       motherPhone: '',
-      motherOccupation: '',
       guardianName: '',
       guardianPhone: '',
       guardianOccupation: '',
@@ -225,10 +221,8 @@ const EditStudentPage: React.FC = () => {
             emailAddress: getContactEmail(fetchedStudent),
             fatherName: father ? `${father.firstName} ${father.lastName}`.trim() : '',
             fatherPhone: father?.phone || '',
-            fatherOccupation: father?.metaData?.occupation || '',
             motherName: mother ? `${mother.firstName} ${mother.lastName}`.trim() : '',
             motherPhone: mother?.phone || '',
-            motherOccupation: mother?.metaData?.occupation || '',
             guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : '',
             guardianPhone: guardian?.phone || '',
             guardianOccupation: guardian?.metaData?.occupation || '',
@@ -319,10 +313,8 @@ const EditStudentPage: React.FC = () => {
         updateStudentData.parentInfo = {
           fatherName: data.fatherName || '',
           fatherPhone: data.fatherPhone,
-          fatherOccupation: data.fatherOccupation,
           motherName: data.motherName || '',
           motherPhone: data.motherPhone,
-          motherOccupation: data.motherOccupation,
           guardianName: data.guardianName,
           guardianPhone: data.guardianPhone,
           guardianRelation: 'Other',
@@ -787,19 +779,6 @@ const EditStudentPage: React.FC = () => {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="fatherOccupation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">Occupation</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Father's occupation" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   </div>
 
@@ -828,19 +807,6 @@ const EditStudentPage: React.FC = () => {
                             <FormLabel className="font-medium">Phone</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Mother's phone" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="motherOccupation"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">Occupation</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Mother's occupation" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

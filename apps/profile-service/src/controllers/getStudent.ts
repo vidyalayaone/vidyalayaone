@@ -79,6 +79,15 @@ export async function getStudent(req: Request, res: Response) {
       return;
     }
 
+    if (student.status !== 'ACCEPTED') {
+      res.status(403).json({
+        success: false,
+        error: { message: 'Access denied. Student is not in ACCEPTED status' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     // Verify that the student belongs to the same school as the context
     if (student.schoolId !== schoolId) {
       res.status(403).json({

@@ -631,7 +631,7 @@ const StudentsPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Button 
               className="space-x-2"
-              onClick={() => navigate('/admission')}
+              onClick={() => navigate('/admission/single')}
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Student</span>

@@ -16,7 +16,9 @@ import {
   PaginatedResponse,
   PaginationParams,
   ProfileServiceStudent,
+  StudentApplicationsResponse,
   CreateStudentRequest,
+  CreateStudentApplicationRequest,
   DeleteStudentsRequest,
   DeleteStudentsResponse,
   DeleteTeachersRequest,
@@ -300,6 +302,16 @@ export const api = {
     }
   },
 
+  // Profile service: create a student application (public route)
+  createStudentApplication: async (data: CreateStudentApplicationRequest): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.post('/profile/students/apply', data);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Profile service: update an existing student
   updateStudent: async (id: string, data: Partial<CreateStudentRequest>): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
     try {
@@ -463,6 +475,16 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Profile service: get student applications by status
+  getStudentApplications: async (): Promise<APIResponse<StudentApplicationsResponse>> => {
+    try {
+      const response = await httpClient.get('/profile/schools/student-applications');
+      return handleResponse<StudentApplicationsResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -486,6 +508,7 @@ export const {
   getStudentsBySchool,
   getStudentById,
   createStudent,
+  createStudentApplication,
   updateStudent,
   deleteStudents,
   deleteTeachers,
@@ -499,5 +522,6 @@ export const {
   getStudentDocuments,
   getStudentDocument,
   getMyTeacherId,
-  markAttendance
+  markAttendance,
+  getStudentApplications
 } = api;

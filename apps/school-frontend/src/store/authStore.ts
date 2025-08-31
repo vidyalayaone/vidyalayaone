@@ -107,7 +107,7 @@ export const useAuthStore = create<AuthState>()(
             }
           });
           
-          toast.success(`Welcome back, ${user.firstName}!`);
+          toast.success(`Welcome back!`);
           return true;
         } else {
           toast.error(response.message || 'Login failed');

@@ -193,6 +193,8 @@ export interface Teacher extends Omit<User, 'role'> {
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   bloodGroup?: string;
   maritalStatus: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+  religion?: string;
+  category?: string;
 }
 
 // Profile Service Teacher interface (matches backend response)

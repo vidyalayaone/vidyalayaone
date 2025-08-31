@@ -161,7 +161,7 @@ const EditTeacherPage: React.FC = () => {
           setSelectedSubjects(teacherData.subjectIds || []);
         } else {
           toast.error('Failed to load teacher data');
-          navigate('/teachers');
+          navigate(`/teachers/${id}`);
         }
 
         // Handle subjects data
@@ -275,8 +275,8 @@ const EditTeacherPage: React.FC = () => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-2">Teacher not found</h2>
-            <Button onClick={() => navigate('/teachers')}>
-              Back to Teachers
+            <Button onClick={() => navigate(`/teachers/${id}`)}>
+              Back to Teacher
             </Button>
           </div>
         </div>
@@ -292,15 +292,14 @@ const EditTeacherPage: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate('/teachers')}
+            onClick={() => navigate(`/teachers/${id}`)}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Teachers
+            Back to Teacher
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Edit Teacher</h1>
-            <p className="text-muted-foreground">{teacher.fullName} ({teacher.employeeId})</p>
           </div>
         </div>
 
@@ -588,7 +587,7 @@ const EditTeacherPage: React.FC = () => {
                   name="salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Salary</FormLabel>
+                      <FormLabel>Salary (in ₹ per month)(Optional)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 

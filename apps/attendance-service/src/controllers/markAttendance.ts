@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
 import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-utils';
 import { markAttendanceSchema } from '../validations/attendanceSchemas';
+import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 
 const { prisma } = DatabaseService;
 
@@ -15,6 +16,25 @@ export async function markAttendance(req: Request, res: Response): Promise<void>
     const userId = userData?.id;
     const { context, schoolId } = getSchoolContext(req);
 
+    
+    if(context !== 'school') {
+      res.status(403).json({
+        success: false,
+        error: { message: 'Context must be school' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    if (!schoolId) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'SchoolId context required' },
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     if (!userId) {
       res.status(401).json({
         success: false,
@@ -24,19 +44,10 @@ export async function markAttendance(req: Request, res: Response): Promise<void>
       return;
     }
 
-    if(context !== 'school') {
+    if (!hasPermission(PERMISSIONS.ATTENDANCE.MARK, userData)){
       res.status(403).json({
         success: false,
-        error: { message: 'Context must be school' },
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-
-    if (!schoolId) {
-      res.status(400).json({
-        success: false,
-        error: { message: 'SchoolId context required' },
+        error: { message: 'Insufficient permissions to mark attendance' },
         timestamp: new Date().toISOString()
       });
       return;

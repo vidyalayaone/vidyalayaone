@@ -5,11 +5,15 @@ import { getStudentAttendance } from '../controllers/getStudentAttendance';
 import { getAttendanceStats } from '../controllers/getAttendanceStats';
 import { updateAttendanceRecord } from '../controllers/updateAttendanceRecord';
 import { exportAttendance } from '../controllers/exportAttendance';
+import { checkAttendanceExists } from '../controllers/checkAttendanceExists';
 
 const router: Router = Router();
 
 // POST /api/v1/attendance/mark - Mark attendance for a class
 router.post('/mark', markAttendance);
+
+// GET /api/v1/attendance/check/:classId/section/:sectionId - Check if attendance exists for a date
+router.get('/check/:classId/section/:sectionId', checkAttendanceExists);
 
 // GET /api/v1/attendance/class/:classId/section/:sectionId - Get class attendance
 router.get('/class/:classId/section/:sectionId', getClassAttendance);

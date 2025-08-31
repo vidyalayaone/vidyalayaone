@@ -10,7 +10,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Eye
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/table';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import toast from 'react-hot-toast';
 import { api } from '@/api/api';
 import { useAuthStore } from '@/store/authStore';
@@ -82,16 +84,18 @@ interface SchoolClass {
 // StudentAttendanceRow Component
 interface StudentAttendanceRowProps {
   student: Student;
-  attendance: AttendanceStatus;
+  attendance: AttendanceStatus | undefined;
   onAttendanceChange: (studentId: string, status: AttendanceStatus) => void;
+  isViewMode: boolean;
 }
 
 const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
   student,
   attendance,
   onAttendanceChange,
+  isViewMode,
 }) => {
-  const getStatusIcon = (status: AttendanceStatus) => {
+  const getStatusIcon = (status: AttendanceStatus | undefined) => {
     switch (status) {
       case 'present':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
@@ -100,11 +104,11 @@ const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
       case 'late':
         return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
       default:
-        return null;
+        return <Clock className="w-4 h-4 text-gray-400" />;
     }
   };
 
-  const getStatusBadge = (status: AttendanceStatus) => {
+  const getStatusBadge = (status: AttendanceStatus | undefined) => {
     switch (status) {
       case 'present':
         return <Badge variant="default" className="bg-green-100 text-green-800">Present</Badge>;
@@ -113,7 +117,7 @@ const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
       case 'late':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Late</Badge>;
       default:
-        return <Badge variant="outline">Not Set</Badge>;
+        return <Badge variant="outline" className="bg-gray-100 text-gray-600">Not Marked</Badge>;
     }
   };
 
@@ -137,24 +141,31 @@ const StudentAttendanceRow: React.FC<StudentAttendanceRowProps> = ({
         </div>
       </TableCell>
       <TableCell>
-        <RadioGroup
-          value={attendance}
-          onValueChange={(value) => onAttendanceChange(student.id, value as AttendanceStatus)}
-          className="flex space-x-4"
-        >
+        {isViewMode ? (
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="present" id={`${student.id}-present`} />
-            <Label htmlFor={`${student.id}-present`} className="text-sm">Present</Label>
+            {getStatusIcon(attendance)}
+            {getStatusBadge(attendance)}
           </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="absent" id={`${student.id}-absent`} />
-            <Label htmlFor={`${student.id}-absent`} className="text-sm">Absent</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="late" id={`${student.id}-late`} />
-            <Label htmlFor={`${student.id}-late`} className="text-sm">Late</Label>
-          </div>
-        </RadioGroup>
+        ) : (
+          <RadioGroup
+            value={attendance || ''}
+            onValueChange={(value) => onAttendanceChange(student.id, value as AttendanceStatus)}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="present" id={`${student.id}-present`} />
+              <Label htmlFor={`${student.id}-present`} className="text-sm">Present</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="absent" id={`${student.id}-absent`} />
+              <Label htmlFor={`${student.id}-absent`} className="text-sm">Absent</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="late" id={`${student.id}-late`} />
+              <Label htmlFor={`${student.id}-late`} className="text-sm">Late</Label>
+            </div>
+          </RadioGroup>
+        )}
       </TableCell>
     </TableRow>
   );
@@ -171,6 +182,13 @@ const MarkStudentAttendancePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedAcademicYear] = useState<string>('2025-26');
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  
+  // Attendance checking state
+  const [attendanceExists, setAttendanceExists] = useState<boolean>(false);
+  const [checkingAttendance, setCheckingAttendance] = useState<boolean>(false);
+  const [existingAttendanceRecords, setExistingAttendanceRecords] = useState<any[]>([]);
+  const [isViewMode, setIsViewMode] = useState<boolean>(false);
 
   // Classes and sections data
   const [classes, setClasses] = useState<SchoolClass[]>([]);
@@ -197,6 +215,73 @@ const MarkStudentAttendancePage: React.FC = () => {
         totalGirls: null,
       }))
     }));
+  };
+
+  // Check if attendance exists for the selected date
+  const checkAttendanceForDate = async (classId: string, sectionId: string, date: string) => {
+    if (!classId || !sectionId || !date) return;
+
+    setCheckingAttendance(true);
+    try {
+      const response = await api.checkAttendanceExists(classId, sectionId, date);
+      
+      if (response.success && response.data) {
+        setAttendanceExists(response.data.attendanceExists);
+        
+        if (response.data.attendanceExists) {
+          // Load existing attendance records
+          await loadExistingAttendance(classId, sectionId, date);
+        } else {
+          setExistingAttendanceRecords([]);
+          setIsViewMode(false);
+        }
+      } else {
+        setAttendanceExists(false);
+        setExistingAttendanceRecords([]);
+        setIsViewMode(false);
+      }
+    } catch (error) {
+      console.error('Error checking attendance:', error);
+      setAttendanceExists(false);
+      setExistingAttendanceRecords([]);
+      setIsViewMode(false);
+    } finally {
+      setCheckingAttendance(false);
+    }
+  };
+
+  // Load existing attendance records
+  const loadExistingAttendance = async (classId: string, sectionId: string, date: string) => {
+    try {
+      const response = await api.getClassAttendance(classId, sectionId, date);
+      
+      if (response.success && response.data) {
+        setExistingAttendanceRecords(response.data.attendanceRecords);
+        setIsViewMode(true);
+        
+        // Convert existing records to frontend format and populate attendance state
+        const existingAttendanceMap: Record<string, AttendanceStatus> = {};
+        response.data.attendanceRecords.forEach((record: any) => {
+          let status: AttendanceStatus = 'present';
+          switch (record.status) {
+            case 'PRESENT':
+              status = 'present';
+              break;
+            case 'ABSENT':
+              status = 'absent';
+              break;
+            case 'LEAVE':
+              status = 'late';
+              break;
+          }
+          existingAttendanceMap[record.studentId] = status;
+        });
+        setAttendance(existingAttendanceMap);
+      }
+    } catch (error) {
+      console.error('Error loading existing attendance:', error);
+      toast.error('Failed to load existing attendance records');
+    }
   };
 
   // Fetch teacher ID for the logged-in user
@@ -270,7 +355,21 @@ const MarkStudentAttendancePage: React.FC = () => {
   // Reset section when class changes
   useEffect(() => {
     setSelectedSection('');
+    setAttendanceExists(false);
+    setExistingAttendanceRecords([]);
+    setIsViewMode(false);
   }, [selectedClass]);
+
+  // Check attendance when class, section, or date changes
+  useEffect(() => {
+    if (selectedClass && selectedSection && selectedDate) {
+      checkAttendanceForDate(selectedClass, selectedSection, selectedDate);
+    } else {
+      setAttendanceExists(false);
+      setExistingAttendanceRecords([]);
+      setIsViewMode(false);
+    }
+  }, [selectedClass, selectedSection, selectedDate]);
 
   // Load students when class and section are selected
   useEffect(() => {
@@ -312,12 +411,12 @@ const MarkStudentAttendancePage: React.FC = () => {
 
           setStudents(mappedStudents);
 
-          // Initialize attendance with 'present' as default
-          const initialAttendance: Record<string, AttendanceStatus> = {};
-          mappedStudents.forEach(student => {
-            initialAttendance[student.id] = 'present';
-          });
-          setAttendance(initialAttendance);
+          // Only initialize attendance if not in view mode
+          if (!isViewMode) {
+            // Don't set default attendance, let users explicitly mark each student
+            const initialAttendance: Record<string, AttendanceStatus> = {};
+            setAttendance(initialAttendance);
+          }
         } else {
           toast.error(response.message || 'Failed to fetch students');
           setStudents([]);
@@ -334,18 +433,16 @@ const MarkStudentAttendancePage: React.FC = () => {
     };
 
     fetchStudents();
-  }, [selectedClass, selectedSection, school?.id, selectedAcademicYear]);
-
-  // Reset section when class changes
-  useEffect(() => {
-    setSelectedSection('');
-  }, [selectedClass]);
+  }, [selectedClass, selectedSection, school?.id, selectedAcademicYear, isViewMode]);
 
   const handleAttendanceChange = (studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({
-      ...prev,
-      [studentId]: status
-    }));
+    // Only allow changes if not in view mode (attendance not already marked)
+    if (!isViewMode) {
+      setAttendance(prev => ({
+        ...prev,
+        [studentId]: status
+      }));
+    }
   };
 
   const handleSaveAttendance = async () => {
@@ -356,6 +453,18 @@ const MarkStudentAttendancePage: React.FC = () => {
 
     if (!teacherId) {
       toast.error('Unable to identify teacher. Please refresh the page and try again.');
+      return;
+    }
+
+    if (attendanceExists) {
+      toast.error('Attendance has already been marked for this date');
+      return;
+    }
+
+    // Check if all students have attendance marked
+    const unmarkedStudents = students.filter(student => !attendance[student.id]);
+    if (unmarkedStudents.length > 0) {
+      toast.error(`Please mark attendance for all students. ${unmarkedStudents.length} students are unmarked.`);
       return;
     }
 
@@ -383,14 +492,10 @@ const MarkStudentAttendancePage: React.FC = () => {
         notes: attendance[student.id] === 'late' ? 'Student arrived late' : undefined
       }));
 
-      // Format date to YYYY-MM-DD
-      const today = new Date();
-      const attendanceDate = today.toISOString().split('T')[0];
-
       const requestData = {
         classId: selectedClass,
         sectionId: selectedSection,
-        attendanceDate,
+        attendanceDate: selectedDate,
         attendanceTakerId: teacherId,
         attendanceRecords
       };
@@ -401,13 +506,10 @@ const MarkStudentAttendancePage: React.FC = () => {
         const selectedClassObj = availableClasses.find(c => c.id === selectedClass);
         const selectedSectionObj = availableSections.find(s => s.id === selectedSection);
         
-        toast.success(`Attendance marked successfully for ${selectedClassObj?.displayName} ${selectedSectionObj?.name}`);
+        toast.success(`Attendance marked successfully for ${selectedClassObj?.displayName} ${selectedSectionObj?.name} on ${selectedDate}`);
         
-        // Reset the form
-        setSelectedClass('');
-        setSelectedSection('');
-        setStudents([]);
-        setAttendance({});
+        // Refresh the attendance check to show the newly marked attendance
+        await checkAttendanceForDate(selectedClass, selectedSection, selectedDate);
       } else {
         toast.error(response.message || 'Failed to mark attendance');
       }
@@ -428,8 +530,9 @@ const MarkStudentAttendancePage: React.FC = () => {
     const present = Object.values(attendance).filter(status => status === 'present').length;
     const absent = Object.values(attendance).filter(status => status === 'absent').length;
     const late = Object.values(attendance).filter(status => status === 'late').length;
+    const unmarked = total - (present + absent + late);
     
-    return { total, present, absent, late };
+    return { total, present, absent, late, unmarked };
   };
 
   const stats = getAttendanceStats();
@@ -453,17 +556,9 @@ const MarkStudentAttendancePage: React.FC = () => {
             </Button>
             <div>
               <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                <Calendar className="w-8 h-8 text-primary" />
-                Mark Student Attendance
+                {/* <Calendar className="w-8 h-8 text-primary" /> */}
+                {isViewMode ? 'View Student Attendance' : 'Mark Student Attendance'}
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Take attendance for {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
               {fetchingTeacherId && (
                 <div className="flex items-center space-x-2 mt-2">
                   <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -480,16 +575,39 @@ const MarkStudentAttendancePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Class and Section Selection */}
+        {/* Class, Section, and Date Selection */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Select Class & Section
+              Select Class, Section & Date
+              {checkingAttendance && (
+                <div className="flex items-center space-x-2 ml-4">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm text-muted-foreground">Checking attendance...</span>
+                </div>
+              )}
+              {attendanceExists && !checkingAttendance && (
+                <Badge variant="secondary" className="ml-4 bg-blue-100 text-blue-800">
+                  <Eye className="w-4 h-4 mr-1" />
+                  Already Marked
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date-select">Attendance Date</Label>
+                <Input
+                  id="date-select"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]} // Can't select future dates
+                />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="class-select">Class</Label>
                 <Select value={selectedClass} onValueChange={setSelectedClass} disabled={isFetchingClasses}>
@@ -534,7 +652,7 @@ const MarkStudentAttendancePage: React.FC = () => {
 
         {/* Attendance Statistics */}
         {students.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -582,6 +700,20 @@ const MarkStudentAttendancePage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {!isViewMode && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Unmarked</p>
+                      <p className="text-2xl font-bold text-gray-600">{stats.unmarked}</p>
+                    </div>
+                    <Clock className="w-8 h-8 text-gray-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
@@ -614,7 +746,7 @@ const MarkStudentAttendancePage: React.FC = () => {
                         <TableHead>Student Name</TableHead>
                         <TableHead>Roll Number</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Mark Attendance</TableHead>
+                        <TableHead>{isViewMode ? 'Attendance Status' : 'Mark Attendance'}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -622,43 +754,56 @@ const MarkStudentAttendancePage: React.FC = () => {
                         <StudentAttendanceRow
                           key={student.id}
                           student={student}
-                          attendance={attendance[student.id] || 'present'}
+                          attendance={attendance[student.id]}
                           onAttendanceChange={handleAttendanceChange}
+                          isViewMode={isViewMode}
                         />
                       ))}
                     </TableBody>
                   </Table>
 
-                  {/* Save Button */}
+                  {/* Save Button or View Message */}
                   <div className="flex justify-end pt-4">
-                    <Button
-                      onClick={handleSaveAttendance}
-                      disabled={saving || !teacherId || fetchingTeacherId}
-                      className="flex items-center space-x-2"
-                      size="lg"
-                    >
-                      {saving ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Saving...</span>
-                        </>
-                      ) : fetchingTeacherId ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          <span>Loading...</span>
-                        </>
-                      ) : !teacherId ? (
-                        <>
-                          <Save className="w-4 h-4" />
-                          <span>Teacher ID Required</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          <span>Mark Attendance</span>
-                        </>
-                      )}
-                    </Button>
+                    {isViewMode ? (
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Eye className="w-4 h-4" />
+                        <span>Attendance has already been marked for this date</span>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={handleSaveAttendance}
+                        disabled={saving || !teacherId || fetchingTeacherId || stats.unmarked > 0}
+                        className="flex items-center space-x-2"
+                        size="lg"
+                      >
+                        {saving ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Saving...</span>
+                          </>
+                        ) : fetchingTeacherId ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Loading...</span>
+                          </>
+                        ) : !teacherId ? (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Teacher ID Required</span>
+                          </>
+                        ) : stats.unmarked > 0 ? (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Mark All Students ({stats.unmarked} remaining)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Mark Attendance</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -679,7 +824,7 @@ const MarkStudentAttendancePage: React.FC = () => {
                 <Clock className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Ready to Take Attendance</h3>
                 <p className="text-muted-foreground">
-                  Select a class and section above to start taking attendance for today
+                  Select a date, class and section above to start taking attendance or view existing attendance records
                 </p>
               </div>
             </CardContent>

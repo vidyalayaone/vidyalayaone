@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ViewStudentAttendance from '@/components/attendance/ViewStudentAttendance';
 import ViewClassAttendance from '@/components/attendance/ViewClassAttendance';
-import AssignSubstituteTeacher from '@/components/attendance/AssignSubstituteTeacher';
 
 // Types for attendance management
 type AttendanceView = 'main' | 'student' | 'class' | 'substitute';
@@ -31,10 +30,7 @@ const AttendancePage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor student attendance across all classes
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Attendance</h1>
         </div>
       </div>
 
@@ -86,29 +82,6 @@ const AttendancePage: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-
-        {/* Assign Substitute Teacher */}
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-              onClick={() => setCurrentView('substitute')}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <UserPlus className="h-6 w-6 text-orange-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Substitute Teacher</CardTitle>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Assign substitute teachers to take attendance when regular class teachers are absent.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
@@ -119,8 +92,6 @@ const AttendancePage: React.FC = () => {
         return <ViewStudentAttendance onBack={() => setCurrentView('main')} />;
       case 'class':
         return <ViewClassAttendance onBack={() => setCurrentView('main')} />;
-      case 'substitute':
-        return <AssignSubstituteTeacher onBack={() => setCurrentView('main')} />;
       default:
         return renderMainMenu();
     }

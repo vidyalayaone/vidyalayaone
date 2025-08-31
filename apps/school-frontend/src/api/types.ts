@@ -828,6 +828,9 @@ export interface CreateTeacherResponse {
   };
 }
 
+// Update teacher request (all fields optional)
+export interface UpdateTeacherRequest extends Partial<CreateTeacherRequest> {}
+
 // Delete Teachers Request and Response
 export interface DeleteTeachersRequest {
   teacherIds: string[];

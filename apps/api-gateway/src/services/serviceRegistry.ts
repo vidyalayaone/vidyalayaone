@@ -90,8 +90,14 @@ class ServiceRegistry {
         { path: '/schools/students', method: 'GET', isProtected: true },
         { path: '/schools/student-applications', method: 'GET', isProtected: true },
 
+        // Student application management routes
+        { path: '/student-applications/:id', method: 'GET', isProtected: true },
+        { path: '/student-applications/:id/accept', method: 'POST', isProtected: true },
+        { path: '/student-applications/:id/reject', method: 'POST', isProtected: true },
+
         // Teacher routes
         { path: '/teachers', method: 'POST', isProtected: true },
+        { path: '/teachers/:id', method: 'PATCH', isProtected: true },
         { path: '/teachers', method: 'DELETE', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },

@@ -219,8 +219,7 @@ const CreateTeacherPage: React.FC = () => {
             Back to Teachers
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Create New Teacher</h1>
-            <p className="text-muted-foreground">Add a new teacher to the school staff</p>
+            <h1 className="text-3xl font-bold text-foreground">Add New Teacher</h1>
           </div>
         </div>
 

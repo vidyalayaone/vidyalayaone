@@ -862,12 +862,6 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={student.avatar} />
-                            <AvatarFallback>
-                              {student.firstName[0]}{student.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
                           <div>
                             <div className="font-medium">
                               {student.firstName} {student.lastName}

@@ -236,16 +236,32 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
 
         if (response.success && response.data) {
           const records = response.data.attendanceRecords || [];
-          const mappedRecords: AttendanceRecord[] = records.map((record: any) => ({
-            id: record.id,
-            date: record.attendanceDate,
-            status: record.status,
-            timeIn: undefined, // Backend doesn't provide this yet
-            timeOut: undefined, // Backend doesn't provide this yet
-            reason: record.notes || undefined,
-            markedBy: record.attendanceTakerId, // This should be mapped to teacher name
-            notes: record.notes,
-          }));
+          const mappedRecords: AttendanceRecord[] = records.map((record: any) => {
+            // Use the utility function to safely extract the date
+            const normalizedDate = extractDateFromBackend(record.attendanceDate || record.date);
+            
+            return {
+              id: record.id,
+              date: normalizedDate,
+              status: record.status,
+              timeIn: record.timeIn || undefined,
+              timeOut: record.timeOut || undefined,
+              reason: record.notes || record.reason || undefined,
+              markedBy: record.attendanceTakerId || record.markedBy,
+              notes: record.notes,
+            };
+          });
+
+          console.log('Raw backend records:', records);
+          console.log('Date conversion examples:');
+          records.slice(0, 3).forEach((record: any, index: number) => {
+            const original = record.attendanceDate || record.date;
+            const converted = extractDateFromBackend(original);
+            console.log(`Record ${index + 1}: "${original}" → "${converted}"`);
+          });
+          console.log('Mapped attendance records:', mappedRecords);
+          console.log('Selected student ID:', selectedStudent.id);
+          console.log('Current date for filtering:', currentDate);
 
           setAttendanceRecords({
             [selectedStudent.id]: mappedRecords
@@ -275,11 +291,40 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
 
   const isWeekend = (date: Date) => {
     const day = date.getDay();
-    return day === 0; // Sunday
+    return day === 0 || day === 6; // Sunday or Saturday
   };
 
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
+  };
+
+  // Utility function to safely extract date from backend format
+  const extractDateFromBackend = (backendDate: string): string => {
+    if (!backendDate) return '';
+    
+    // Handle ISO date strings like "2025-09-02T00:00:00.000Z"
+    if (backendDate.includes('T')) {
+      // Extract just the date part before 'T'
+      return backendDate.split('T')[0];
+    }
+    
+    // Handle already formatted dates like "2025-09-02"
+    if (backendDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return backendDate;
+    }
+    
+    // For other formats, try to parse and format safely
+    try {
+      const date = new Date(backendDate);
+      // Use getFullYear, getMonth, getDate to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.warn('Failed to parse date:', backendDate);
+      return '';
+    }
   };
 
   const getAttendanceForDate = (studentId: string, date: string) => {
@@ -463,9 +508,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Student Attendance</h1>
-            <p className="text-muted-foreground">
-              Attendance records for {selectedStudent.name}
-            </p>
           </div>
         </div>
 
@@ -473,12 +515,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
         <Card>
           <CardHeader>
             <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={selectedStudent.profileImage} />
-                <AvatarFallback className="text-lg">
-                  {selectedStudent.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
               <div>
                 <CardTitle className="text-xl">{selectedStudent.name}</CardTitle>
                 <p className="text-muted-foreground">
@@ -550,9 +586,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Attendance Calendar</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Monthly view of attendance records
-                </p>
               </div>
               <div className="flex items-center space-x-2">
                 <Button 
@@ -603,12 +636,35 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                     const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
                     const cellStyle = getDateCellStyle(cellDate, selectedStudent.id);
                     const cellContent = getDateCellContent(cellDate, selectedStudent.id);
+                    const dateStr = formatDate(cellDate);
+                    const attendance = getAttendanceForDate(selectedStudent.id, dateStr);
+                    
+                    // Log first few days for debugging
+                    if (day <= 5) {
+                      console.log(`Day ${day} (${dateStr}):`, {
+                        cellDate: cellDate.toISOString(),
+                        dateStr,
+                        attendance,
+                        cellStyle,
+                        recordDates: attendanceRecords[selectedStudent.id]?.map(r => r.date),
+                        isWeekend: isWeekend(cellDate)
+                      });
+                    }
                     
                     return (
                       <div
                         key={day}
                         className={`p-3 h-12 rounded text-center flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${cellStyle}`}
-                        title={`${cellDate.toLocaleDateString()} - ${isWeekend(cellDate) ? 'School Closed' : getAttendanceForDate(selectedStudent.id, formatDate(cellDate))?.status || 'No Record'}`}
+                        title={`${cellDate.toLocaleDateString()} - ${isWeekend(cellDate) ? 'School Closed' : attendance?.status || 'No Record'}`}
+                        onClick={() => {
+                          // Debug click to see data
+                          console.log('Cell clicked:', {
+                            date: dateStr,
+                            attendance,
+                            allRecords: attendanceRecords[selectedStudent.id],
+                            isWeekend: isWeekend(cellDate)
+                          });
+                        }}
                       >
                         {cellContent}
                       </div>
@@ -655,9 +711,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">View Student Attendance</h1>
-          <p className="text-muted-foreground">
-            Search and select a student to view their attendance records
-          </p>
         </div>
       </div>
 
@@ -675,55 +728,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                 className="pl-9"
               />
             </div>
-            
-            {/* Class Filter */}
-            <div className="w-full md:w-48">
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger>
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="All Classes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {isLoadingClasses ? (
-                    <SelectItem value="loading" disabled>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Loading...
-                    </SelectItem>
-                  ) : (
-                    uniqueClasses.map((className) => (
-                      <SelectItem key={className.id} value={className.id}>
-                        {className.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Section Filter */}
-            <div className="w-full md:w-32">
-              <Select value={selectedSection} onValueChange={setSelectedSection}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Sections" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sections</SelectItem>
-                  {isLoadingClasses ? (
-                    <SelectItem value="loading" disabled>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Loading...
-                    </SelectItem>
-                  ) : (
-                    uniqueSections.map((section) => (
-                      <SelectItem key={section.id} value={section.id}>
-                        Section {section.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardHeader>
       </Card>
@@ -732,9 +736,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
       <Card>
         <CardHeader>
           <CardTitle>Students ({filteredStudents.length})</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Click on a student to view their attendance records
-          </p>
         </CardHeader>
         <CardContent>
           {isLoadingStudents ? (
@@ -756,16 +757,6 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                       <TableHead>
                         <Button 
                           variant="ghost" 
-                          onClick={() => handleSort('rollNumber')}
-                          className="h-auto p-0 font-medium text-left justify-start"
-                        >
-                          Roll No
-                          {getSortIcon('rollNumber')}
-                        </Button>
-                      </TableHead>
-                      <TableHead>
-                        <Button 
-                          variant="ghost" 
                           onClick={() => handleSort('name')}
                           className="h-auto p-0 font-medium text-left justify-start"
                         >
@@ -773,9 +764,17 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                           {getSortIcon('name')}
                         </Button>
                       </TableHead>
-                      <TableHead>Student ID</TableHead>
+                      <TableHead>
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => handleSort('rollNumber')}
+                          className="h-auto p-0 font-medium text-left justify-start"
+                        >
+                          Roll No
+                          {getSortIcon('rollNumber')}
+                        </Button>
+                      </TableHead>
                       <TableHead>Class & Section</TableHead>
-                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -785,32 +784,13 @@ const ViewStudentAttendance: React.FC<ViewStudentAttendanceProps> = ({ onBack })
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => setSelectedStudent(student)}
                       >
-                        <TableCell className="font-medium">{student.rollNumber}</TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={student.profileImage} />
-                              <AvatarFallback className="text-sm">
-                                {student.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
                             <span className="font-medium">{student.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{student.id}</TableCell>
+                        <TableCell className="font-medium">{student.rollNumber}</TableCell>
                         <TableCell>{student.className} - {student.section}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedStudent(student);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

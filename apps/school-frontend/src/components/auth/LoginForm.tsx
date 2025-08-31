@@ -35,7 +35,7 @@ const LoginForm: React.FC = () => {
   const navigate = useNavigate();
 
   const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(loginSchema as any),
     defaultValues: {
       username: '',
       password: '',
@@ -116,6 +116,12 @@ const LoginForm: React.FC = () => {
               className="text-sm text-primary hover:text-primary-hover transition-colors"
             >
               Forgot your password?
+            </Link>
+            <Link
+              to="/apply"
+              className="text-sm text-primary hover:text-primary-hover transition-colors"
+            >
+              Apply for admission
             </Link>
           </div>
 

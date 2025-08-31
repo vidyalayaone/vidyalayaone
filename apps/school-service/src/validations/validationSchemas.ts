@@ -204,6 +204,12 @@ export const createClassSubjectsSchema = z.object({
   })).min(1, 'At least one class with subjects is required')
 });
 
+// Assign class teacher schema
+export const assignClassTeacherSchema = z.object({
+  sectionId: z.string().uuid('Invalid section ID format'),
+  teacherId: z.string().uuid('Invalid teacher ID format')
+});
+
 // Type exports for TypeScript
 export type CreateSchoolInput = z.infer<typeof createSchoolSchema>;
 export type UpdateSchoolInput = z.infer<typeof updateSchoolSchema>;
@@ -211,3 +217,4 @@ export type CreateClassesInput = z.infer<typeof createClassesSchema>;
 export type CreateSectionsInput = z.infer<typeof createSectionsSchema>;
 export type CreateGlobalSubjectsInput = z.infer<typeof createGlobalSubjectsSchema>;
 export type CreateClassSubjectsInput = z.infer<typeof createClassSubjectsSchema>;
+export type AssignClassTeacherInput = z.infer<typeof assignClassTeacherSchema>;

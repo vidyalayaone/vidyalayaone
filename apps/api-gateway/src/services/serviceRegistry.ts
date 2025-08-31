@@ -71,6 +71,7 @@ class ServiceRegistry {
         { path: '/:schoolId/classes/:classId/sections/:sectionId/details', method: 'GET', isProtected: true },
         { path: '/:schoolId/classes/:classId/sections/:sectionId/students', method: 'GET', isProtected: true },
         { path: '/:schoolId/classes/:classId/sections/:sectionId/timetable', method: 'GET', isProtected: true },
+        { path: '/sections/assign-class-teacher', method: 'PUT', isProtected: true },
       ],
       healthPath: '/health',
       timeout: config.services.school.timeout,
@@ -80,16 +81,31 @@ class ServiceRegistry {
       name: 'profile-service',
       url: config.services.profile.url,
       path: '/api/v1/profile',
-      isProtected: true,
+      isProtected: false,
       routes: [
+        // Student routes
         { path: '/students', method: 'POST', isProtected: true },
+        { path: '/students/apply', method: 'POST', isProtected: false }, // Unprotected route for student applications
+        { path: '/students/:id', method: 'PATCH', isProtected: true },
+        { path: '/students', method: 'DELETE', isProtected: true },
         { path: '/students/:id', method: 'GET', isProtected: true },
         { path: '/schools/students', method: 'GET', isProtected: true },
+        { path: '/schools/student-applications', method: 'GET', isProtected: true },
+
+        // Student application management routes
+        { path: '/student-applications/:id', method: 'GET', isProtected: true },
+        { path: '/student-applications/:id/accept', method: 'POST', isProtected: true },
+        { path: '/student-applications/:id/reject', method: 'POST', isProtected: true },
+
+        // Teacher routes
         { path: '/teachers', method: 'POST', isProtected: true },
+        { path: '/teachers/:id', method: 'PATCH', isProtected: true },
+        { path: '/teachers', method: 'DELETE', isProtected: true },
         { path: '/teachers/:id', method: 'GET', isProtected: true },
         { path: '/schools/teachers', method: 'GET', isProtected: true },
+        { path: '/me/teacher-id', method: 'GET', isProtected: true },
         // Student document routes
-        { path: '/students/:id/documents', method: 'POST', isProtected: true },
+        { path: '/students/:id/documents/upload', method: 'POST', isProtected: true },
         { path: '/students/:id/documents', method: 'GET', isProtected: true },
         { path: '/students/:id/documents/:docId', method: 'GET', isProtected: true },
       ],
@@ -135,29 +151,6 @@ class ServiceRegistry {
         timeout: paymentCfg.timeout || 30000,
       });
     }
-
-    // Future services - fully protected at gateway
-    // this.services.set('users', {
-    //   name: 'user-service',
-    //   url: config.services.users?.url || 'http://localhost:3002',
-    //   path: '/api/v1/users',
-    //   isProtected: true, // All routes protected at gateway
-    //   healthPath: '/health',
-    //   timeout: 30000,
-    // });
-
-    // this.services.set('exams', {
-    //   name: 'exam-service',
-    //   url: config.services.exams?.url || 'http://localhost:3003',
-    //   path: '/api/v1/exams',
-    //   isProtected: true, // All routes protected at gateway
-    //   routes: [
-    //     // Override default protection for specific routes if needed
-    //     { path: '/public-results', method: 'GET', isProtected: false },
-    //   ],
-    //   healthPath: '/health',
-    //   timeout: 30000,
-    // });
   }
 
   getService(name: string): ServiceConfig | undefined {

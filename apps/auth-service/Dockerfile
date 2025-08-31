@@ -22,7 +22,7 @@ RUN pnpm build:packages
 
 WORKDIR /app/apps/auth-service
 
-RUN pnpm prisma generate
+RUN pnpm db:generate
 
 # Expose port
 EXPOSE 3001

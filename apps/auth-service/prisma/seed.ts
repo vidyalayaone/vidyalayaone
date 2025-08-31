@@ -90,6 +90,14 @@ async function main() {
     'student.view_details',
     'student.manage_enrollment',
     
+    // Section management
+    'section.create',
+    'section.update',
+    'section.delete',
+    'section.view',
+    'section.assign_class',
+    'section.manage_students',
+
     // Teacher management  
     'teacher.create',
     'teacher.update',
@@ -116,8 +124,6 @@ async function main() {
     
     // Attendance management
     'attendance.view',
-    'attendance.mark',
-    'attendance.edit',
     'attendance.view_reports',
     
     // Exam management

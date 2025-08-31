@@ -8,6 +8,7 @@ import { DeviceType } from '../generated/client';
 import config from '../config/config';
 import { fetchUserByUsernameAndContext } from '../utils/fetchUserBasedOnContext';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
+import { permission } from 'process';
 
 const { prisma } = DatabaseService;
 
@@ -152,6 +153,7 @@ export async function login(req: Request, res: Response) {
           id: user.id,
           roleId: user.roleId,
           roleName: role.name,
+          username: user.username
         }
       },
       timestamp: new Date().toISOString()

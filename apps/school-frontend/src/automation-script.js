@@ -146,37 +146,14 @@ async function seedRoles() {
         name: "TEACHER",
         description: "Teacher role with permissions to manage classes and students",
         permissions: [
-          "student.view",
-          "student.view_details",
-          "class.view",
-          "class.view_timetable",
-          "subject.view",
-          "attendance.view",
-          "attendance.mark",
-          "exam.view",
-          "exam.grade",
-          "exam.view_results",
-          "academic_calendar.view",
-          "communication.send_message",
-          "communication.view_messages",
-          "report.view_teacher",
-          "dashboard.view_teacher"
+          "attendance.mark", "class.view"
         ]
       },
       {
         name: "STUDENT",
         description: "Student role with basic access permissions",
         permissions: [
-          "class.view",
-          "class.view_timetable",
-          "subject.view",
-          "attendance.view_own",
-          "exam.view_own_results",
-          "academic_calendar.view",
-          "fee.view_own",
-          "communication.view_messages",
-          "report.view_student",
-          "dashboard.view_student"
+        "me.view"
         ]
       }
     ]
@@ -204,7 +181,7 @@ async function createClasses() {
   
   const classesPayload = {
     schoolId: schoolData.schoolId,
-    classes: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade", "6th Grade", "7th Grade", "8th Grade", "9th Grade", "10th Grade"],
+    classes: ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"],
     academicYear: "2025-26"
   };
 
@@ -230,13 +207,30 @@ async function createClasses() {
 async function createSections() {
   console.log('\n🏛️ === STEP 5: CREATE SECTIONS ===');
   
+  // Function to randomly determine section names for a class
+  const getRandomSections = () => {
+    const sectionTypes = [
+      ["Default"], // Type 1: default only
+      ["A", "B"],  // Type 2: A, B
+      ["A", "B", "C"] // Type 3: A, B, C
+    ];
+    
+    // Randomly pick one of the three types
+    const randomType = Math.floor(Math.random() * 3);
+    return sectionTypes[randomType];
+  };
+  
   const sectionsPayload = {
     schoolId: schoolData.schoolId,
     academicYear: "2025-26",
-    sections: schoolData.classes.map(classItem => ({
-      className: classItem.name,
-      sectionNames: ["A", "B", "C"]
-    }))
+    sections: schoolData.classes.map(classItem => {
+      const sectionNames = getRandomSections();
+      console.log(`📝 Class ${classItem.name} will have sections: ${sectionNames.join(', ')}`);
+      return {
+        className: classItem.name,
+        sectionNames: sectionNames
+      };
+    })
   };
 
   try {
@@ -299,10 +293,10 @@ async function assignSubjectsToClasses() {
   
   // Define subject assignments based on grade level
   const getSubjectsForClass = (className) => {
-    const lowerGrades = ["1st Grade", "2nd Grade", "3rd Grade"];
-    const middleGrades = ["4th Grade", "5th Grade", "6th Grade", "7th Grade"];
-    const higherGrades = ["8th Grade", "9th Grade", "10th Grade"];
-    
+    const lowerGrades = ["1st", "2nd", "3rd"];
+    const middleGrades = ["4th", "5th", "6th", "7th"];
+    const higherGrades = ["8th", "9th", "10th"];
+
     if (lowerGrades.includes(className)) {
       return ["Mathematics", "English", "Hindi", "Science", "Art and Craft", "Physical Education"];
     } else if (middleGrades.includes(className)) {
@@ -483,10 +477,8 @@ async function createStudents() {
       parentInfo: {
         fatherName: `Mr ${lastName}`,
         fatherPhone: phone,
-        fatherEmail: `father.${lastName.toLowerCase()}${i}@example.com`,
         motherName: `Mrs ${lastName}`,
-        motherPhone: phone,
-        motherEmail: `mother.${lastName.toLowerCase()}${i}@example.com`
+        motherPhone: phone
       },
       classId: classId,
       sectionId: section.id,

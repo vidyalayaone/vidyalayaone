@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import DatabaseService from "../services/database";
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
+import { profileService } from '../services/profileService';
 
 const { prisma } = DatabaseService;
 
@@ -99,6 +100,28 @@ export async function getSectionDetails(req: Request, res: Response): Promise<vo
     // you might want to include assigned teacher, subjects count, etc.
     // This would require additional models/relationships in your schema.
 
+    // Fetch class teacher details if classTeacherId exists
+    let classTeacher = null;
+    if (section.classTeacherId) {
+      try {
+        const teacherResponse = await profileService.getTeacherDetails(section.classTeacherId);
+        if (teacherResponse.success && teacherResponse.data) {
+          classTeacher = {
+            id: teacherResponse.data.teacher.id,
+            name: teacherResponse.data.teacher.fullName,
+            firstName: teacherResponse.data.teacher.firstName,
+            lastName: teacherResponse.data.teacher.lastName,
+            employeeId: teacherResponse.data.teacher.employeeId
+          };
+        } else {
+          console.warn(`Failed to fetch teacher details for ID: ${section.classTeacherId}`, teacherResponse.error?.message);
+        }
+      } catch (error) {
+        console.error(`Error fetching teacher details for ID: ${section.classTeacherId}`, error);
+        // Continue without teacher details rather than failing the entire request
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -119,11 +142,11 @@ export async function getSectionDetails(req: Request, res: Response): Promise<vo
           id: school.id,
           name: school.name
         },
-        // Placeholder for additional section metadata
+        // Enhanced section metadata with class teacher details
         stats: {
           totalStudents: 0, // Will be populated when student enrollment is implemented
           totalSubjects: 0, // Will be populated when subject assignment is implemented
-          classTeacher: null // Will be populated when teacher assignment is implemented
+          classTeacher: classTeacher // Now populated with actual teacher details
         }
       },
       timestamp: new Date().toISOString()

@@ -12,10 +12,13 @@ model StudentAttendance {
   id                String            @id @default(uuid())
   studentId         String            @map("student_id") // Reference to profile-service Student.id
   schoolId          String            @map("school_id") // Reference to school-service School.id (for filtering)
+  classId           String            @map("class_id") // Reference to school-service Class.id
+  sectionId         String            @map("section_id") // Reference to school-service Section.id
   attendanceDate    DateTime          @map("attendance_date") @db.Date // Date of attendance (unique per student per date)
   status            AttendanceStatus  // Attendance status
   attendanceTakerId String            @map("attendance_taker_id") // Teacher.id who marked attendance (profile-service)
-  metaData          Json?             @map("meta_data") // Additional flexible data (notes, reasons, etc.)
+  notes             String?           // Optional notes for the attendance record
+  metaData          Json?             @map("meta_data") // Additional flexible data
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
 
@@ -39,7 +42,6 @@ model TeacherAttendance {
   @@map("teacher_attendance")
 }
 
-// Enum for student attendance status
 enum AttendanceStatus {
   PRESENT
   ABSENT

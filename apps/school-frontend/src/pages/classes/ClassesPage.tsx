@@ -7,7 +7,6 @@ import {
   BookOpen,
   ChevronDown,
   UserCheck,
-  Calendar,
   Loader2
 } from 'lucide-react';
 
@@ -15,13 +14,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,21 +77,11 @@ const ClassesPage: React.FC = () => {
 
   // Use shared classes store
   const classes = useClassesStore(state => state.classes);
-  const stats = useClassesStore(state => state.stats);
   const isLoading = useClassesStore(state => state.isLoading);
   const error = useClassesStore(state => state.error);
   const fetchClassesAndSections = useClassesStore(state => state.fetchClassesAndSections);
 
   const { school } = useAuthStore();
-
-  // Academic year options - you can modify this list as needed
-  const academicYearOptions = [
-    { value: '2025-26', label: '2025-26' },
-    { value: '2024-25', label: '2024-25' },
-    { value: '2023-24', label: '2023-24' },
-    { value: '2022-23', label: '2022-23' },
-    { value: '2021-22', label: '2021-22' },
-  ];
 
   // Fetch classes and sections from the shared store
   useEffect(() => {
@@ -132,27 +114,10 @@ const ClassesPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Classes</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
+            {/* <p className="text-muted-foreground">
               Manage school classes and sections
-            </p>
-          </div>
-          
-          {/* Academic Year Selector */}
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Academic Year" />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYearOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            </p> */}
           </div>
         </div>
 
@@ -191,81 +156,6 @@ const ClassesPage: React.FC = () => {
         {/* Content - only show when not loading and no error */}
         {!isLoading && !error && (
           <>
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalClasses}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Across all grades
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Sections</CardTitle>
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalSections}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Across all classes
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalStudents}</div>
-                  <p className="text-xs text-muted-foreground">
-                    All enrolled students
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Boys</CardTitle>
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalBoys}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {typeof stats.totalStudents === 'number' && typeof stats.totalBoys === 'number' 
-                      ? `${Math.round((stats.totalBoys / stats.totalStudents) * 100)}% of total`
-                      : 'Percentage of total'
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Girls</CardTitle>
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalGirls}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {typeof stats.totalStudents === 'number' && typeof stats.totalGirls === 'number' 
-                      ? `${Math.round((stats.totalGirls / stats.totalStudents) * 100)}% of total`
-                      : 'Percentage of total'
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-
             {/* Classes Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {classes.map((schoolClass) => (
@@ -279,9 +169,9 @@ const ClassesPage: React.FC = () => {
                         </Badge>
                       </div>
                       
-                      <div className="text-sm text-muted-foreground">
+                      {/* <div className="text-sm text-muted-foreground">
                         Total Students: {schoolClass.sections.reduce((sum, section) => sum + (section.totalStudents || 0), 0) || 'N/A'}
-                      </div>
+                      </div> */}
 
                       {schoolClass.sections.length === 1 ? (
                         <Button 
@@ -306,9 +196,9 @@ const ClassesPage: React.FC = () => {
                               >
                                 <div className="flex flex-col w-full">
                                   <div className="font-medium">{section.name}</div>
-                                  <div className="text-sm text-muted-foreground">
+                                  {/* <div className="text-sm text-muted-foreground">
                                     {section.totalStudents || 'N/A'} students • {section.classTeacher || 'No teacher assigned'}
-                                  </div>
+                                  </div> */}
                                 </div>
                               </DropdownMenuItem>
                             ))}

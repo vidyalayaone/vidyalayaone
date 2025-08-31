@@ -16,15 +16,24 @@ import {
   PaginatedResponse,
   PaginationParams,
   ProfileServiceStudent,
+  StudentApplicationsResponse,
   CreateStudentRequest,
+  CreateStudentApplicationRequest,
+  DeleteStudentsRequest,
+  DeleteStudentsResponse,
+  DeleteTeachersRequest,
+  DeleteTeachersResponse,
   ProfileServiceTeachersResponse,
   ProfileServiceTeacherDetail,
   SchoolSubjectsResponse,
   CreateTeacherRequest,
+  UpdateTeacherRequest,
   CreateTeacherResponse,
   CreateDocumentRequest,
   DocumentsListResponse,
-  ProfileServiceDocument
+  ProfileServiceDocument,
+  AssignClassTeacherRequest,
+  AssignClassTeacherResponse
 } from './types';
 
 // Import mock API for fallback
@@ -296,6 +305,50 @@ export const api = {
     }
   },
 
+  // Profile service: create a student application (public route)
+  createStudentApplication: async (data: CreateStudentApplicationRequest): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.post('/profile/students/apply', data);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: update an existing student
+  updateStudent: async (id: string, data: Partial<CreateStudentRequest>): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.patch(`/profile/students/${id}`, data);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  
+  // Profile service: delete students
+  deleteStudents: async (data: DeleteStudentsRequest): Promise<APIResponse<DeleteStudentsResponse>> => {
+    try {
+      const response = await httpClient.delete('/profile/students', {
+        data: data
+      });
+      return handleResponse<DeleteStudentsResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: delete teachers
+  deleteTeachers: async (data: DeleteTeachersRequest): Promise<APIResponse<DeleteTeachersResponse>> => {
+    try {
+      const response = await httpClient.delete('/profile/teachers', {
+        data: data
+      });
+      return handleResponse<DeleteTeachersResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // School service: get subjects for a school
   getSchoolSubjects: async (): Promise<APIResponse<SchoolSubjectsResponse>> => {
     try {
@@ -316,6 +369,15 @@ export const api = {
     }
   },
 
+  // Profile service: update an existing teacher
+  updateTeacher: async (id: string, data: UpdateTeacherRequest): Promise<APIResponse<{ teacher: ProfileServiceTeacherDetail['teacher'] }>> => {
+    try {
+      const response = await httpClient.patch(`/profile/teachers/${id}`, data);
+      return handleResponse<{ teacher: ProfileServiceTeacherDetail['teacher'] }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
   // Section details endpoints
   getSectionDetails: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
     try {
@@ -344,10 +406,44 @@ export const api = {
     }
   },
 
+  // School service: assign class teacher to a section
+  assignClassTeacher: async (data: AssignClassTeacherRequest): Promise<APIResponse<AssignClassTeacherResponse>> => {
+    try {
+      const response = await httpClient.put('/school/sections/assign-class-teacher', data);
+      return handleResponse<AssignClassTeacherResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
   // Student Documents endpoints
   createStudentDocument: async (studentId: string, data: CreateDocumentRequest): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
     try {
       const response = await httpClient.post(`/profile/students/${studentId}/documents`, data);
+      return handleResponse<{ document: ProfileServiceDocument }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  uploadStudentDocument: async (studentId: string, file: File, data: { name: string; type: CreateDocumentRequest['type']; description?: string; expiryDate?: string }): Promise<APIResponse<{ document: ProfileServiceDocument }>> => {
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('name', data.name);
+      formData.append('type', data.type);
+      if (data.description) {
+        formData.append('description', data.description);
+      }
+      if (data.expiryDate) {
+        formData.append('expiryDate', data.expiryDate);
+      }
+
+      const response = await httpClient.post(`/profile/students/${studentId}/documents/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return handleResponse<{ document: ProfileServiceDocument }>(response);
     } catch (error) {
       return handleError(error);
@@ -367,6 +463,161 @@ export const api = {
     try {
       const response = await httpClient.get(`/profile/students/${studentId}/documents/${docId}`);
       return handleResponse<{ document: ProfileServiceDocument }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: get teacher ID for logged-in user
+  getMyTeacherId: async (): Promise<APIResponse<{ teacherId: string; userId: string; schoolId: string; firstName: string; lastName: string; employeeId: string }>> => {
+    try {
+      const response = await httpClient.get('/profile/me/teacher-id');
+      return handleResponse<{ teacherId: string; userId: string; schoolId: string; firstName: string; lastName: string; employeeId: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: mark attendance
+  markAttendance: async (data: {
+    classId: string;
+    sectionId: string;
+    attendanceDate: string;
+    attendanceTakerId: string;
+    attendanceRecords: Array<{
+      studentId: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      notes?: string;
+    }>;
+  }): Promise<APIResponse<{ recordsCreated: number; classId: string; sectionId: string; attendanceDate: string; attendanceTaker: string }>> => {
+    try {
+      const response = await httpClient.post('/attendance/mark', data);
+      return handleResponse<{ recordsCreated: number; classId: string; sectionId: string; attendanceDate: string; attendanceTaker: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: check if attendance exists for a date
+  checkAttendanceExists: async (classId: string, sectionId: string, date: string): Promise<APIResponse<{ 
+    attendanceExists: boolean; 
+    attendanceCount: number; 
+    date: string; 
+    classId: string; 
+    sectionId: string; 
+  }>> => {
+    try {
+      const response = await httpClient.get(`/attendance/check/${classId}/section/${sectionId}?date=${date}`);
+      return handleResponse<{ attendanceExists: boolean; attendanceCount: number; date: string; classId: string; sectionId: string; }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: get class attendance for a specific date
+  getClassAttendance: async (classId: string, sectionId: string, date: string): Promise<APIResponse<{
+    attendanceRecords: Array<{
+      id: string;
+      studentId: string;
+      schoolId: string;
+      classId: string;
+      sectionId: string;
+      attendanceDate: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      attendanceTakerId: string;
+      notes?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    meta: {
+      classId: string;
+      sectionId: string;
+      totalRecords: number;
+      filters: { date?: string; startDate?: string; endDate?: string; };
+    };
+  }>> => {
+    try {
+      const response = await httpClient.get(`/attendance/class/${classId}/section/${sectionId}?date=${date}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Attendance service: get student attendance records within a date range
+  getStudentAttendance: async (studentId: string, startDate?: string, endDate?: string): Promise<APIResponse<{
+    attendanceRecords: Array<{
+      id: string;
+      studentId: string;
+      schoolId: string;
+      classId: string;
+      sectionId: string;
+      attendanceDate: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      attendanceTakerId: string;
+      notes?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    meta: {
+      studentId: string;
+      totalRecords: number;
+      filters: { startDate?: string; endDate?: string; };
+    };
+  }>> => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('startDate', startDate);
+      if (endDate) queryParams.append('endDate', endDate);
+      
+      const response = await httpClient.get(`/attendance/student/${studentId}?${queryParams.toString()}`);
+      return handleResponse(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: get student applications by status
+  getStudentApplications: async (): Promise<APIResponse<StudentApplicationsResponse>> => {
+    try {
+      const response = await httpClient.get('/profile/schools/student-applications');
+      return handleResponse<StudentApplicationsResponse>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: get specific student application by ID
+  getStudentApplication: async (id: string): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.get(`/profile/student-applications/${id}`);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: accept student application
+  acceptStudentApplication: async (id: string, data: {
+    admissionNumber: string;
+    admissionDate: string;
+    classId: string;
+    sectionId: string;
+    rollNumber?: string;
+  }): Promise<APIResponse<{ student: ProfileServiceStudent; enrollment: any; userCreated: boolean; message: string }>> => {
+    try {
+      const response = await httpClient.post(`/profile/student-applications/${id}/accept`, data);
+      return handleResponse<{ student: ProfileServiceStudent; enrollment: any; userCreated: boolean; message: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: reject student application
+  rejectStudentApplication: async (id: string, data?: { reason?: string }): Promise<APIResponse<{ student: ProfileServiceStudent; message: string }>> => {
+    try {
+      const response = await httpClient.post(`/profile/student-applications/${id}/reject`, data || {});
+      return handleResponse<{ student: ProfileServiceStudent; message: string }>(response);
     } catch (error) {
       return handleError(error);
     }
@@ -394,12 +645,28 @@ export const {
   getStudentsBySchool,
   getStudentById,
   createStudent,
+  createStudentApplication,
+  updateStudent,
+  deleteStudents,
+  deleteTeachers,
   getSchoolSubjects,
   createTeacher,
+  updateTeacher,
   getSectionDetails,
   getSectionStudents,
   getSectionTimetable,
+  assignClassTeacher,
   createStudentDocument,
+  uploadStudentDocument,
   getStudentDocuments,
-  getStudentDocument
+  getStudentDocument,
+  getMyTeacherId,
+  markAttendance,
+  checkAttendanceExists,
+  getClassAttendance,
+  getStudentAttendance,
+  getStudentApplications,
+  getStudentApplication,
+  acceptStudentApplication,
+  rejectStudentApplication
 } = api;

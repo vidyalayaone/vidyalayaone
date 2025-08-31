@@ -7,8 +7,6 @@ import { authService } from '../services/authService';
 
 const { prisma } = DatabaseService;
 
-import crypto from 'crypto';
-
 // Helper function to generate username (alphanumeric, lowercase only)
 const generateUsername = (firstName: string, lastName: string, admissionNumber: string): string => {
   const baseUsername = `${firstName}${lastName}${admissionNumber}`
@@ -40,7 +38,7 @@ export const createStudent = async (req: Request, res: Response) => {
     const validation = validateInput(createStudentSchema, req.body, res);
     if (!validation.success) return;
     
-        const {
+    const {
       firstName,
       lastName,
       admissionNumber,
@@ -53,7 +51,6 @@ export const createStudent = async (req: Request, res: Response) => {
       address,
       contactInfo,
       parentInfo,
-      medicalInfo,
       documents,
       classId,
       sectionId,
@@ -128,8 +125,9 @@ export const createStudent = async (req: Request, res: Response) => {
           firstName: parentInfo.fatherName.split(' ')[0] || parentInfo.fatherName,
           lastName: parentInfo.fatherName.split(' ').slice(1).join(' ') || '',
           phone: parentInfo.fatherPhone,
-          email: parentInfo.fatherEmail,
+          email: null,
           relation: 'FATHER',
+          address: address, // Use student's address as default
         });
       }
       
@@ -139,8 +137,9 @@ export const createStudent = async (req: Request, res: Response) => {
           firstName: parentInfo.motherName.split(' ')[0] || parentInfo.motherName,
           lastName: parentInfo.motherName.split(' ').slice(1).join(' ') || '',
           phone: parentInfo.motherPhone,
-          email: parentInfo.motherEmail,
+          email: null,
           relation: 'MOTHER',
+          address: address, // Use student's address as default
         });
       }
       
@@ -150,42 +149,7 @@ export const createStudent = async (req: Request, res: Response) => {
           firstName: parentInfo.guardianName.split(' ')[0] || parentInfo.guardianName,
           lastName: parentInfo.guardianName.split(' ').slice(1).join(' ') || '',
           phone: parentInfo.guardianPhone,
-          email: parentInfo.guardianEmail,
-          relation: parentInfo.guardianRelation || 'GUARDIAN',
-        });
-      }
-    }
-    
-    if (parentInfo && processedGuardians.length === 0) {
-      // Convert parent info to guardian format
-      if (parentInfo.fatherName) {
-        processedGuardians.push({
-          firstName: parentInfo.fatherName.split(' ')[0] || parentInfo.fatherName,
-          lastName: parentInfo.fatherName.split(' ').slice(1).join(' ') || '',
-          phone: parentInfo.fatherPhone,
-          email: parentInfo.fatherEmail,
-          relation: 'FATHER',
-          address: address, // Use student's address as default
-        });
-      }
-      
-      if (parentInfo.motherName) {
-        processedGuardians.push({
-          firstName: parentInfo.motherName.split(' ')[0] || parentInfo.motherName,
-          lastName: parentInfo.motherName.split(' ').slice(1).join(' ') || '',
-          phone: parentInfo.motherPhone,
-          email: parentInfo.motherEmail,
-          relation: 'MOTHER',
-          address: address, // Use student's address as default
-        });
-      }
-      
-      if (parentInfo.guardianName) {
-        processedGuardians.push({
-          firstName: parentInfo.guardianName.split(' ')[0] || parentInfo.guardianName,
-          lastName: parentInfo.guardianName.split(' ').slice(1).join(' ') || '',
-          phone: parentInfo.guardianPhone,
-          email: parentInfo.guardianEmail,
+          email: null,
           relation: parentInfo.guardianRelation || 'GUARDIAN',
           address: address, // Use student's address as default
         });
@@ -244,11 +208,9 @@ export const createStudent = async (req: Request, res: Response) => {
             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
             gender,
             address,
-            contactInfo: {
-              ...contactInfo,
-              ...(medicalInfo && { medical: medicalInfo }), // Include medical info in contact info
-            },
+            contactInfo: contactInfo,
             profilePhoto: null, // Set to null for now, can be updated later
+            status: 'ACCEPTED', // Set initial status to ACCEPTED
           },
         });
 

@@ -63,6 +63,45 @@ export interface CreateDocumentRequest {
   expiryDate?: string;
 }
 
+export interface UploadDocumentRequest {
+  name: string;
+  type: 'BIRTH_CERTIFICATE' | 'AADHAAR_CARD' | 'PAN_CARD' | 'PASSPORT' | 'VOTER_ID' | 'DRIVING_LICENSE' | 
+        'MARK_SHEET' | 'DEGREE_CERTIFICATE' | 'DIPLOMA_CERTIFICATE' | 'TRANSFER_CERTIFICATE' | 
+        'CHARACTER_CERTIFICATE' | 'EXPERIENCE_CERTIFICATE' | 'MEDICAL_CERTIFICATE' | 'VACCINATION_RECORD' | 
+        'HEALTH_CHECKUP_REPORT' | 'INCOME_CERTIFICATE' | 'FEE_RECEIPT' | 'SALARY_SLIP' | 'BANK_STATEMENT' | 
+        'PHOTO' | 'SIGNATURE' | 'CASTE_CERTIFICATE' | 'DOMICILE_CERTIFICATE' | 'RESIDENCE_PROOF' | 'OTHER';
+  description?: string;
+  expiryDate?: string;
+}
+
+// Delete students API types
+export interface DeleteStudentsRequest {
+  studentIds: string[];
+}
+
+export interface DeleteStudentsResponse {
+  summary: {
+    totalRequested: number;
+    successfulDeletions: number;
+    failedDeletions: number;
+    deletedUsers: number;
+    failedUserDeletions: number;
+  };
+  results: {
+    deletedStudents: string[];
+    failedDeletions: Array<{
+      studentId: string;
+      error: string;
+    }>;
+    deletedUsers: string[];
+    failedUserDeletions: Array<{
+      userId: string;
+      error: string;
+    }>;
+  };
+  message: string;
+}
+
 export interface DocumentsListResponse {
   documents: ProfileServiceDocument[];
   pagination: {
@@ -89,12 +128,27 @@ export interface ProfileServiceStudent {
   address?: any;
   contactInfo?: any;
   profilePhoto?: string;
+  status?: 'PENDING' | 'ACCEPTED' | 'REJECTED';
   metaData?: any;
   guardians: ProfileServiceStudentGuardian[];
   enrollments: ProfileServiceStudentEnrollment[];
   documents: ProfileServiceDocument[];
   createdAt: string;
   updatedAt: string;
+}
+
+// Student Applications Response
+export interface StudentApplicationsResponse {
+  acceptedStudents: ProfileServiceStudent[];
+  rejectedStudents: ProfileServiceStudent[];
+  pendingStudents: ProfileServiceStudent[];
+  summary: {
+    totalAccepted: number;
+    totalRejected: number;
+    totalPending: number;
+    totalApplications: number;
+  };
+  schoolId: string;
 }
 
 // User interface for authentication and user management
@@ -139,6 +193,8 @@ export interface Teacher extends Omit<User, 'role'> {
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   bloodGroup?: string;
   maritalStatus: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
+  religion?: string;
+  category?: string;
 }
 
 // Profile Service Teacher interface (matches backend response)
@@ -279,7 +335,6 @@ export interface Student extends Omit<User, 'role'> {
   dateOfBirth: string;
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   bloodGroup?: string;
-  medicalInfo?: MedicalInfo;
   documents: StudentDocument[];
   academicHistory: AcademicRecord[];
   feeStatus: FeeStatus;
@@ -296,25 +351,11 @@ export interface StudentClass {
 export interface ParentGuardian {
   fatherName: string;
   fatherPhone?: string;
-  fatherEmail?: string;
-  fatherOccupation?: string;
   motherName: string;
   motherPhone?: string;
-  motherEmail?: string;
-  motherOccupation?: string;
   guardianName?: string;
   guardianPhone?: string;
-  guardianEmail?: string;
   guardianRelation?: string;
-}
-
-export interface MedicalInfo {
-  allergies?: string[];
-  chronicConditions?: string[];
-  medications?: string[];
-  doctorName?: string;
-  doctorPhone?: string;
-  healthInsurance?: string;
 }
 
 export interface StudentDocument {
@@ -443,7 +484,6 @@ export interface CreateStudentData {
   address: Address;
   parentGuardian: ParentGuardian;
   emergencyContact: EmergencyContact;
-  medicalInfo?: MedicalInfo;
   documents?: File[];
 }
 
@@ -614,9 +654,7 @@ export interface CreateStudentRequest {
   };
   contactInfo: {
     primaryPhone: string; // Required for user account creation
-    secondaryPhone?: string;
     email: string; // Required for user account creation
-    emergencyContact?: string;
   };
   profilePhoto?: string;
   
@@ -624,26 +662,11 @@ export interface CreateStudentRequest {
   parentInfo?: {
     fatherName: string;
     fatherPhone?: string;
-    fatherEmail?: string;
-    fatherOccupation?: string;
     motherName: string;
     motherPhone?: string;
-    motherEmail?: string;
-    motherOccupation?: string;
     guardianName?: string;
     guardianPhone?: string;
-    guardianEmail?: string;
     guardianRelation?: string;
-  };
-  
-  // Medical information
-  medicalInfo?: {
-    allergies?: string;
-    chronicConditions?: string;
-    medications?: string;
-    doctorName?: string;
-    doctorPhone?: string;
-    healthInsurance?: string;
   };
   
   // Documents (optional)
@@ -661,6 +684,55 @@ export interface CreateStudentRequest {
   sectionId: string;
   academicYear: string;
   rollNumber?: string;
+}
+
+// Student application request without class enrollment
+export interface CreateStudentApplicationRequest {
+  // Basic student information (no userId - will be created internally)
+  firstName: string;
+  lastName: string;
+  admissionNumber?: string;
+  bloodGroup?: string;
+  category?: string;
+  religion?: string;
+  admissionDate?: string;
+  dateOfBirth?: string;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER';
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  contactInfo: {
+    primaryPhone: string; // Required for user account creation
+    email: string; // Required for user account creation
+  };
+  profilePhoto?: string;
+  
+  // Parent/Guardian information (using parent info format for easier frontend mapping)
+  parentInfo?: {
+    fatherName: string;
+    fatherPhone?: string;
+    motherName: string;
+    motherPhone?: string;
+    guardianName?: string;
+    guardianPhone?: string;
+    guardianRelation?: string;
+  };
+  
+  // Documents (optional)
+  documents?: {
+    name: string;
+    description?: string;
+    type: string;
+    mimeType: string;
+    fileSize?: number;
+    base64Data?: string;
+  }[];
+  
+  // Note: No enrollment information required for applications
 }
 
 // Dashboard Stats Types
@@ -755,5 +827,52 @@ export interface CreateTeacherResponse {
   credentials: {
     username: string;
     temporaryPassword: string;
+  };
+}
+
+// Update teacher request (all fields optional)
+export interface UpdateTeacherRequest extends Partial<CreateTeacherRequest> {}
+
+// Delete Teachers Request and Response
+export interface DeleteTeachersRequest {
+  teacherIds: string[];
+}
+
+export interface DeleteTeachersResponse {
+  summary: {
+    totalRequested: number;
+    successfulDeletions: number;
+    failedDeletions: number;
+  };
+  results: {
+    deletedTeachers: string[];
+    failedTeachers: {
+      teacherId: string;
+      reason: string;
+    }[];
+  };
+  errors?: string[];
+}
+
+// Assign class teacher types
+export interface AssignClassTeacherRequest {
+  sectionId: string;
+  teacherId: string;
+}
+
+export interface AssignClassTeacherResponse {
+  section: {
+    id: string;
+    name: string;
+    classTeacherId: string;
+    class: {
+      id: string;
+      name: string;
+      academicYear: string;
+    };
+    school: {
+      id: string;
+      name: string;
+    };
   };
 }

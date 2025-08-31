@@ -73,10 +73,13 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { api } from '@/api/api'; // <-- add API import to fetch real students
+import { DeleteStudentsRequest } from '@/api/types';
 import { useAuthStore } from '@/store/authStore';
+import { downloadStudents } from '@/utils/downloadUtils';
+import toast from 'react-hot-toast';
 
 // Student type with enhanced fields
-type EnhancedStudent = {
+export type EnhancedStudent = {
   id: string;
   username: string;
   email: string;
@@ -153,20 +156,19 @@ interface SchoolClass {
 }
 
 // Sort types
-type SortField = 'name' | 'rollNo' | 'admissionDate' | 'feeStatus';
+type SortField = 'name' | 'rollNo' | 'admissionDate';
 type SortOrder = 'asc' | 'desc';
 
 const StudentsPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // State for academic year selection
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2025-26');
+  // Academic year constant
+  const selectedAcademicYear = '2025-26';
 
   // State for filters and search
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState<string>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
-  const [feeStatusFilter, setFeeStatusFilter] = useState<string>('all');
   const [quickFilter, setQuickFilter] = useState<string>('all');
 
   // Students data fetched from backend (start with mock as fallback until fetch completes)
@@ -259,7 +261,7 @@ const StudentsPage: React.FC = () => {
             admissionDate: u.admissionDate || '',
             currentClass: {
               id: u.classId || '',
-              grade: u.currentClass || 'N/A',
+              grade: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
               section: u.currentSection || 'N/A',
               className: u.currentClass || (u.currentClass ? `${u.currentClass}` : 'N/A'),
               academicYear: u.academicYear || selectedAcademicYear
@@ -358,20 +360,87 @@ const StudentsPage: React.FC = () => {
   // State for dialogs
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<EnhancedStudent | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Mock API functions
+    // Download and bulk action functions
+  const handleDownload = (format: 'excel' | 'pdf') => {
+    try {
+      let studentsToDownload: EnhancedStudent[] = [];
+      let filename = 'students';
+
+      if (selectedStudents.length > 0) {
+        // Download selected students
+        studentsToDownload = students.filter(s => selectedStudents.includes(s.id));
+        filename = `selected_students_${selectedStudents.length}`;
+      } else {
+        // Download all filtered students
+        studentsToDownload = filteredAndSortedStudents;
+        filename = 'all_students';
+      }
+
+      if (studentsToDownload.length === 0) {
+        toast.error('No students to download');
+        return;
+      }
+
+      downloadStudents(studentsToDownload, format, filename);
+      
+      const count = studentsToDownload.length;
+      const type = format === 'excel' ? 'Excel' : 'PDF';
+      toast.success(`${type} file downloaded successfully (${count} student${count > 1 ? 's' : ''})`);
+      
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file. Please try again.');
+    }
+  };
+
+  // Mock API functions (keeping for non-download actions)
   const mockBulkActions = {
     sendMessage: (studentIds: string[]) => {
       console.log('Sending message to students:', studentIds);
-      alert(`Sending messages to ${studentIds.length} students`);
+      toast.success(`Sending messages to ${studentIds.length} students`);
     },
     promoteStudents: (studentIds: string[]) => {
       console.log('Promoting students:', studentIds);
-      alert(`Promoting ${studentIds.length} students`);
-    },
-    exportData: (format: 'csv' | 'excel' | 'pdf') => {
-      console.log(`Exporting ${format} for students:`, selectedStudents.length > 0 ? selectedStudents : 'all');
-      alert(`Exporting ${format} for ${selectedStudents.length > 0 ? selectedStudents.length : 'all'} students`);
+      toast.success(`Promoting ${studentIds.length} students`);
+    }
+  };
+
+  // Delete students functionality
+  const handleDeleteStudents = async (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const deleteRequest: DeleteStudentsRequest = { studentIds };
+      const response = await api.deleteStudents(deleteRequest);
+      
+      if (response.success && response.data) {
+        const { summary, results } = response.data;
+        
+        // Remove deleted students from the local state
+        setStudents(prev => prev.filter(s => !results.deletedStudents.includes(s.id)));
+        
+        // Clear selection
+        setSelectedStudents([]);
+        
+        // Show success message
+        if (summary.successfulDeletions === summary.totalRequested) {
+          toast.success(`Successfully deleted ${summary.successfulDeletions} student${summary.successfulDeletions > 1 ? 's' : ''}`);
+        } else {
+          toast.error(`Deleted ${summary.successfulDeletions} out of ${summary.totalRequested} students. ${summary.failedDeletions} failed.`);
+        }
+      } else {
+        toast.error(response.message || 'Failed to delete students');
+      }
+    } catch (error) {
+      console.error('Error deleting students:', error);
+      toast.error('Failed to delete students. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setBulkDeleteDialogOpen(false);
     }
   };
 
@@ -407,21 +476,14 @@ const StudentsPage: React.FC = () => {
       // Section filter
       const matchesSection = sectionFilter === 'all' || student.currentClass.section === sectionFilter;
 
-      // Fee status filter
-      const matchesFeeStatus = feeStatusFilter === 'all' || student.feeStatus.status === feeStatusFilter;
-
       // Quick filter
       let matchesQuickFilter = true;
-      if (quickFilter === 'paid') {
-        matchesQuickFilter = student.feeStatus.status === 'PAID';
-      } else if (quickFilter === 'pending') {
-        matchesQuickFilter = student.feeStatus.status === 'PENDING' || student.feeStatus.status === 'PARTIAL';
-      } else if (quickFilter.startsWith('class-')) {
+      if (quickFilter.startsWith('class-')) {
         const grade = quickFilter.split('-')[1];
         matchesQuickFilter = student.currentClass.grade === grade;
       }
 
-      return matchesSearch && matchesClass && matchesSection && matchesFeeStatus && matchesQuickFilter;
+      return matchesSearch && matchesClass && matchesSection && matchesQuickFilter;
     });
 
     // Sort
@@ -434,17 +496,13 @@ const StudentsPage: React.FC = () => {
           bValue = `${b.firstName} ${b.lastName}`.toLowerCase();
           break;
         case 'rollNo':
-          aValue = a.rollNo;
-          bValue = b.rollNo;
+          // Convert roll numbers to integers for proper numerical sorting
+          aValue = parseInt(a.rollNo) || 0;
+          bValue = parseInt(b.rollNo) || 0;
           break;
         case 'admissionDate':
           aValue = new Date(a.admissionDate);
           bValue = new Date(b.admissionDate);
-          break;
-        case 'feeStatus':
-          const statusOrder = { 'OVERDUE': 0, 'PENDING': 1, 'PARTIAL': 2, 'PAID': 3 };
-          aValue = statusOrder[a.feeStatus.status as keyof typeof statusOrder] ?? 99;
-          bValue = statusOrder[b.feeStatus.status as keyof typeof statusOrder] ?? 99;
           break;
         default:
           return 0;
@@ -456,7 +514,7 @@ const StudentsPage: React.FC = () => {
     });
 
     return filtered;
-  }, [students, searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, sortField, sortOrder]);
+  }, [students, searchTerm, classFilter, sectionFilter, quickFilter, sortField, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedStudents.length / studentsPerPage);
@@ -467,16 +525,15 @@ const StudentsPage: React.FC = () => {
   // Reset to first page when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, classFilter, sectionFilter, feeStatusFilter, quickFilter, selectedAcademicYear]);
+  }, [searchTerm, classFilter, sectionFilter, quickFilter]);
 
-  // Reset filters when academic year changes
+  // Reset filters when component mounts
   React.useEffect(() => {
     setClassFilter('all');
     setSectionFilter('all');
-    setFeeStatusFilter('all');
     setQuickFilter('all');
     setSelectedStudents([]);
-  }, [selectedAcademicYear]);
+  }, []);
 
   // Helper functions
   const handleSort = (field: SortField) => {
@@ -511,31 +568,26 @@ const StudentsPage: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (studentToDelete) {
-      console.log('Deleting student:', studentToDelete.id);
-      alert(`Deleting student: ${studentToDelete.firstName} ${studentToDelete.lastName}`);
+      await handleDeleteStudents([studentToDelete.id]);
       setDeleteDialogOpen(false);
       setStudentToDelete(null);
     }
   };
 
-  const getFeeStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Paid</Badge>;
-      case 'PARTIAL':
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Partial</Badge>;
-      case 'PENDING':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Pending</Badge>;
-      case 'OVERDUE':
-        return <Badge variant="destructive">Overdue</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
+  const handleBulkDelete = () => {
+    if (selectedStudents.length > 0) {
+      setBulkDeleteDialogOpen(true);
     }
   };
 
-  // Update bulk actions visibility
+  const confirmBulkDelete = async () => {
+    if (selectedStudents.length > 0) {
+      await handleDeleteStudents(selectedStudents);
+    }
+  };
+
   React.useEffect(() => {
     setShowBulkActions(selectedStudents.length > 0);
   }, [selectedStudents]);
@@ -547,135 +599,17 @@ const StudentsPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-            <p className="text-muted-foreground">
-              Manage and monitor student information, fees, and academic progress
-            </p>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-muted-foreground">Academic Year</label>
-              <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Select Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2024-25">2024-25</SelectItem>
-                  <SelectItem value="2025-26">2025-26</SelectItem>
-                  <SelectItem value="2026-27">2026-27</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="space-x-2">
-                  <Download className="h-4 w-4" />
-                  <span>Export All</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('csv')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
-                  Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button 
               className="space-x-2"
-              onClick={() => navigate('/admission')}
+              onClick={() => navigate('/admission/single')}
             >
               <UserPlus className="h-4 w-4" />
               <span>Add Student</span>
             </Button>
           </div>
         </div>
-
-        {/* Stats Section */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                Enrolled this academic year
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeStudents}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently attending classes
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Admissions</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.newAdmissions}</div>
-              <p className="text-xs text-muted-foreground">
-                Last 30 days
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Filter Chips */}
-        {/* <div className="flex flex-wrap gap-2">
-          <Button
-            variant={quickFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={quickFilter === 'paid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('paid')}
-            className="space-x-1"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Paid</span>
-          </Button>
-          <Button
-            variant={quickFilter === 'pending' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleQuickFilter('pending')}
-            className="space-x-1"
-          >
-            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-            <span>Pending</span>
-          </Button>
-          {['9', '10', '11', '12'].map(grade => (
-            <Button
-              key={grade}
-              variant={quickFilter === `class-${grade}` ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleQuickFilter(`class-${grade}`)}
-            >
-              Class {grade}
-            </Button>
-          ))}
-        </div> */}
 
         {/* Search and Filters */}
         <Card>
@@ -734,22 +668,6 @@ const StudentsPage: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-muted-foreground">Fee Status</label>
-                  <Select value={feeStatusFilter} onValueChange={setFeeStatusFilter}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="PAID">Paid</SelectItem>
-                      <SelectItem value="PARTIAL">Partial</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="OVERDUE">Overdue</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
             </div>
           </CardHeader>
@@ -767,45 +685,35 @@ const StudentsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => mockBulkActions.sendMessage(selectedStudents)}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => mockBulkActions.promoteStudents(selectedStudents)}
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Promote
-                  </Button>
+                  
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
-                        Export
+                        Download Selected
                         <ChevronDown className="ml-2 h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('csv')}>
+                      <DropdownMenuItem onClick={() => handleDownload('excel')}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Export as CSV
+                        Download as Excel ({selectedStudents.length} students)
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('excel')}>
-                        <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Export as Excel
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => mockBulkActions.exportData('pdf')}>
+                      <DropdownMenuItem onClick={() => handleDownload('pdf')}>
                         <FileText className="mr-2 h-4 w-4" />
-                        Export as PDF
+                        Download as PDF ({selectedStudents.length} students)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -824,7 +732,7 @@ const StudentsPage: React.FC = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>
-                Students List ({filteredAndSortedStudents.length} total, showing {currentStudents.length})
+                Total: {filteredAndSortedStudents.length}
               </CardTitle>
               {(isFetchingStudents || isFetchingClasses) && (
                 <div className="text-sm text-muted-foreground">Loading...</div>
@@ -845,6 +753,7 @@ const StudentsPage: React.FC = () => {
                       <Checkbox
                         checked={selectedStudents.length === currentStudents.length && currentStudents.length > 0}
                         onCheckedChange={handleSelectAll}
+                        className="rounded-none"
                       />
                     </TableHead>
                     <TableHead 
@@ -867,15 +776,6 @@ const StudentsPage: React.FC = () => {
                     </TableHead>
                     <TableHead>Admission Number</TableHead>
                     <TableHead>Class & Section</TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('feeStatus')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Fee Status</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
                     <TableHead 
                       className="cursor-pointer"
                       onClick={() => handleSort('admissionDate')}
@@ -901,6 +801,7 @@ const StudentsPage: React.FC = () => {
                         <Checkbox
                           checked={selectedStudents.includes(student.id)}
                           onCheckedChange={() => handleSelectStudent(student.id)}
+                          className="rounded-none"
                         />
                       </TableCell>
                       <TableCell>
@@ -908,12 +809,6 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={student.avatar} />
-                            <AvatarFallback>
-                              {student.firstName[0]}{student.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
                           <div>
                             <div className="font-medium">
                               {student.firstName} {student.lastName}
@@ -929,26 +824,15 @@ const StudentsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{student.currentClass.className}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {student.currentClass.academicYear}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {getFeeStatusBadge(student.feeStatus.status)}
-                          {student.feeStatus.pendingAmount > 0 && (
-                            <div className="text-sm text-muted-foreground">
-                              ${student.feeStatus.pendingAmount} pending
-                            </div>
-                          )}
+                          <div className="font-medium">{student.currentClass.className} {student.currentClass.section }</div>
+                          {/* <div className="text-sm text-muted-foreground">
+                            {student.currentClass.section}
+                          </div> */}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {/* {new Date(student.admissionDate).toLocaleDateString()} */}
-                          {student.admissionDate}
+                          {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString() : '-'}
                         </div>
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
@@ -979,7 +863,7 @@ const StudentsPage: React.FC = () => {
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              {student.isActive ? 'Deactivate' : 'Delete'} Student
+                              Delete Student
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1057,18 +941,42 @@ const StudentsPage: React.FC = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently {studentToDelete?.isActive ? 'deactivate' : 'delete'} the student
+                This action cannot be undone. This will permanently delete the student
                 <strong> {studentToDelete?.firstName} {studentToDelete?.lastName}</strong> and 
-                {studentToDelete?.isActive ? ' remove their access to the system.' : ' remove all associated data from the system.'}
+                remove all associated data from the system.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
+                disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700"
               >
-                {studentToDelete?.isActive ? 'Deactivate' : 'Delete'} Student
+                {isDeleting ? 'Deleting...' : 'Delete Student'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {selectedStudents.length} Students</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete {selectedStudents.length} student{selectedStudents.length > 1 ? 's' : ''} and 
+                remove all associated data from the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmBulkDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isDeleting ? 'Deleting...' : `Delete ${selectedStudents.length} Student${selectedStudents.length > 1 ? 's' : ''}`}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

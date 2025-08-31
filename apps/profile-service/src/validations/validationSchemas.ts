@@ -12,9 +12,7 @@ const addressSchema = z.object({
 // Contact info schema for nested validation
 const contactInfoSchema = z.object({
   primaryPhone: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
-  secondaryPhone: z.string().optional(),
   email: z.string().email('Valid email is required'),
-  emergencyContact: z.string().optional(),
 });
 
 // Guardian schema for nested validation
@@ -31,15 +29,10 @@ const guardianSchema = z.object({
 const parentInfoSchema = z.object({
   fatherName: z.string().min(1, 'Father name is required'),
   fatherPhone: z.string().optional(),
-  fatherEmail: z.string().email('Invalid email format').optional().or(z.literal('')),
-  fatherOccupation: z.string().optional(),
   motherName: z.string().min(1, 'Mother name is required'),
   motherPhone: z.string().optional(),
-  motherEmail: z.string().email('Invalid email format').optional().or(z.literal('')),
-  motherOccupation: z.string().optional(),
   guardianName: z.string().optional(),
   guardianPhone: z.string().optional(),
-  guardianEmail: z.string().email('Invalid email format').optional().or(z.literal('')),
   guardianRelation: z.string().optional(),
 });
 
@@ -51,16 +44,6 @@ const documentSchema = z.object({
   mimeType: z.string().min(1, 'MIME type is required'),
   fileSize: z.number().optional(),
   base64Data: z.string().optional(), // For handling file uploads
-}).optional();
-
-// Medical info schema
-const medicalInfoSchema = z.object({
-  allergies: z.string().optional(),
-  chronicConditions: z.string().optional(),
-  medications: z.string().optional(),
-  doctorName: z.string().optional(),
-  doctorPhone: z.string().optional(),
-  healthInsurance: z.string().optional(),
 }).optional();
 
 export const createStudentSchema = z.object({
@@ -82,9 +65,6 @@ export const createStudentSchema = z.object({
   parentInfo: parentInfoSchema.optional(), // For easier frontend mapping
   guardians: z.array(guardianSchema).optional(), // For direct guardian data
   
-  // Medical information
-  medicalInfo: medicalInfoSchema,
-  
   // Documents (optional)
   documents: z.array(documentSchema).optional(),
   
@@ -96,7 +76,20 @@ export const createStudentSchema = z.object({
 });
 
 export const updateStudentSchema = createStudentSchema.partial().extend({
-  id: z.string().uuid('Invalid student ID format'),
+  // Make id optional since it should come from URL params, not the request body
+  id: z.string().uuid('Invalid student ID format').optional(),
+});
+
+export const acceptStudentApplicationSchema = z.object({
+  admissionNumber: z.string().min(1, 'Admission number is required').max(50),
+  admissionDate: z.string().datetime('Invalid admission date format'),
+  classId: z.string().uuid('Invalid class ID format'),
+  sectionId: z.string().uuid('Invalid section ID format'),
+  rollNumber: z.string().max(50).optional(),
+});
+
+export const rejectStudentApplicationSchema = z.object({
+  reason: z.string().min(1, 'Rejection reason is required').max(500).optional(),
 });
 
 // Teacher validation schemas
@@ -123,7 +116,103 @@ export const createTeacherSchema = z.object({
 });
 
 export const updateTeacherSchema = createTeacherSchema.partial().extend({
-  id: z.string().uuid('Invalid teacher ID format'),
+  // Make id optional since it should come from URL params, not the request body
+  id: z.string().uuid('Invalid teacher ID format').optional(),
+});
+
+// Document validation schemas
+export const createDocumentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(255),
+  type: z.enum([
+    'BIRTH_CERTIFICATE',
+    'AADHAAR_CARD',
+    'PAN_CARD',
+    'PASSPORT',
+    'VOTER_ID',
+    'DRIVING_LICENSE',
+    'MARK_SHEET',
+    'DEGREE_CERTIFICATE',
+    'DIPLOMA_CERTIFICATE',
+    'TRANSFER_CERTIFICATE',
+    'CHARACTER_CERTIFICATE',
+    'EXPERIENCE_CERTIFICATE',
+    'MEDICAL_CERTIFICATE',
+    'VACCINATION_RECORD',
+    'HEALTH_CHECKUP_REPORT',
+    'INCOME_CERTIFICATE',
+    'FEE_RECEIPT',
+    'SALARY_SLIP',
+    'BANK_STATEMENT',
+    'PHOTO',
+    'SIGNATURE',
+    'CASTE_CERTIFICATE',
+    'DOMICILE_CERTIFICATE',
+    'RESIDENCE_PROOF',
+    'OTHER'
+  ], 'Invalid document type'),
+  url: z.string().url('Valid URL is required').max(500),
+  description: z.string().max(1000).optional(),
+  mimeType: z.string().min(1, 'MIME type is required').max(100).optional(),
+  fileSize: z.number().int().min(0).optional(),
+  expiryDate: z.string().datetime('Invalid expiry date format').optional(),
+});
+
+// Schema for file upload without URL (file will be uploaded to cloud)
+export const uploadDocumentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(255),
+  type: z.enum([
+    'BIRTH_CERTIFICATE',
+    'AADHAAR_CARD',
+    'PAN_CARD',
+    'PASSPORT',
+    'VOTER_ID',
+    'DRIVING_LICENSE',
+    'MARK_SHEET',
+    'DEGREE_CERTIFICATE',
+    'DIPLOMA_CERTIFICATE',
+    'TRANSFER_CERTIFICATE',
+    'CHARACTER_CERTIFICATE',
+    'EXPERIENCE_CERTIFICATE',
+    'MEDICAL_CERTIFICATE',
+    'VACCINATION_RECORD',
+    'HEALTH_CHECKUP_REPORT',
+    'INCOME_CERTIFICATE',
+    'FEE_RECEIPT',
+    'SALARY_SLIP',
+    'BANK_STATEMENT',
+    'PHOTO',
+    'SIGNATURE',
+    'CASTE_CERTIFICATE',
+    'DOMICILE_CERTIFICATE',
+    'RESIDENCE_PROOF',
+    'OTHER'
+  ], 'Invalid document type'),
+  description: z.string().max(1000).optional(),
+  expiryDate: z.string().datetime('Invalid expiry date format').optional(),
+});
+
+export const listDocumentsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/, 'Page must be a number').optional(),
+  pageSize: z.string().regex(/^\d+$/, 'Page size must be a number').optional(),
+});
+
+export const documentParamsSchema = z.object({
+  id: z.string().uuid('Invalid student ID format'),
+  docId: z.string().uuid('Invalid document ID format').optional(),
+});
+
+// Delete students validation schema
+export const deleteStudentsSchema = z.object({
+  studentIds: z.array(z.string().uuid('Invalid student ID format'))
+    .min(1, 'At least one student ID is required')
+    .max(100, 'Cannot delete more than 100 students at once'),
+});
+
+// Delete teachers validation schema
+export const deleteTeachersSchema = z.object({
+  teacherIds: z.array(z.string().uuid('Invalid teacher ID format'))
+    .min(1, 'At least one teacher ID is required')
+    .max(100, 'Cannot delete more than 100 teachers at once'),
 });
 
 // Document validation schemas

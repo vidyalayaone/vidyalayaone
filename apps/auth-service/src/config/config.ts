@@ -60,7 +60,7 @@ const config: Config = {
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',
     refreshSecret: process.env.JWT_REFRESH_SECRET || '',
-    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '7d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   email: {
@@ -90,21 +90,5 @@ const config: Config = {
     },
   }
 };
-
-// Validate required environment variables
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_ACCESS_SECRET',
-  'JWT_REFRESH_SECRET',
-  'EMAIL_HOST',
-  'EMAIL_USER',
-  'EMAIL_PASSWORD',
-];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
 
 export default config;

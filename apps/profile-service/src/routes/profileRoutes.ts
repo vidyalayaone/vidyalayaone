@@ -1,17 +1,27 @@
 import { Router } from 'express';
 import { createStudent } from '../controllers/createStudent';
+import { createStudentApplication } from '../controllers/createStudentApplication';
+import { updateStudent } from '../controllers/updateStudent';
+import { deleteStudents } from '../controllers/deleteStudents';
 import { getStudent } from '../controllers/getStudent';
 import { getAllStudents } from '../controllers/getAllStudents';
+import { getStudentApplication } from '../controllers/getStudentApplication';
+import { acceptStudentApplication } from '../controllers/acceptStudentApplication';
+import { rejectStudentApplication } from '../controllers/rejectStudentApplication';
 import { createTeacher } from '../controllers/createTeacher';
+import { updateTeacher } from '../controllers/updateTeacher';
+import { deleteTeachers } from '../controllers/deleteTeachers';
 import { getTeacher } from '../controllers/getTeacher';
 import { getAllTeachers } from '../controllers/getAllTeachers';
+import { getMyTeacherId } from '../controllers/getMyTeacherId';
+import { getStudentApplications } from '../controllers/getStudentApplications';
 import rateLimit from 'express-rate-limit';
-import { createStudentDocument } from '../controllers/documents/uploadDocument';
+import { uploadStudentDocument } from '../controllers/documents/uploadDocument';
 import { listStudentDocuments } from '../controllers/documents/listStudentDocuments';
 import { getStudentDocument } from '../controllers/documents/getStudentDocument';
+import { uploadSingle, handleUploadErrors } from '../middleware/upload';
 
 const router: Router = Router();
-
 const profileLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
@@ -24,16 +34,29 @@ const profileLimiter = rateLimit({
 
 // Student routes
 router.post('/students', profileLimiter, createStudent);
+router.post('/students/apply', createStudentApplication); // Unprotected route for student applications
+router.patch('/students/:id', profileLimiter, updateStudent);
+router.delete('/students', profileLimiter, deleteStudents);
 router.get('/students/:id', profileLimiter, getStudent);
 router.get('/schools/students', profileLimiter, getAllStudents);
+router.get('/schools/student-applications', profileLimiter, getStudentApplications);
+
+// Student application management routes
+router.get('/student-applications/:id', profileLimiter, getStudentApplication);
+router.post('/student-applications/:id/accept', profileLimiter, acceptStudentApplication);
+router.post('/student-applications/:id/reject', profileLimiter, rejectStudentApplication);
+
 // Student documents
-router.post('/students/:id/documents', profileLimiter, createStudentDocument);
+router.post('/students/:id/documents/upload', profileLimiter, uploadSingle, handleUploadErrors, uploadStudentDocument);
 router.get('/students/:id/documents', profileLimiter, listStudentDocuments);
 router.get('/students/:id/documents/:docId', profileLimiter, getStudentDocument);
 
 // Teacher routes
 router.post('/teachers', profileLimiter, createTeacher);
+router.patch('/teachers/:id', profileLimiter, updateTeacher);
+router.delete('/teachers', profileLimiter, deleteTeachers);
 router.get('/teachers/:id', profileLimiter, getTeacher);
 router.get('/schools/teachers', profileLimiter, getAllTeachers);
+router.get('/me/teacher-id', profileLimiter, getMyTeacherId);
 
 export default router;

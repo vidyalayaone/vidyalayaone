@@ -57,13 +57,4 @@ const config: Config = {
   },
 };
 
-// Validate required environment variables
-const requiredEnvVars = ['DATABASE_URL'];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
-
 export default config;

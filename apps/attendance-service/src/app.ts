@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/config';
 import { errorHandler, notFound } from '@vidyalayaone/common-middleware';
+import attendanceRoutes from './routes/attendanceRoutes';
 import type { ErrorRequestHandler } from 'express';
 
 const app: Application = express();
@@ -25,11 +26,11 @@ if (config.server.nodeEnv === 'development') {
   app.use(morgan('combined'));
 }
 
-// CONDITIONAL body parsing - only for POST/PUT/PATCH requests
+// CONDITIONAL body parsing - only for POST/PUT/PATCH/DELETE requests
 app.use((req, res, next) => {
   console.log(`🔍 [ATTENDANCE SERVICE] ${req.method} ${req.url}`);
   
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
     console.log(`🔍 [ATTENDANCE SERVICE] Applying body parsing for ${req.method} request`);
     express.json({ limit: '10mb' })(req, res, (err) => {
       if (err) return next(err);
@@ -51,8 +52,8 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// TODO: Add attendance routes when ready
-// app.use(`${config.server.apiPrefix}/attendance`, attendanceRoutes);
+// Attendance routes
+app.use(`${config.server.apiPrefix}/attendance`, attendanceRoutes);
 
 // 404 handler
 app.use(notFound);

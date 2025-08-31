@@ -100,9 +100,7 @@ export const PERMISSIONS = {
     EXPORT: "report.export",
   },
   DASHBOARD: {
-    VIEW_ADMIN: "dashboard.view_admin",
-    VIEW_TEACHER: "dashboard.view_teacher",
-    VIEW_STUDENT: "dashboard.view_student",
+    VIEW: "dashboard.view",
   },
   SCHOOL: {
     CREATE: "school.create",
@@ -117,6 +115,9 @@ export const PERMISSIONS = {
   PLATFORM: {
     LOGIN: "platform.login",
     GET_ME: "platform.get_me",
+  },
+    ME: {
+    VIEW: "me.view",
   }
 } as const;
 

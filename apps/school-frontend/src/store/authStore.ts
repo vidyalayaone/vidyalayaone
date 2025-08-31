@@ -22,6 +22,7 @@ interface AuthState {
   
   // School data
   school: School | null;
+  schoolNotFound: boolean;
   
   // Loading states
   isLoading: boolean;
@@ -53,6 +54,7 @@ export const useAuthStore = create<AuthState>()(
     user: null,
     isAuthenticated: false,
     school: null,
+    schoolNotFound: false,
     isLoading: false,
     isInitializing: true,
     resetFlow: {
@@ -105,7 +107,7 @@ export const useAuthStore = create<AuthState>()(
             }
           });
           
-          toast.success(`Welcome back, ${user.firstName}!`);
+          toast.success(`Welcome back!`);
           return true;
         } else {
           toast.error(response.message || 'Login failed');
@@ -355,10 +357,15 @@ export const useAuthStore = create<AuthState>()(
         const response = await api.getSchoolBySubdomain(subdomain);
         
         if (response.success && response.data) {
-          set({ school: response.data.school });
+          set({ school: response.data.school, schoolNotFound: false });
+        } else {
+          // School not found or API returned error
+          set({ school: null, schoolNotFound: true });
         }
       } catch (error) {
         console.error('Fetch school error:', error);
+        // Network error or other issues - consider as school not found
+        set({ school: null, schoolNotFound: true });
       }
     },
 

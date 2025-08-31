@@ -45,7 +45,11 @@ export async function getStudentDocument(req: Request, res: Response) {
       res.status(404).json({ success: false, error: { message: 'Student not found' }, timestamp: new Date().toISOString() });
       return;
     }
-
+    
+    if (student.status !== 'ACCEPTED') {
+      res.status(403).json({ success: false, error: { message: 'Access denied. Student is not in ACCEPTED status' }, timestamp: new Date().toISOString() });
+      return;
+    }
     if (student.schoolId !== schoolId) {
       res.status(403).json({ success: false, error: { message: 'Access denied. Student does not belong to your school' }, timestamp: new Date().toISOString() });
       return;

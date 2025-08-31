@@ -8,13 +8,11 @@ import { checkNavigationAccess } from '@/config/navigation';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPermissions?: string[]; // Requires ANY of these permissions
-  excludedPermissions?: string[]; // User cannot have any of these permissions
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredPermissions,
-  excludedPermissions
+  requiredPermissions
 }) => {
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
@@ -30,19 +28,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     user.permissions || []
   );
 
-  // Check excluded permissions
-  if (excludedPermissions && excludedPermissions.length > 0) {
-    const hasExcludedPermission = excludedPermissions.some(permission => 
-      (user.permissions || []).includes(permission)
-    );
-    if (hasExcludedPermission) {
-      return <Navigate to="/dashboard" replace />;
-    }
-  }
-
   if (!hasAccess) {
     // User doesn't have required permissions - redirect to their dashboard
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/not-found" replace />;
   }
 
   // User is authenticated and has required permissions

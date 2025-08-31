@@ -29,9 +29,7 @@ export async function getSubjects(req: Request, res: Response): Promise<void> {
       });
       return;
     }
-
-    console.log(userData.permissions)
-
+    
     // Check permissions
     if (!await hasPermission(PERMISSIONS.SUBJECT.VIEW, userData)) {
       res.status(403).json({

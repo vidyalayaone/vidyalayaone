@@ -80,6 +80,18 @@ export const updateStudentSchema = createStudentSchema.partial().extend({
   id: z.string().uuid('Invalid student ID format').optional(),
 });
 
+export const acceptStudentApplicationSchema = z.object({
+  admissionNumber: z.string().min(1, 'Admission number is required').max(50),
+  admissionDate: z.string().datetime('Invalid admission date format'),
+  classId: z.string().uuid('Invalid class ID format'),
+  sectionId: z.string().uuid('Invalid section ID format'),
+  rollNumber: z.string().max(50).optional(),
+});
+
+export const rejectStudentApplicationSchema = z.object({
+  reason: z.string().min(1, 'Rejection reason is required').max(500).optional(),
+});
+
 // Teacher validation schemas
 export const createTeacherSchema = z.object({
   // Basic teacher information (no userId - will be created internally)

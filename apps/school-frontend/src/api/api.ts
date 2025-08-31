@@ -485,6 +485,42 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Profile service: get specific student application by ID
+  getStudentApplication: async (id: string): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.get(`/profile/student-applications/${id}`);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: accept student application
+  acceptStudentApplication: async (id: string, data: {
+    admissionNumber: string;
+    admissionDate: string;
+    classId: string;
+    sectionId: string;
+    rollNumber?: string;
+  }): Promise<APIResponse<{ student: ProfileServiceStudent; enrollment: any; userCreated: boolean; message: string }>> => {
+    try {
+      const response = await httpClient.post(`/profile/student-applications/${id}/accept`, data);
+      return handleResponse<{ student: ProfileServiceStudent; enrollment: any; userCreated: boolean; message: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // Profile service: reject student application
+  rejectStudentApplication: async (id: string, data?: { reason?: string }): Promise<APIResponse<{ student: ProfileServiceStudent; message: string }>> => {
+    try {
+      const response = await httpClient.post(`/profile/student-applications/${id}/reject`, data || {});
+      return handleResponse<{ student: ProfileServiceStudent; message: string }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -523,5 +559,8 @@ export const {
   getStudentDocument,
   getMyTeacherId,
   markAttendance,
-  getStudentApplications
+  getStudentApplications,
+  getStudentApplication,
+  acceptStudentApplication,
+  rejectStudentApplication
 } = api;

@@ -177,9 +177,6 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
           roleName: 'STUDENT'
         });
 
-        console.log('function started XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx');
-        console.log('User creation result:', userCreationResult);
-
         if (!userCreationResult.success || !userCreationResult.data?.user?.id) {
           res.status(400).json({
             success: false,

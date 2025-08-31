@@ -1,5 +1,3 @@
-// Teachers management page for admin users
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -73,6 +71,24 @@ import { DeleteTeachersRequest } from '@/api/types';
 import { transformProfileTeachersToTeachers } from '@/utils/teacherTransform';
 import { downloadTeachers } from '@/utils/teacherDownloadUtils';
 import toast from 'react-hot-toast';
+
+// Utility function to format joining date
+const formatJoiningDate = (dateString: string | null): string => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    // Format as DD/MM/YYYY
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (error) {
+    return 'Invalid Date';
+  }
+};
+
 
 const TeachersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -514,134 +530,126 @@ const TeachersPage: React.FC = () => {
           <CardContent>
             <div className="rounded-md border">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedTeachers.length === currentTeachers.length && currentTeachers.length > 0}
-                        onCheckedChange={handleSelectAll}
-                        className="rounded-none"
-                      />
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('employeeId')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Employee ID</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('name')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Teacher Name</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('subjects')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Subjects</span>
-                        <ArrowUpDown className="h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-12">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentTeachers.map((teacher) => (
-                    <TableRow 
-                      key={teacher.id}
-                      className={`hover:bg-muted/50 transition-colors cursor-pointer ${
-                        !teacher.isActive ? 'opacity-60' : ''
-                      }`}
-                      onClick={() => navigate(`/teachers/${teacher.id}`)}
-                    >
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedTeachers.includes(teacher.id)}
-                          onCheckedChange={() => handleSelectTeacher(teacher.id)}
-                          className="rounded-none"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-mono text-sm font-medium">{teacher.employeeId}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={teacher.avatar} alt={`${teacher.firstName} ${teacher.lastName}`} />
-                            <AvatarFallback>{getInitials(teacher.firstName, teacher.lastName)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">
-                              {teacher.firstName} {teacher.lastName}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-sm">
-                            <Mail className="w-3 h-3" />
-                            {teacher.email !== 'N/A' ? teacher.email : 'Not available'}
-                          </div>
-                          {teacher.phoneNumber && teacher.phoneNumber !== 'N/A' && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Phone className="w-3 h-3" />
-                              {teacher.phoneNumber}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {teacher.subjects.map((subject) => (
-                            <Badge key={subject.id} variant="secondary" className="text-xs">
-                              {subject.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => navigate(`/teachers/${teacher.id}`)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/teachers/${teacher.id}/edit`)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit Teacher
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteTeacher(teacher)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete Teacher
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead className="w-12">
+        <Checkbox
+          checked={selectedTeachers.length === currentTeachers.length && currentTeachers.length > 0}
+          onCheckedChange={handleSelectAll}
+          className="rounded-none"
+        />
+      </TableHead>
+      <TableHead 
+        className="cursor-pointer"
+        onClick={() => handleSort('employeeId')}
+      >
+        <div className="flex items-center space-x-1">
+          <span>Employee ID</span>
+          <ArrowUpDown className="h-4 w-4" />
+        </div>
+      </TableHead>
+      <TableHead 
+        className="cursor-pointer"
+        onClick={() => handleSort('name')}
+      >
+        <div className="flex items-center space-x-1">
+          <span>Teacher Name</span>
+          <ArrowUpDown className="h-4 w-4" />
+        </div>
+      </TableHead>
+      <TableHead>Joining Date</TableHead>
+      <TableHead 
+        className="cursor-pointer"
+        onClick={() => handleSort('subjects')}
+      >
+        <div className="flex items-center space-x-1">
+          <span>Subjects</span>
+          <ArrowUpDown className="h-4 w-4" />
+        </div>
+      </TableHead>
+      <TableHead className="w-12">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {currentTeachers.map((teacher) => (
+      <TableRow 
+        key={teacher.id}
+        className={`hover:bg-muted/50 transition-colors cursor-pointer ${
+          !teacher.isActive ? 'opacity-60' : ''
+        }`}
+        onClick={() => navigate(`/teachers/${teacher.id}`)}
+      >
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={selectedTeachers.includes(teacher.id)}
+            onCheckedChange={() => handleSelectTeacher(teacher.id)}
+            className="rounded-none"
+          />
+        </TableCell>
+        <TableCell>
+          <div className="font-mono text-sm font-medium">{teacher.employeeId}</div>
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={teacher.avatar} alt={`${teacher.firstName} ${teacher.lastName}`} />
+              <AvatarFallback>{getInitials(teacher.firstName, teacher.lastName)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">
+                {teacher.firstName} {teacher.lastName}
+              </div>
+            </div>
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="text-sm font-medium">
+            {formatJoiningDate(teacher.joiningDate)}
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex flex-wrap gap-1">
+            {teacher.subjects.map((subject) => (
+              <Badge key={subject.id} variant="secondary" className="text-xs">
+                {subject.name}
+              </Badge>
+            ))}
+          </div>
+        </TableCell>
+        <TableCell onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigate(`/teachers/${teacher.id}`)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/teachers/${teacher.id}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Teacher
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => handleDeleteTeacher(teacher)}
+                className="text-red-600"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Teacher
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+
               
               {currentTeachers.length === 0 && (
                 <div className="flex h-24 items-center justify-center">

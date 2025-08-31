@@ -300,6 +300,16 @@ export const api = {
     }
   },
 
+  // Profile service: update an existing student
+  updateStudent: async (id: string, data: Partial<CreateStudentRequest>): Promise<APIResponse<{ student: ProfileServiceStudent }>> => {
+    try {
+      const response = await httpClient.patch(`/profile/students/${id}`, data);
+      return handleResponse<{ student: ProfileServiceStudent }>(response);
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+  
   // Profile service: delete students
   deleteStudents: async (data: DeleteStudentsRequest): Promise<APIResponse<DeleteStudentsResponse>> => {
     try {
@@ -452,6 +462,7 @@ export const {
   getStudentsBySchool,
   getStudentById,
   createStudent,
+  updateStudent,
   deleteStudents,
   deleteTeachers,
   getSchoolSubjects,

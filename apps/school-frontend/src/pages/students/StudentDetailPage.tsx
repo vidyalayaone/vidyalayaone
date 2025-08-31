@@ -1,5 +1,3 @@
-// Student detail view page
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
@@ -15,7 +13,8 @@ import {
   FileText,
   DollarSign,
   GraduationCap,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react';
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -61,8 +60,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import StudentFeesTab from '@/components/students/StudentFeesTab';
-import { getStudentById, createStudentDocument, getStudentDocuments } from '@/api/api';
-import type { ProfileServiceStudent, CreateDocumentRequest } from '@/api/types';
+import { getStudentById, createStudentDocument, getStudentDocuments, deleteStudents } from '@/api/api';
+import type { ProfileServiceStudent, CreateDocumentRequest, DeleteStudentsRequest, DeleteStudentsResponse } from '@/api/types';
 import toast from 'react-hot-toast';
 
 // Mock student data according to the new JSON shape
@@ -72,7 +71,7 @@ const StudentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDocumentDialogOpen, setUploadDocumentDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [student, setStudent] = useState<ProfileServiceStudent | null>(null);
@@ -80,6 +79,7 @@ const StudentDetailPage: React.FC = () => {
   const [documents, setDocuments] = useState<ProfileServiceStudent['documents']>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
   const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [documentName, setDocumentName] = useState('');
   const [documentType, setDocumentType] = useState<CreateDocumentRequest['type']>('OTHER');
   const [documentDescription, setDocumentDescription] = useState('');
@@ -308,10 +308,33 @@ const StudentDetailPage: React.FC = () => {
     );
   }
 
-  const handleDeactivateStudent = () => {
-    console.log('Deactivating student:', id);
-    // Here you would call the API to deactivate the student
-    navigate('/students');
+  const handleDeleteStudent = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    try {
+      const deleteRequest: DeleteStudentsRequest = { studentIds: [id] };
+      const response = await deleteStudents(deleteRequest);
+      
+      if (response.success && response.data) {
+        const { summary } = response.data;
+        
+        if (summary.successfulDeletions === summary.totalRequested) {
+          toast.success('Student deleted successfully');
+          navigate('/students');
+        } else {
+          toast.error('Failed to delete student');
+        }
+      } else {
+        toast.error(response.message || 'Failed to delete student');
+      }
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast.error('Failed to delete student. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
   };
 
   const handleMarkAsPaid = () => {
@@ -353,38 +376,24 @@ const StudentDetailPage: React.FC = () => {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <span>Dashboard</span>
-          <span>→</span>
-          <span 
-            className="cursor-pointer hover:text-foreground"
-            onClick={() => navigate('/students')}
-          >
-            Students
-          </span>
-          <span>→</span>
-          <span className="text-foreground font-medium">{getFullName(student)}</span>
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={() => navigate('/students')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Students
+          </Button>
         </div>
 
         {/* Header Section with Photo and Info */}
         <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-6">
+          <div className="flex items-center space-x-6">
             <Avatar className="h-24 w-24">
               <AvatarImage src={getAvatarUrl(student)} />
               <AvatarFallback className="text-lg">
                 {getFullName(student).split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <h1 className="text-3xl font-bold tracking-tight">{getFullName(student)}</h1>
-                {getStatusBadge()}
-              </div>
-              {/* <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                <span>Admission No: <span className="font-medium text-foreground">{student.admissionNumber}</span></span>
-                <span>Student ID: <span className="font-medium text-foreground">{student.id}</span></span>
-                <span>Class: <span className="font-medium text-foreground">{getCurrentClassInfo()}</span></span>
-              </div> */}
+            <div className="flex items-center space-x-2">
+              <h1 className="text-3xl font-bold tracking-tight">{getFullName(student)}</h1>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -395,214 +404,28 @@ const StudentDetailPage: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setDeactivateDialogOpen(true)}
+              onClick={() => setDeleteDialogOpen(true)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Deactivate
+              Delete
             </Button>
           </div>
         </div>
 
-        {/* Profile Summary Sidebar */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Roll No</p>
-                <p className="text-lg font-semibold">{getCurrentRollNumber()}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Class</p>
-                <p className="text-lg font-semibold">{getCurrentClassInfo()}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Fee Status</p>
-                <div>{getFeeStatusBadge()}</div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Admission Date</p>
-                <p>{new Date(student.admissionDate).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Contact</p>
-                <p className="text-sm">{getContactPhone(student)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="basic">Basic Information</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="fees">Fees</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="marks">Marks</TabsTrigger>
           </TabsList>
 
           {/* Basic Information Tab */}
           <TabsContent value="basic" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Academic Info Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <GraduationCap className="mr-2 h-5 w-5" />
-                    Academic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Roll No</p>
-                      <p className="text-lg">{getCurrentRollNumber()}</p>
-                    </div>
-                    {/* <div>
-                      <p className="text-sm font-medium text-muted-foreground">Student ID</p>
-                      <p className="text-lg">{student.id}</p>
-                    </div> */}
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Admission No</p>
-                      <p className="text-lg">{student.admissionNumber}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Class</p>
-                      <p className="text-lg">{getCurrentClassInfo()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Admission Date</p>
-                      <p>{new Date(student.admissionDate).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                      <p>{student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Contact Info Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Phone className="mr-2 h-5 w-5" />
-                    Contact Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Email</p>
-                    <p className="flex items-center">
-                      <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {getContactEmail(student)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                    <p className="flex items-center">
-                      <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {getContactPhone(student)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Address</p>
-                    <p className="flex items-start">
-                      <MapPin className="mr-2 h-4 w-4 text-muted-foreground mt-1" />
-                      {getAddressString(student)}
-                    </p>
-                  </div>
-                  {student.gender && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Gender</p>
-                      <p>{student.gender}</p>
-                    </div>
-                  )}
-                  {student.bloodGroup && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Blood Group</p>
-                      <p>{student.bloodGroup}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Guardian Info Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Users className="mr-2 h-5 w-5" />
-                    Parents / Guardians
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(() => {
-                      const father = getFatherGuardian(student);
-                      const mother = getMotherGuardian(student);
-                      
-                      return (
-                        <>
-                          {father && (
-                            <div className="border rounded-lg p-3">
-                              <p className="text-sm font-medium text-muted-foreground">Father</p>
-                              <p className="font-medium">{`${father.firstName} ${father.lastName}`}</p>
-                              {father.phone && (
-                                <p className="text-sm">{father.phone}</p>
-                              )}
-                              {father.email && (
-                                <p className="text-sm text-muted-foreground">{father.email}</p>
-                              )}
-                            </div>
-                          )}
-
-                          {mother && (
-                            <div className="border rounded-lg p-3">
-                              <p className="text-sm font-medium text-muted-foreground">Mother</p>
-                              <p className="font-medium">{`${mother.firstName} ${mother.lastName}`}</p>
-                              {mother.phone && (
-                                <p className="text-sm">{mother.phone}</p>
-                              )}
-                              {mother.email && (
-                                <p className="text-sm text-muted-foreground">{mother.email}</p>
-                              )}
-                            </div>
-                          )}
-                          
-                          {/* Show other guardians */}
-                          {student.guardians
-                            .filter(sg => sg.relation?.toLowerCase() !== 'father' && sg.relation?.toLowerCase() !== 'mother')
-                            .map((sg) => (
-                              <div key={sg.id} className="border rounded-lg p-3">
-                                <p className="text-sm font-medium text-muted-foreground">{sg.relation || 'Guardian'}</p>
-                                <p className="font-medium">{`${sg.guardian.firstName} ${sg.guardian.lastName}`}</p>
-                                {sg.guardian.phone && (
-                                  <p className="text-sm">{sg.guardian.phone}</p>
-                                )}
-                                {sg.guardian.email && (
-                                  <p className="text-sm text-muted-foreground">{sg.guardian.email}</p>
-                                )}
-                              </div>
-                            ))
-                          }
-                          
-                          {student.guardians.length === 0 && (
-                            <div className="col-span-2 text-center py-4 text-muted-foreground">
-                              No guardian information available
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Personal Info Card */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Personal Information Card */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -610,58 +433,234 @@ const StudentDetailPage: React.FC = () => {
                     Personal Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    {student.dateOfBirth && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                        <p>{new Date(student.dateOfBirth).toLocaleDateString()}</p>
-                      </div>
-                    )}
-                    {student.gender && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Gender</p>
-                        <p>{student.gender}</p>
-                      </div>
-                    )}
-                    {student.bloodGroup && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Blood Group</p>
-                        <p>{student.bloodGroup}</p>
-                      </div>
-                    )}
-                    {student.category && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Category</p>
-                        <p>{student.category}</p>
-                      </div>
-                    )}
-                    {student.religion && (
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Religion</p>
-                        <p>{student.religion}</p>
-                      </div>
-                    )}
-                  </div>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Field</TableHead>
+                        <TableHead className="font-bold">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Name</TableCell>
+                        <TableCell className="font-medium">{getFullName(student)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Date of Birth</TableCell>
+                        <TableCell className="font-medium">
+                          {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : 'N/A'}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Gender</TableCell>
+                        <TableCell className="font-medium">{student.gender || 'N/A'}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Religion</TableCell>
+                        <TableCell className="font-medium">{student.religion || 'N/A'}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Category</TableCell>
+                        <TableCell className="font-medium">{student.category || 'N/A'}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Blood Group</TableCell>
+                        <TableCell className="font-medium">{student.bloodGroup || 'N/A'}</TableCell>
+                      </TableRow>
+                      {/* <TableRow>
+                        <TableCell className="font-medium">Aadhaar Number</TableCell>
+                        <TableCell className="font-medium">N/A</TableCell>
+                      </TableRow> */}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
 
-              {/* Transport Info Card - Commented out as it's not in the new schema */}
-              {/* <Card>
+              {/* Academic Information Card */}
+              <Card>
                 <CardHeader>
-                  <CardTitle>Transport Information</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <GraduationCap className="mr-2 h-5 w-5" />
+                    Academic Information
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Route</p>
-                    <p>{student.transport.route}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pickup Point</p>
-                    <p>{student.transport.pickup}</p>
-                  </div>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Field</TableHead>
+                        <TableHead className="font-bold">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Class</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const currentEnrollment = getCurrentEnrollment(student);
+                            return currentEnrollment ? (currentEnrollment.className || currentEnrollment.classId) : 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Section</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const currentEnrollment = getCurrentEnrollment(student);
+                            return currentEnrollment ? (currentEnrollment.sectionName || currentEnrollment.sectionId) : 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Roll Number</TableCell>
+                        <TableCell className="font-medium">{getCurrentRollNumber()}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Admission Number</TableCell>
+                        <TableCell className="font-medium">{student.admissionNumber}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Admission Date</TableCell>
+                        <TableCell className="font-medium">{new Date(student.admissionDate).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
                 </CardContent>
-              </Card> */}
+              </Card>
+
+              {/* Contact Information Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Phone className="mr-2 h-5 w-5" />
+                    Contact Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Field</TableHead>
+                        <TableHead className="font-bold">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Address</TableCell>
+                        <TableCell className="font-medium">{getAddressString(student)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Phone Number</TableCell>
+                        <TableCell className="font-medium">{getContactPhone(student)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Email Address</TableCell>
+                        <TableCell className="font-medium">{getContactEmail(student)}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Parents/Guardians Information Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-5 w-5" />
+                    Parents/Guardians Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-bold">Field</TableHead>
+                        <TableHead className="font-bold">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Father's Name</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const father = getFatherGuardian(student);
+                            return father ? `${father.firstName} ${father.lastName}` : 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Father's Phone Number</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const father = getFatherGuardian(student);
+                            return father?.phone || 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      {/* <TableRow>
+                        <TableCell className="font-medium">Father's Occupation</TableCell>
+                        <TableCell className="font-medium">N/A</TableCell>
+                      </TableRow> */}
+                      <TableRow>
+                        <TableCell className="font-medium">Mother's Name</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const mother = getMotherGuardian(student);
+                            return mother ? `${mother.firstName} ${mother.lastName}` : 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Mother's Phone Number</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const mother = getMotherGuardian(student);
+                            return mother?.phone || 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      {/* <TableRow>
+                        <TableCell className="font-medium">Mother's Occupation</TableCell>
+                        <TableCell className="font-medium">N/A</TableCell>
+                      </TableRow> */}
+                      <TableRow>
+                        <TableCell className="font-medium">Guardian's Name</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const otherGuardians = student.guardians.filter(sg => 
+                              sg.relation?.toLowerCase() !== 'father' && sg.relation?.toLowerCase() !== 'mother'
+                            );
+                            if (otherGuardians.length > 0) {
+                              const guardian = otherGuardians[0].guardian;
+                              return `${guardian.firstName} ${guardian.lastName}`;
+                            }
+                            return 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Guardian's Phone Number</TableCell>
+                        <TableCell className="font-medium">
+                          {(() => {
+                            const otherGuardians = student.guardians.filter(sg => 
+                              sg.relation?.toLowerCase() !== 'father' && sg.relation?.toLowerCase() !== 'mother'
+                            );
+                            if (otherGuardians.length > 0) {
+                              return otherGuardians[0].guardian.phone || 'N/A';
+                            }
+                            return 'N/A';
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                      {/* <TableRow>
+                        <TableCell className="font-medium">Guardian's Occupation</TableCell>
+                        <TableCell className="font-medium">N/A</TableCell>
+                      </TableRow> */}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -751,62 +750,26 @@ const StudentDetailPage: React.FC = () => {
             </Card>
           </TabsContent>
 
-          {/* Marks Tab */}
-          <TabsContent value="marks" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Academic Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-16">
-                  <GraduationCap className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-muted-foreground">Marks & Grades Coming Soon</p>
-                  <p className="text-sm text-muted-foreground">This section will display subject-wise marks and performance analytics</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
 
-        {/* Activity Timeline */}
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Activity Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {student.activity.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-4 border-l-2 border-muted pl-4">
-                  <div className="w-2 h-2 bg-primary rounded-full -ml-5 border-2 border-background"></div>
-                  <div className="flex-1">
-                    <p className="font-medium">{activity.event}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(activity.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card> */}
-
-        {/* Deactivate Confirmation Dialog */}
-        <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action will deactivate the student <strong>{getFullName(student)}</strong>. 
-                The student will not be able to access the system until reactivated.
+                This action cannot be undone. This will permanently delete the student
+                <strong> {getFullName(student)}</strong> and remove all associated data from the system.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={handleDeactivateStudent}
+                onClick={handleDeleteStudent}
+                disabled={isDeleting}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Deactivate Student
+                {isDeleting ? 'Deleting...' : 'Delete Student'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

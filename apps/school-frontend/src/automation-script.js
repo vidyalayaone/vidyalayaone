@@ -7,8 +7,8 @@ const config = {
   baseURL: 'http://localhost:3000', // API Gateway URL
   host: 'vidyalayaone.com',
   users: {
-    defaultUser: { username: 'first_user', password: 'password123' },
-    platformAdmin: { username: 'abhijeetst22', password: 'password123' }
+    defaultUser: { username: 'first_user', password: 'avngr___stark' },
+    platformAdmin: { username: 'abhijeetst22', password: 'avngr___stark' }
   }
 };
 

@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import PaymentService from '@/services/payment';
-import WebhookService from '@/services/webhook';
-import DatabaseService from '@/services/database';
+import PaymentService from '../services/payment';
+import WebhookService from '../services/webhook';
+import DatabaseService from '../services/database';
 import axios from 'axios';
-import config from '@/config/config';
+import config from '../config/config';
 import {
   createPaymentOrderSchema,
   verifyPaymentSchema,
@@ -13,7 +13,7 @@ import {
   receiptDownloadSchema,
   paymentStatsQuerySchema,
   webhookSchema,
-} from '@/validations/paymentValidations';
+} from '../validations/paymentValidations';
 import {
   ApiResponse,
   PaymentOrderResponse,
@@ -23,7 +23,7 @@ import {
   RefundResponse,
   PaymentStatsResponse,
   ErrorResponse,
-} from '@/types/payment';
+} from '../types/payment';
 
 class PaymentController {
   private paymentService = new PaymentService();

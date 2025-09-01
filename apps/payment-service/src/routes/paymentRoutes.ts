@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import rateLimit from 'express-rate-limit';
-import paymentController from '@/controllers/paymentController';
-import config from '@/config/config';
+import paymentController from '../controllers/paymentController';
+import config from '../config/config';
 
 const router: ExpressRouter = Router();
 

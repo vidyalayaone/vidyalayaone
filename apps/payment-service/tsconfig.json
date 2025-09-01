@@ -1,26 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["*"],
-      "@/config/*": ["config/*"],
-      "@/controllers/*": ["controllers/*"],
-      "@/services/*": ["services/*"],
-      "@/routes/*": ["routes/*"],
-      "@/types/*": ["types/*"],
-      "@/utils/*": ["utils/*"],
-      "@/validations/*": ["validations/*"],
-      "@/generated/*": ["generated/*"]
-    }
+    "module": "CommonJS",
+    "moduleResolution": "node",
   },
-  "include": [
-    "src/**/*",
-    "prisma/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "typeRoots": ["./node_modules/@types", "./src/types"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

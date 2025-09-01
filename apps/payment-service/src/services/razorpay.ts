@@ -1,6 +1,6 @@
 import Razorpay from 'razorpay';
 import * as crypto from 'node:crypto';
-import config from '@/config/config';
+import config from '../config/config';
 
 class RazorpayService {
   private razorpay: Razorpay;

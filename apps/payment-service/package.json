@@ -19,7 +19,12 @@
     "db:clean": "ts-node-dev --require tsconfig-paths/register prisma/clean.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["payment", "razorpay", "school", "registration"],
+  "keywords": [
+    "payment",
+    "razorpay",
+    "school",
+    "registration"
+  ],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
@@ -55,6 +60,7 @@
     "prisma": "^6.10.1",
     "react": "^18.3.1",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0"
   }
 }

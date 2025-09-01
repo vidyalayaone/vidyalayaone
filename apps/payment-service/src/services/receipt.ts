@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
 import path from 'path';
-import config from '@/config/config';
+import config from '../config/config';
 import { SchoolPayment } from '../generated/client';
 
 interface GenerateReceiptParams {

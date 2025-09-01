@@ -1,24 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./*"],
-      "@vidyalayaone/common-middleware": ["../../packages/common-middleware/src"],
-      "@vidyalayaone/common-utils": ["../../packages/common-utils/src"],
-      "@vidyalayaone/logger": ["../../packages/logger/src"]
-    }
+    "rootDir": "./src",
+    "outDir": "./dist"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/generated"
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
-  }
+  "typeRoots": ["./node_modules/@types", "./src/types"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

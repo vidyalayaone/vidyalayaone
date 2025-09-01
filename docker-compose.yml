@@ -108,17 +108,8 @@ services:
       - "3005:3005"
       - "5561:5561"
     depends_on:
-      migration:
-        condition: service_completed_successfully
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/payment_db
-      - PORT=3005
-      - NODE_ENV=development
-      - RAZORPAY_KEY_ID=rzp_test_RA3jdWxBNi01ne
-      - RAZORPAY_KEY_SECRET=t1JTiucxpg1HVVIrghwrjuqm
-      - RAZORPAY_WEBHOOK_SECRET=test_webhook_secret
-      - SCHOOL_SERVICE_URL=http://school-service:3002
-      - CORS_ORIGIN=http://localhost:8080,http://localhost:8081
+      postgres:
+        condition: service_healthy
     volumes:
     - ./apps/payment-service:/app/apps/payment-service
     - ./packages:/app/packages
@@ -201,17 +192,6 @@ services:
       - "8081:8081"
     depends_on:
       - api-gateway
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://localhost:3000
-      - VITE_AUTH_API_URL=http://localhost:3000/api/v1
-      - VITE_SCHOOL_API_URL=http://localhost:3000/api/v1
-      - VITE_PAYMENT_API_URL=http://localhost:3000/api/v1/payments
-      - VITE_AUTH_SERVICE_URL=http://localhost:3001
-      - VITE_SCHOOL_SERVICE_URL=http://localhost:3002
-      - VITE_PROFILE_SERVICE_URL=http://localhost:3003
-      - VITE_PAYMENT_SERVICE_URL=http://localhost:3005
-      - VITE_ATTENDANCE_SERVICE_URL=http://localhost:3004
     volumes:
       - ./apps/platform-frontend:/app/apps/platform-frontend
       - ./packages:/app/packages

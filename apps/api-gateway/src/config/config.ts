@@ -65,10 +65,10 @@ const config: Config = {
       url: process.env.ATTENDANCE_SERVICE_URL || 'http://attendance-service:3004',
       timeout: parseInt(process.env.ATTENDANCE_SERVICE_TIMEOUT || '30000', 10),
     },
-    payment: process.env.PAYMENT_SERVICE_URL ? {
-      url: process.env.PAYMENT_SERVICE_URL,
+    payment: {
+      url: process.env.PAYMENT_SERVICE_URL || 'http://payment-service:3005',
       timeout: parseInt(process.env.PAYMENT_SERVICE_TIMEOUT || '30000', 10),
-    } : undefined,
+    },
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',

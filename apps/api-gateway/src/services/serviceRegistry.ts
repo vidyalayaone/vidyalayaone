@@ -124,12 +124,9 @@ class ServiceRegistry {
       timeout: config.services.attendance.timeout,
     });
 
-    // Payment service registration (conditionally if configured in env)
-    if ((config as any).services.payment) {
-      const paymentCfg: any = (config as any).services.payment;
-      this.services.set('payment', {
+    this.services.set('payment', {
         name: 'payment-service',
-        url: paymentCfg.url,
+        url: config.services.payment?.url || 'http://payment-service:3005',
         path: '/api/v1/payments',
         isProtected: true, // default protection; specific public route overrides below
         routes: [
@@ -148,9 +145,8 @@ class ServiceRegistry {
           { path: '/receipts/:receiptId/download', method: 'GET', isProtected: true },
         ],
         healthPath: '/health',
-        timeout: paymentCfg.timeout || 30000,
+        timeout: config?.services?.payment?.timeout || 30000,
       });
-    }
   }
 
   getService(name: string): ServiceConfig | undefined {

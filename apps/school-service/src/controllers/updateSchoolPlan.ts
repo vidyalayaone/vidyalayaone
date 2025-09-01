@@ -55,7 +55,7 @@ export async function updateSchoolPlan(req: Request, res: Response): Promise<voi
     }
 
     // Update school metadata with plan information
-    const currentMetaData = existingSchool.metaData || {};
+    const currentMetaData = (existingSchool.metaData as Record<string, any>) || {};
     const updatedMetaData = {
       ...currentMetaData,
       plan: plan,

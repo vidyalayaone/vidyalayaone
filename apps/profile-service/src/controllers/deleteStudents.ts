@@ -162,25 +162,29 @@ export const deleteStudents = async (req: Request, res: Response) => {
         });
 
         // 6. Delete user from auth service (outside transaction)
-        console.log(`🔐 Deleting user ${student.userId} from auth service`);
-        try {
-          const userDeleteResult = await authService.deleteUser(student.userId);
-          if (userDeleteResult.success) {
-            deleteResult.deletedUsers.push(student.userId);
-            console.log(`✅ Successfully deleted user ${student.userId} from auth service`);
-          } else {
+        if (student.userId) {
+          console.log(`🔐 Deleting user ${student.userId} from auth service`);
+          try {
+            const userDeleteResult = await authService.deleteUser(student.userId);
+            if (userDeleteResult.success) {
+              deleteResult.deletedUsers.push(student.userId);
+              console.log(`✅ Successfully deleted user ${student.userId} from auth service`);
+            } else {
+              deleteResult.failedUserDeletions.push({
+                userId: student.userId,
+                error: 'Failed to delete user from auth service'
+              });
+              console.error(`❌ Failed to delete user ${student.userId} from auth service`);
+            }
+          } catch (userDeleteError) {
             deleteResult.failedUserDeletions.push({
               userId: student.userId,
-              error: 'Failed to delete user from auth service'
+              error: 'Error occurred while deleting user from auth service'
             });
-            console.error(`❌ Failed to delete user ${student.userId} from auth service`);
+            console.error(`❌ Error deleting user ${student.userId} from auth service:`, userDeleteError);
           }
-        } catch (userDeleteError) {
-          deleteResult.failedUserDeletions.push({
-            userId: student.userId,
-            error: 'Error occurred while deleting user from auth service'
-          });
-          console.error(`❌ Error deleting user ${student.userId} from auth service:`, userDeleteError);
+        } else {
+          console.log(`⚠️ Student ${student.id} has no userId, skipping auth service deletion`);
         }
 
         deleteResult.deletedStudents.push(student.id);

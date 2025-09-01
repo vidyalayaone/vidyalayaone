@@ -13,7 +13,7 @@
     "start:app": "pnpm --filter @vidyalayaone/$APP start",
     "build:packages": "pnpm run --recursive --filter \"./packages/**\" build",
     "automate": "pnpm --filter school-frontend automate",
-    "db:generate": "pnpm --filter auth-service db:generate && pnpm --filter profile-service db:generate && pnpm --filter school-service db:generate"
+    "db:generate": "pnpm --filter auth-service db:generate && pnpm --filter profile-service db:generate && pnpm --filter school-service db:generate && pnpm --filter attendance-service db:generate && pnpm --filter payment-service db:generate"
   },
   "keywords": [],
   "author": "",

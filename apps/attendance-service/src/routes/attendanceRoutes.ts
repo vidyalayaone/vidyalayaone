@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { markAttendance } from '../controllers/markAttendance';
 import { getClassAttendance } from '../controllers/getClassAttendance';
+import { getClassAttendanceRange } from '../controllers/getClassAttendanceRange';
 import { getStudentAttendance } from '../controllers/getStudentAttendance';
 import { getAttendanceStats } from '../controllers/getAttendanceStats';
 import { updateAttendanceRecord } from '../controllers/updateAttendanceRecord';
@@ -17,6 +18,9 @@ router.get('/check/:classId/section/:sectionId', checkAttendanceExists);
 
 // GET /api/v1/attendance/class/:classId/section/:sectionId - Get class attendance
 router.get('/class/:classId/section/:sectionId', getClassAttendance);
+
+// GET /api/v1/attendance/class/:classId/section/:sectionId/range - Get class attendance for date range (optimized)
+router.get('/class/:classId/section/:sectionId/range', getClassAttendanceRange);
 
 // GET /api/v1/attendance/student/:studentId - Get student attendance
 router.get('/student/:studentId', getStudentAttendance);

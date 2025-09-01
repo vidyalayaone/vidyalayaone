@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Calendar,
@@ -13,7 +13,8 @@ import {
   ChevronDown,
   ChevronUp,
   Eye,
-  EyeOff
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { api } from '@/api/api';
+import { useAuthStore } from '@/store/authStore';
+import toast from 'react-hot-toast';
+
 // Types
 interface ClassOption {
   id: string;
@@ -61,79 +66,30 @@ interface Student {
 }
 
 interface AttendanceRecord {
+  id: string;
   studentId: string;
-  date: string;
+  schoolId: string;
+  classId: string;
+  sectionId: string;
+  attendanceDate: string;
   status: 'PRESENT' | 'ABSENT' | 'LEAVE';
-  markedBy: string;
+  attendanceTakerId: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AttendanceTaker {
+  id: string;
+  name: string;
 }
 
 interface ClassAttendanceData {
   students: Student[];
   attendance: AttendanceRecord[];
   dateRange: string[];
+  attendanceTakers: AttendanceTaker[];
 }
-
-// Mock data
-const mockClasses: ClassOption[] = [
-  {
-    id: '9',
-    name: 'Grade 9',
-    sections: [
-      { id: '9-A', name: 'A' },
-      { id: '9-B', name: 'B' },
-    ]
-  },
-  {
-    id: '10',
-    name: 'Grade 10',
-    sections: [
-      { id: '10-A', name: 'A' },
-      { id: '10-B', name: 'B' },
-    ]
-  },
-  {
-    id: '11',
-    name: 'Grade 11',
-    sections: [
-      { id: '11-default', name: 'Default' },
-    ]
-  },
-];
-
-const mockStudents: Student[] = [
-  { id: '1', name: 'John Doe', rollNumber: 'STU001' },
-  { id: '2', name: 'Jane Smith', rollNumber: 'STU002' },
-  { id: '3', name: 'Mike Wilson', rollNumber: 'STU003' },
-  { id: '4', name: 'Sarah Brown', rollNumber: 'STU004' },
-  { id: '5', name: 'Alex Johnson', rollNumber: 'STU005' },
-];
-
-const generateMockAttendance = (students: Student[], dateRange: string[]): AttendanceRecord[] => {
-  const records: AttendanceRecord[] = [];
-  const statuses: ('PRESENT' | 'ABSENT' | 'LEAVE')[] = ['PRESENT', 'ABSENT', 'LEAVE'];
-  const teachers = ['Mrs. Johnson', 'Mr. Smith', 'Ms. Davis', 'Mr. Brown'];
-
-  students.forEach(student => {
-    dateRange.forEach(date => {
-      // Randomly generate attendance (80% present, 15% absent, 5% leave)
-      const rand = Math.random();
-      let status: 'PRESENT' | 'ABSENT' | 'LEAVE';
-      
-      if (rand < 0.8) status = 'PRESENT';
-      else if (rand < 0.95) status = 'ABSENT';
-      else status = 'LEAVE';
-
-      records.push({
-        studentId: student.id,
-        date,
-        status,
-        markedBy: teachers[Math.floor(Math.random() * teachers.length)]
-      });
-    });
-  });
-
-  return records;
-};
 
 // Helper function to generate date range
 const generateDateRange = (startDate: string, endDate: string): string[] => {
@@ -156,17 +112,181 @@ interface ViewClassAttendanceProps {
 }
 
 const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => {
+  const { school } = useAuthStore();
+  const selectedAcademicYear = '2025-26';
+
+  // State
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedSection, setSelectedSection] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('2025-08-12');
-  const [endDate, setEndDate] = useState<string>('2025-08-19');
+  const [startDate, setStartDate] = useState<string>('2025-01-20');
+  const [endDate, setEndDate] = useState<string>('2025-01-27');
   const [showAttendanceTaker, setShowAttendanceTaker] = useState<boolean>(false);
+
+  // Data state
+  const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [attendanceTakers, setAttendanceTakers] = useState<AttendanceTaker[]>([]);
+  const [workingDays, setWorkingDays] = useState<string[]>([]);
+  const [attendanceStats, setAttendanceStats] = useState<{
+    totalWorkingDays: number;
+    totalStudents: number;
+    totalRecords: number;
+    attendanceByStatus: {
+      PRESENT: number;
+      ABSENT: number;
+      LEAVE: number;
+    };
+  } | null>(null);
+
+  // Loading states
+  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
+  const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(false);
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState<boolean>(false);
+
+  // Transform backend class data to frontend format
+  const transformClassData = (backendData: any): ClassOption[] => {
+    return backendData.classes.map((backendClass: any) => ({
+      id: backendClass.id,
+      name: backendClass.name,
+      sections: backendClass.sections.map((backendSection: any) => ({
+        id: backendSection.id,
+        name: backendSection.name,
+      }))
+    }));
+  };
+
+  // Transform backend student data to frontend format
+  const transformStudentData = (backendData: any): Student[] => {
+    if (!backendData.students) return [];
+    return backendData.students.map((student: any) => ({
+      id: student.id,
+      name: `${student.firstName} ${student.lastName}`.trim(),
+      rollNumber: student.rollNumber || student.admissionNumber || 'N/A',
+    }));
+  };
+
+  // Fetch classes and sections
+  useEffect(() => {
+    const fetchClasses = async () => {
+      if (!school?.id) return;
+
+      setIsLoadingClasses(true);
+      try {
+        const response = await api.getClassesAndSections(school.id, selectedAcademicYear);
+        if (response.success && response.data) {
+          const transformedData = transformClassData(response.data);
+          setClasses(transformedData);
+        } else {
+          toast.error(response.message || 'Failed to fetch classes');
+        }
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        toast.error('Failed to load classes');
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
+
+    fetchClasses();
+  }, [school?.id, selectedAcademicYear]);
+
+  // Fetch students when class/section is selected
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!school?.id || !selectedClass || !selectedSection) {
+        setStudents([]);
+        return;
+      }
+
+      setIsLoadingStudents(true);
+      try {
+        const response = await api.getStudentsBySchool({
+          academicYear: selectedAcademicYear,
+          classId: selectedClass,
+          sectionId: selectedSection,
+        });
+
+        if (response.success && response.data) {
+          const transformedStudents = transformStudentData(response.data);
+          setStudents(transformedStudents);
+        } else {
+          toast.error(response.message || 'Failed to fetch students');
+          setStudents([]);
+        }
+      } catch (err) {
+        console.error('Error fetching students:', err);
+        toast.error('Failed to load students');
+        setStudents([]);
+      } finally {
+        setIsLoadingStudents(false);
+      }
+    };
+
+    fetchStudents();
+  }, [school?.id, selectedClass, selectedSection, selectedAcademicYear]);
+
+  // Fetch attendance data for date range
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      if (!selectedClass || !selectedSection || !students.length) {
+        setAttendanceRecords([]);
+        setAttendanceTakers([]);
+        setWorkingDays([]);
+        setAttendanceStats(null);
+        return;
+      }
+
+      setIsLoadingAttendance(true);
+      try {
+        const response = await api.getClassAttendanceRange(selectedClass, selectedSection, startDate, endDate);
+        
+        if (response.success && response.data) {
+          const { attendanceRecords, workingDays, stats, meta } = response.data;
+          
+          setAttendanceRecords(attendanceRecords);
+          setWorkingDays(workingDays);
+          setAttendanceStats(stats);
+
+          // Extract unique attendance takers with better mapping
+          const takerMap = new Map<string, AttendanceTaker>();
+          attendanceRecords.forEach((record: AttendanceRecord) => {
+            if (record.attendanceTakerId && !takerMap.has(record.attendanceTakerId)) {
+              takerMap.set(record.attendanceTakerId, {
+                id: record.attendanceTakerId,
+                name: 'Teacher', // We'll need to fetch teacher names separately if needed
+              });
+            }
+          });
+
+          setAttendanceTakers(Array.from(takerMap.values()));
+        } else {
+          toast.error(response.error?.message || 'Failed to load attendance data');
+          setAttendanceRecords([]);
+          setAttendanceTakers([]);
+          setWorkingDays([]);
+          setAttendanceStats(null);
+        }
+      } catch (err) {
+        console.error('Error fetching attendance data:', err);
+        toast.error('Failed to load attendance data');
+        setAttendanceRecords([]);
+        setAttendanceTakers([]);
+        setWorkingDays([]);
+        setAttendanceStats(null);
+      } finally {
+        setIsLoadingAttendance(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [selectedClass, selectedSection, students, startDate, endDate]);
 
   // Export functions
   const exportToPDF = () => {
     if (!attendanceData) return;
 
-    const className = mockClasses.find(c => c.id === selectedClass)?.name || '';
+    const className = classes.find(c => c.id === selectedClass)?.name || '';
     const sectionName = availableSections.find(s => s.id === selectedSection)?.name || '';
     
     // Create a new window for printing
@@ -348,7 +468,7 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
   const exportToExcel = () => {
     if (!attendanceData) return;
 
-    const className = mockClasses.find(c => c.id === selectedClass)?.name || '';
+    const className = classes.find(c => c.id === selectedClass)?.name || '';
     const sectionName = availableSections.find(s => s.id === selectedSection)?.name || '';
 
     // Create CSV content
@@ -424,23 +544,32 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
 
   // Get available sections for selected class
   const availableSections = useMemo(() => {
-    const classData = mockClasses.find(c => c.id === selectedClass);
+    const classData = classes.find(c => c.id === selectedClass);
     return classData?.sections || [];
-  }, [selectedClass]);
+  }, [classes, selectedClass]);
 
-  // Generate attendance data for selected class/section
+  // Reset section when class changes
+  useEffect(() => {
+    if (selectedClass && availableSections.length === 1) {
+      // Auto-select if only one section
+      setSelectedSection(availableSections[0].id);
+    } else if (selectedClass && availableSections.length > 1) {
+      // Reset selection if multiple sections
+      setSelectedSection('');
+    }
+  }, [selectedClass, availableSections]);
+
+  // Generate attendance data for display
   const attendanceData = useMemo((): ClassAttendanceData | null => {
-    if (!selectedClass || !selectedSection) return null;
-
-    const dateRange = generateDateRange(startDate, endDate);
-    const attendance = generateMockAttendance(mockStudents, dateRange);
+    if (!selectedClass || !selectedSection || !students.length || !workingDays.length) return null;
 
     return {
-      students: mockStudents,
-      attendance,
-      dateRange
+      students,
+      attendance: attendanceRecords,
+      dateRange: workingDays, // Use working days from backend
+      attendanceTakers,
     };
-  }, [selectedClass, selectedSection, startDate, endDate]);
+  }, [selectedClass, selectedSection, students, attendanceRecords, workingDays, attendanceTakers]);
 
   // Calculate student statistics
   const calculateStudentStats = (studentId: string) => {
@@ -458,14 +587,17 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
 
   // Get attendance status for specific student and date
   const getAttendanceStatus = (studentId: string, date: string) => {
-    const record = attendanceData?.attendance.find(r => r.studentId === studentId && r.date === date);
+    const record = attendanceData?.attendance.find(r => r.studentId === studentId && r.attendanceDate === date);
     return record?.status || 'ABSENT';
   };
 
   // Get attendance taker for specific date
   const getAttendanceTaker = (date: string) => {
-    const record = attendanceData?.attendance.find(r => r.date === date);
-    return record?.markedBy || '-';
+    const record = attendanceData?.attendance.find(r => r.attendanceDate === date);
+    if (!record?.attendanceTakerId) return '-';
+    
+    const taker = attendanceData?.attendanceTakers.find(t => t.id === record.attendanceTakerId);
+    return taker?.name || 'Unknown';
   };
 
   // Calculate attendance percentage for a specific date
@@ -512,6 +644,24 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  // Debug information for development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ViewClassAttendance Debug Info:', {
+        selectedClass,
+        selectedSection,
+        studentsCount: students.length,
+        attendanceRecordsCount: attendanceRecords.length,
+        workingDaysCount: workingDays.length,
+        attendanceStats,
+        dateRange: workingDays,
+        isLoadingClasses,
+        isLoadingStudents,
+        isLoadingAttendance,
+      });
+    }
+  }, [selectedClass, selectedSection, students, attendanceRecords, workingDays, attendanceStats, isLoadingClasses, isLoadingStudents, isLoadingAttendance]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -537,18 +687,24 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Class</label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <Select value={selectedClass} onValueChange={setSelectedClass} disabled={isLoadingClasses}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={isLoadingClasses ? "Loading classes..." : "Select class"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockClasses.map(classOption => (
+                  {classes.map(classOption => (
                     <SelectItem key={classOption.id} value={classOption.id}>
                       {classOption.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {isLoadingClasses && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  Loading classes...
+                </p>
+              )}
             </div>
 
             <div>
@@ -556,10 +712,15 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
               <Select 
                 value={selectedSection} 
                 onValueChange={setSelectedSection}
-                disabled={!selectedClass || availableSections.length <= 1}
+                disabled={!selectedClass || availableSections.length === 0 || isLoadingClasses}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select section" />
+                  <SelectValue placeholder={
+                    !selectedClass ? "Select class first" :
+                    isLoadingClasses ? "Loading..." :
+                    availableSections.length === 0 ? "No sections available" :
+                    "Select section"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
                   {availableSections.map(section => (
@@ -569,8 +730,8 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                   ))}
                 </SelectContent>
               </Select>
-              {availableSections.length <= 1 && availableSections[0]?.name === 'Default' && (
-                <p className="text-xs text-muted-foreground mt-1">Default section (no sections available)</p>
+              {availableSections.length === 1 && (
+                <p className="text-xs text-muted-foreground mt-1">Auto-selected: {availableSections[0].name}</p>
               )}
             </div>
 
@@ -592,8 +753,61 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
               />
             </div>
           </div>
+
+          {/* Loading indicator for students */}
+          {isLoadingStudents && (
+            <div className="mt-4 flex items-center text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Loading students...
+            </div>
+          )}
+
+          {/* Loading indicator for attendance */}
+          {isLoadingAttendance && (
+            <div className="mt-4 flex items-center text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Loading attendance data...
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Attendance Statistics Overview */}
+      {attendanceStats && attendanceData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Attendance Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{attendanceStats.totalWorkingDays}</div>
+                <div className="text-sm text-blue-600">Working Days</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{attendanceStats.attendanceByStatus.PRESENT}</div>
+                <div className="text-sm text-green-600">Present Records</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">{attendanceStats.attendanceByStatus.ABSENT}</div>
+                <div className="text-sm text-red-600">Absent Records</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600">{attendanceStats.attendanceByStatus.LEAVE}</div>
+                <div className="text-sm text-yellow-600">Leave Records</div>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground">
+              Total Records: {attendanceStats.totalRecords} • 
+              Average Attendance: {attendanceStats.totalRecords > 0 ? 
+                ((attendanceStats.attendanceByStatus.PRESENT / attendanceStats.totalRecords) * 100).toFixed(1) : 0}%
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Attendance Matrix */}
       {attendanceData && (
@@ -601,11 +815,11 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-semibold">
-                  {mockClasses.find(c => c.id === selectedClass)?.name} - 
-                  {availableSections.find(s => s.id === selectedSection)?.name}
+                  {classes.find(c => c.id === selectedClass)?.name} - 
+                  Section {availableSections.find(s => s.id === selectedSection)?.name}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Attendance from {formatDate(startDate)} to {formatDate(endDate)}
+                  Attendance from {formatDate(startDate)} to {formatDate(endDate)} • {students.length} students
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -613,13 +827,14 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowAttendanceTaker(!showAttendanceTaker)}
+                  disabled={!attendanceData}
                 >
                   {showAttendanceTaker ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
                   {showAttendanceTaker ? 'Hide' : 'Show'} Attendance Taker
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" disabled={!attendanceData}>
                       <Download className="h-4 w-4 mr-2" />
                       Export Report
                       <ChevronDown className="h-4 w-4 ml-2" />
@@ -764,13 +979,41 @@ const ViewClassAttendance: React.FC<ViewClassAttendanceProps> = ({ onBack }) => 
       )}
 
       {/* No Selection State */}
-      {(!selectedClass || !selectedSection) && (
+      {(!selectedClass || !selectedSection) && !isLoadingClasses && (
         <Card>
           <CardContent className="text-center py-12">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Select Class and Section</h3>
             <p className="text-muted-foreground">
               Please select a class and section to view the attendance matrix
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading State */}
+      {(isLoadingClasses || isLoadingStudents || isLoadingAttendance) && selectedClass && selectedSection && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+            <h3 className="text-lg font-medium mb-2">Loading Attendance Data</h3>
+            <p className="text-muted-foreground">
+              {isLoadingStudents ? 'Fetching student list...' : 
+               isLoadingAttendance ? 'Loading attendance records...' : 
+               'Preparing data...'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Data State */}
+      {selectedClass && selectedSection && !isLoadingStudents && !isLoadingAttendance && students.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Students Found</h3>
+            <p className="text-muted-foreground">
+              No students found for the selected class and section
             </p>
           </CardContent>
         </Card>

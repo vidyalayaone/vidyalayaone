@@ -622,6 +622,68 @@ export const api = {
       return handleError(error);
     }
   },
+
+  // Attendance service: get class attendance for a date range
+  getClassAttendanceRange: async (classId: string, sectionId: string, startDate: string, endDate: string): Promise<APIResponse<{
+    attendanceRecords: Array<{
+      id: string;
+      studentId: string;
+      schoolId: string;
+      classId: string;
+      sectionId: string;
+      attendanceDate: string;
+      status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+      attendanceTakerId: string;
+      notes?: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    workingDays: string[];
+    stats: {
+      totalWorkingDays: number;
+      totalStudents: number;
+      totalRecords: number;
+      attendanceByStatus: {
+        PRESENT: number;
+        ABSENT: number;
+        LEAVE: number;
+      };
+    };
+    meta: {
+      classId: string;
+      sectionId: string;
+      dateRange: {
+        startDate: string;
+        endDate: string;
+        totalDays: number;
+        workingDays: number;
+      };
+      uniqueStudents: string[];
+      attendanceTakers: string[];
+      query: { startDate: string; endDate: string; };
+    };
+  }>> => {
+    try {
+      // Use the optimized endpoint with single API call
+      const response = await httpClient.get(`/attendance/class/${classId}/section/${sectionId}/range?startDate=${startDate}&endDate=${endDate}`);
+      
+      if (response.data?.success && response.data?.data) {
+        return {
+          success: true,
+          data: response.data.data,
+          message: response.data.message || 'Attendance data fetched successfully'
+        };
+      } else {
+        return {
+          success: false,
+          error: { message: response.data?.error?.message || 'Failed to fetch attendance data' },
+          data: undefined
+        };
+      }
+    } catch (error) {
+      return handleError(error);
+    }
+  },
 };
 
 // Export individual functions for easier importing (keeping same interface)
@@ -668,5 +730,6 @@ export const {
   getStudentApplications,
   getStudentApplication,
   acceptStudentApplication,
-  rejectStudentApplication
+  rejectStudentApplication,
+  getClassAttendanceRange
 } = api;

@@ -30,19 +30,31 @@ export async function getClassAttendance(req: Request, res: Response): Promise<v
     // Build date filter
     let dateFilter: any = {};
     if (date) {
-      dateFilter.attendanceDate = new Date(date);
-    } else if (startDate && endDate) {
+      // Single date query
+      const targetDate = new Date(date);
       dateFilter.attendanceDate = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
+        gte: new Date(targetDate.setHours(0, 0, 0, 0)),
+        lt: new Date(targetDate.setHours(23, 59, 59, 999))
+      };
+    } else if (startDate && endDate) {
+      // Date range query
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      dateFilter.attendanceDate = {
+        gte: new Date(startDateObj.setHours(0, 0, 0, 0)),
+        lte: new Date(endDateObj.setHours(23, 59, 59, 999))
       };
     } else if (startDate) {
+      // From start date onwards
+      const startDateObj = new Date(startDate);
       dateFilter.attendanceDate = {
-        gte: new Date(startDate)
+        gte: new Date(startDateObj.setHours(0, 0, 0, 0))
       };
     } else if (endDate) {
+      // Up to end date
+      const endDateObj = new Date(endDate);
       dateFilter.attendanceDate = {
-        lte: new Date(endDate)
+        lte: new Date(endDateObj.setHours(23, 59, 59, 999))
       };
     }
 
@@ -54,7 +66,7 @@ export async function getClassAttendance(req: Request, res: Response): Promise<v
         ...dateFilter
       },
       orderBy: [
-        { attendanceDate: 'desc' },
+        { attendanceDate: 'asc' }, // Changed to ascending for better chronological order
         { createdAt: 'desc' }
       ]
     });
@@ -68,7 +80,11 @@ export async function getClassAttendance(req: Request, res: Response): Promise<v
           classId,
           sectionId,
           totalRecords: attendanceRecords.length,
-          filters: { date, startDate, endDate }
+          filters: { date, startDate, endDate },
+          dateRange: {
+            start: startDate || date,
+            end: endDate || date
+          }
         }
       },
       timestamp: new Date().toISOString()

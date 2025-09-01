@@ -31,6 +31,29 @@ export const getClassAttendanceSchema = z.object({
   }),
 });
 
+// Get class attendance range schema (optimized for date ranges)
+export const getClassAttendanceRangeSchema = z.object({
+  params: z.object({
+    classId: z.string().uuid('Class ID must be a valid UUID'),
+    sectionId: z.string().uuid('Section ID must be a valid UUID'),
+  }),
+  query: z.object({
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
+  }).refine(data => new Date(data.startDate) <= new Date(data.endDate), {
+    message: 'Start date must be before or equal to end date',
+    path: ['startDate']
+  }).refine(data => {
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff <= 90;
+  }, {
+    message: 'Date range cannot exceed 90 days',
+    path: ['endDate']
+  }),
+});
+
 // Get student attendance schema
 export const getStudentAttendanceSchema = z.object({
   params: z.object({
@@ -81,6 +104,7 @@ export const updateAttendanceSchema = z.object({
 // Type exports
 export type MarkAttendanceRequest = z.infer<typeof markAttendanceSchema>;
 export type GetClassAttendanceRequest = z.infer<typeof getClassAttendanceSchema>;
+export type GetClassAttendanceRangeRequest = z.infer<typeof getClassAttendanceRangeSchema>;
 export type GetStudentAttendanceRequest = z.infer<typeof getStudentAttendanceSchema>;
 export type GetAttendanceStatsRequest = z.infer<typeof getAttendanceStatsSchema>;
 export type ExportAttendanceRequest = z.infer<typeof exportAttendanceSchema>;

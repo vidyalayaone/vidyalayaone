@@ -15,6 +15,8 @@ import StudentDashboard from '@/components/dashboard/StudentDashboard';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
+
+  console.log('Current user:', user);
   const [stats, setStats] = useState<AdminStats | TeacherStats | StudentStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +62,7 @@ const DashboardPage: React.FC = () => {
       );
     }
 
-    if (!user || !stats) {
+    if (!user) {
       return (
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Unable to load dashboard data</p>

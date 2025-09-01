@@ -64,13 +64,13 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Main',
     items: [
-      { 
-        path: '/dashboard', 
-        label: 'Dashboard', 
-        icon: LayoutDashboard,
-        description: 'Overview of school activities and statistics',
-        requiredPermissions: []
-      },
+      // {
+      //   path: '/dashboard', 
+      //   label: 'Dashboard', 
+      //   icon: LayoutDashboard,
+      //   description: 'Overview of school activities and statistics',
+      //   requiredPermissions: []
+      // },
       {
         path: '/students', 
         label: 'Students', 

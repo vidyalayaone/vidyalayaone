@@ -15,6 +15,7 @@ interface ServicesConfig {
   school: ServiceConfig;
   profile: ServiceConfig;
   attendance: ServiceConfig;
+  payment?: ServiceConfig; // optional payment service
   // add more services
 }
 
@@ -29,7 +30,7 @@ interface Config {
     accessSecret: string;
   };
   cors: {
-    origin: string;
+    origin: string | string[];
   };
   rateLimit: {
     windowMs: number;
@@ -64,12 +65,16 @@ const config: Config = {
       url: process.env.ATTENDANCE_SERVICE_URL || 'http://attendance-service:3004',
       timeout: parseInt(process.env.ATTENDANCE_SERVICE_TIMEOUT || '30000', 10),
     },
+    payment: {
+      url: process.env.PAYMENT_SERVICE_URL || 'http://payment-service:3005',
+      timeout: parseInt(process.env.PAYMENT_SERVICE_TIMEOUT || '30000', 10),
+    },
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes

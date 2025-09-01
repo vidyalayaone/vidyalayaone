@@ -158,14 +158,13 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Administrative',
     items: [
-      
-      { 
-        path: '/fees', 
-        label: 'Fees', 
-        icon: IndianRupee,
-        description: 'Manage student fees and payments',
-        requiredPermissions: [PERMISSIONS.FEE.VIEW]
-      },
+      // { 
+      //   path: '/fees', 
+      //   label: 'Fees', 
+      //   icon: IndianRupee,
+      //   description: 'Manage student fees and payments',
+      //   requiredPermissions: [PERMISSIONS.FEE.VIEW]
+      // },
       // { 
       //   path: '/library', 
       //   label: 'Library', 

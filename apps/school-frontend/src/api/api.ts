@@ -378,7 +378,6 @@ export const api = {
       return handleError(error);
     }
   },
-
   // Section details endpoints
   getSectionDetails: async (schoolId: string, classId: string, sectionId: string): Promise<APIResponse> => {
     try {

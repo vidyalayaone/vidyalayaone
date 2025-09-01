@@ -66,7 +66,6 @@ export interface AttendanceExportData {
     totalRecords: number;
   };
 }
-
 export interface AttendanceSummary {
   totalDays: number;
   presentDays: number;

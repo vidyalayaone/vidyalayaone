@@ -42,7 +42,6 @@ model TeacherAttendance {
   @@map("teacher_attendance")
 }
 
-// Enum for attendance status
 enum AttendanceStatus {
   PRESENT
   ABSENT

@@ -39,6 +39,7 @@ class ServiceRegistry {
         { path: '/reset-password', method: 'POST', isProtected: false },
         { path: '/refresh-token', method: 'POST', isProtected: false },
         { path: '/me', method: 'GET', isProtected: true },
+        { path: '/my-school', method: 'GET', isProtected: true },
         { path: '/logout', method: 'POST', isProtected: true },
         { path: '/update-admin-with-subdomain', method: 'POST', isProtected: true },
         { path: '/seed-roles', method: 'POST', isProtected: true },
@@ -122,6 +123,30 @@ class ServiceRegistry {
       healthPath: '/health',
       timeout: config.services.attendance.timeout,
     });
+
+    this.services.set('payment', {
+        name: 'payment-service',
+        url: config.services.payment?.url || 'http://payment-service:3005',
+        path: '/api/v1/payments',
+        isProtected: true, // default protection; specific public route overrides below
+        routes: [
+          // Public webhook endpoint (Razorpay calls this, no auth)
+          { path: '/webhook', method: 'POST', isProtected: false },
+          // Protected operational endpoints
+          { path: '/orders', method: 'POST', isProtected: true },
+          { path: '/create-order', method: 'POST', isProtected: true }, // Alias for frontend
+          { path: '/verify', method: 'POST', isProtected: true },
+          { path: '/verify-payment', method: 'POST', isProtected: true }, // Alias for frontend
+          { path: '/orders/:orderId/status', method: 'GET', isProtected: true },
+          { path: '/schools/:schoolId/payments', method: 'GET', isProtected: true },
+          { path: '/schools/:schoolId/payment-status', method: 'GET', isProtected: true },
+          { path: '/refunds', method: 'POST', isProtected: true },
+          { path: '/stats', method: 'GET', isProtected: true },
+          { path: '/receipts/:receiptId/download', method: 'GET', isProtected: true },
+        ],
+        healthPath: '/health',
+        timeout: config?.services?.payment?.timeout || 30000,
+      });
   }
 
   getService(name: string): ServiceConfig | undefined {

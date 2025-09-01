@@ -34,7 +34,7 @@ interface Config {
     lockoutTime: number;
   };
   cors: {
-    origin: string;
+    origin: string | string[];
   };
   sms: {
     fast2smsApiKey: string,
@@ -77,7 +77,7 @@ const config: Config = {
     lockoutTime: parseInt(process.env.LOCKOUT_TIME || '15', 10),
   },
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
   },
   sms: {
     fast2smsApiKey: process.env.FAST2SMS_API_KEY || '',

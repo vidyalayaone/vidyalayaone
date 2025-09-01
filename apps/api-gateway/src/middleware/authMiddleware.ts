@@ -3,12 +3,15 @@ import jwt from 'jsonwebtoken';
 import config from '../config/config';
 
 function verifyAccessToken(token: string): jwt.JwtPayload | string {
+  console.log('🔐 :', config.jwt.accessSecret);
   return jwt.verify(token, config.jwt.accessSecret);
 }
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const authHeader = req.headers.authorization;
+
+    // console.log('🔐 Authenticating request, Authorization header:', authHeader);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({ 
@@ -20,9 +23,14 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
     }
 
     const token = authHeader.split(' ')[1];
+
+    // console.log(token);
+
     const decoded = verifyAccessToken(token) as any;
 
-    // console.log(decoded);
+
+
+    
     
 
     // req.user = decoded;
@@ -34,6 +42,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     next();
   } catch (error) {
+    console.error('❌ Authentication error:', error);
     res.status(401).json({ 
       success: false,
       error: { message: 'Invalid or expired token' },

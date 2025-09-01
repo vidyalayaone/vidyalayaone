@@ -19,7 +19,7 @@ services:
       retries: 5
     networks:
       - vidyalayaone-network
-
+  
   # Auth Service
   auth-service:
     build:
@@ -38,6 +38,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/auth-service/src/generated
     - /app/apps/auth-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -60,6 +64,10 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/school-service/src/generated
     - /app/apps/school-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -82,6 +90,38 @@ services:
     # Exclude generated Prisma client from volume mount
     - /app/apps/profile-service/src/generated
     - /app/apps/profile-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
+    networks:
+      - vidyalayaone-network
+    restart: unless-stopped
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: apps/payment-service/Dockerfile
+    container_name: vidyalayaone-payment
+    ports:
+      - "3005:3005"
+      - "5561:5561"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+    - ./apps/payment-service:/app/apps/payment-service
+    - ./packages:/app/packages
+    - /app/node_modules
+    - /app/apps/payment-service/node_modules
+    # Exclude generated Prisma client from volume mount
+    - /app/apps/payment-service/src/generated
+    - /app/apps/payment-service/node_modules/.prisma
+    # Exclude built package dist folders
+    - /app/packages/common-middleware/dist
+    - /app/packages/common-utils/dist
+    - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped
@@ -141,6 +181,26 @@ services:
     volumes:
       - ./apps/school-frontend:/app/apps/school-frontend
       - ./packages:/app/packages
+
+  # Platform Frontend
+  platform-frontend:
+    build:
+      context: .
+      dockerfile: apps/platform-frontend/Dockerfile
+    container_name: vidyalayaone-platform-frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - api-gateway
+    volumes:
+      - ./apps/platform-frontend:/app/apps/platform-frontend
+      - ./packages:/app/packages
+      - /app/node_modules
+      - /app/apps/platform-frontend/node_modules
+      # Exclude built package dist folders
+      - /app/packages/common-middleware/dist
+      - /app/packages/common-utils/dist
+      - /app/packages/logger/dist
     networks:
       - vidyalayaone-network
     restart: unless-stopped

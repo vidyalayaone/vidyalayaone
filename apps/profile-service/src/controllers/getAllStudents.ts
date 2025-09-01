@@ -34,6 +34,9 @@ export async function getAllStudents(req: Request, res: Response) {
 
     // Get school context and user information
     const { context, schoolId } = getSchoolContext(req);
+
+    console.log(req.host);
+
     const user = getUser(req);
 
     // Validate school ID parameter

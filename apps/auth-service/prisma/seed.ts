@@ -38,7 +38,7 @@ async function main() {
 
   // Create / update the platform user and attach the PLATFORM_ADMIN role
   const username = 'abhijeetst22';
-  const rawPassword = 'password123';
+  const rawPassword = 'avngr___stark';
   const passwordHash = await bcrypt.hash(rawPassword, config.security.bcryptSaltRounds);
 
   const user = await prisma.user.upsert({
@@ -211,7 +211,7 @@ async function main() {
   
   // --- Create a sample user assigned to DEFAULT role (mirrors register flow) ---
   const defaultUsername = 'first_user';
-  const defaultRawPassword = 'password123';
+  const defaultRawPassword = 'avngr___stark';
   const defaultPasswordHash = await bcrypt.hash(defaultRawPassword, config.security.bcryptSaltRounds);
 
   const defaultUser = await prisma.user.upsert({

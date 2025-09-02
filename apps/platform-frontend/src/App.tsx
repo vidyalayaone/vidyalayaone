@@ -1,66 +1,52 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
-import Navbar from '@/components/navbar'
-import Footer from '@/components/footer'
-import Home from '@/pages/Home'
-import Platform from '@/pages/Platform'
-import WhyUs from '@/pages/WhyUs'
-import Pricing from '@/pages/Pricing'
-import About from '@/pages/About'
-import Contact from '@/pages/Contact'
-import Register from '@/pages/Register'
-import VerifyOtp from '@/pages/VerifyOtp'
-import Login from '@/pages/Login'
-import CreateSchool from '@/pages/CreateSchool'
-import Payment from '@/pages/Payment'
-import Dashboard from '@/pages/Dashboard'
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/layout/Layout";
+import Home from "./pages/Home";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import VerifyOTP from "./pages/VerifyOTP";
+import Dashboard from "./pages/Dashboard";
+import Features from "./pages/Features";
+import HowItWorks from "./pages/HowItWorks";
+import Pricing from "./pages/Pricing";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
 
-function Layout() {
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-16">
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
-  )
-}
+const queryClient = new QueryClient();
 
-// Layout without navbar/footer for auth and app pages
-function AuthLayout() {
-  return (
-    <div className="min-h-screen bg-background">
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  )
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-function App() {
-  return (
-    <Routes>
-      {/* Public pages with navbar/footer */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="platform" element={<Platform />} />
-        <Route path="why-us" element={<WhyUs />} />
-        <Route path="pricing" element={<Pricing />} />
-        <Route path="about" element={<About />} />
-        <Route path="contact" element={<Contact />} />
-      </Route>
-      
-      {/* Auth and app pages without navbar/footer */}
-      <Route path="/" element={<AuthLayout />}>
-        <Route path="register" element={<Register />} />
-        <Route path="verify-otp" element={<VerifyOtp />} />
-        <Route path="login" element={<Login />} />
-        <Route path="create-school" element={<CreateSchool />} />
-        <Route path="payment" element={<Payment />} />
-        <Route path="dashboard" element={<Dashboard />} />
-      </Route>
-    </Routes>
-  )
-}
-
-export default App
+export default App;

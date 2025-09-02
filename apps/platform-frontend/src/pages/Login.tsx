@@ -1,264 +1,140 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { env } from '@/lib/env'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { authAPI } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import { toast } from '@/hooks/use-toast';
+import { Loader2, GraduationCap } from 'lucide-react';
 
-interface LoginFormData {
-  username: string
-  password: string
-}
+const loginSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
+  password: z.string().min(1, 'Password is required'),
+});
 
-interface LoginResponse {
-  success: boolean
-  data?: {
-    accessToken: string
-    refreshToken: string
-    user: {
-      id: string
-      roleId: string
-      roleName: string
-    }
-  }
-  error?: { message: string }
-  message?: string
-}
+type LoginForm = z.infer<typeof loginSchema>;
 
-interface SchoolStatusResponse {
-  success: boolean
-  data?: {
-    school?: {
-      id: string
-      name: string
-      isActive: boolean
-      plan: string | null
-    }
-  }
-  error?: string
-  message?: string
-}
+const Login = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuthStore();
 
-const Login: React.FC = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  
-  const [formData, setFormData] = useState<LoginFormData>({
-    username: '',
-    password: ''
-  })
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema as any),
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  });
 
-  useEffect(() => {
-    // Check for success message from previous page (e.g., registration completion)
-    if (location.state?.message && location.state?.type === 'success') {
-      setSuccessMessage(location.state.message)
-    }
-  }, [location.state])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    setError(null)
-  }
-
-  const checkSchoolStatus = async (token: string) => {
+  const onSubmit = async (data: LoginForm) => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`${env.SCHOOL_API_URL}/school/my-school`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const result: SchoolStatusResponse = await response.json()
+      const response = await authAPI.login({
+        username: data.username,
+        password: data.password,
+      });
       
-      if (response.ok && result.success && result.data?.school) {
-        const school = result.data.school
+      if (response.data) {
+        const { accessToken, refreshToken, user } = response.data;
+        login(user, accessToken, refreshToken);
         
-        // If school exists but no payment plan, redirect to payment
-        if (!school.plan || school.plan === 'null') {
-          navigate('/payment')
-        } else {
-          // School exists with payment, go to dashboard
-          navigate('/dashboard')
-        }
-      } else {
-        // No school found, redirect to create school
-        navigate('/create-school')
-      }
-    } catch (error) {
-      console.error('Error checking school status:', error)
-      // Default to create school if API fails
-      navigate('/create-school')
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.username || !formData.password) {
-      setError('Please enter both username and password')
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`${env.AUTH_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Context': 'platform'
-        },
-        body: JSON.stringify(formData)
-      })
-
-      const result: LoginResponse = await response.json()
-
-      if (response.ok && result.success && result.data) {
-        // Store auth tokens and user data
-        localStorage.setItem('authToken', result.data.accessToken)
-        localStorage.setItem('refreshToken', result.data.refreshToken)
-        localStorage.setItem('user', JSON.stringify(result.data.user))
+        toast({
+          title: 'Welcome back!',
+          description: 'You have been successfully logged in.',
+        });
         
-        // Check school status to determine where to redirect
-        await checkSchoolStatus(result.data.accessToken)
-      } else {
-        const errorMsg = result.error?.message || result.message || 'Login failed. Please check your credentials.'
-        setError(errorMsg)
+        navigate('/dashboard');
       }
-    } catch (error) {
-      console.error('Login error:', error)
-      setError('Network error. Please check your connection and try again.')
+    } catch (error: any) {
+      toast({
+        title: 'Login failed',
+        description: error.message || 'Invalid username or password',
+        variant: 'destructive',
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <>
-      <Helmet>
-        <title>Login - VidyalayaOne</title>
-        <meta name="description" content="Sign in to your VidyalayaOne account to manage your school." />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">V1</span>
-              </div>
-              <span className="font-bold text-xl text-white">VidyalayaOne</span>
-            </Link>
-            <h2 className="text-3xl font-bold text-white">Welcome back</h2>
-            <p className="mt-2 text-white/80">Sign in to your account to continue</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+            <GraduationCap className="h-8 w-8 text-white" />
           </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-white/80">Sign in to your VidyalayaOne account</p>
+        </div>
 
-          <Card className="bg-white shadow-lg">
-            <CardHeader>
-              <CardTitle>Sign In</CardTitle>
-              <CardDescription>
-                Enter your credentials to access your account
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {successMessage && (
-                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md text-sm">
-                    {successMessage}
-                  </div>
-                )}
-
-                {error && (
-                  <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <Input
-                  label="Username"
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-large">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
                   name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter your username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-
-                <Input
-                  label="Password"
+                
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter your password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Enter your password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember-me" className="ml-2 block text-sm text-muted-foreground">
-                      Remember me
-                    </label>
-                  </div>
-
-                  <div className="text-sm">
-                    <Link
-                      to="/forgot-password"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </Link>
                 </div>
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sign In
                 </Button>
               </form>
+            </Form>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{' '}
-                  <Link
-                    to="/register"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Register here
-                  </Link>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="text-center">
-            <Link
-              to="/"
-              className="text-white/60 hover:text-white text-sm underline"
-            >
-              ← Back to homepage
-            </Link>
-          </div>
-        </div>
+            <div className="mt-6 text-center text-sm">
+              <span className="text-muted-foreground">Don't have an account? </span>
+              <Link to="/register" className="text-primary hover:underline font-medium">
+                Create one
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default Login
+export default Login;

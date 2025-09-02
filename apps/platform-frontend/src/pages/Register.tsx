@@ -1,225 +1,164 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { authClient } from '@/lib/authClient'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { authAPI } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
+import { Loader2, GraduationCap } from 'lucide-react';
 
-interface RegisterFormData {
-  username: string
-  phone: string
-  password: string
-  confirmPassword: string
-}
+const registerSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
+  phone: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
-interface RegisterResponse {
-  success: boolean
-  data?: {
-    user_id: string
-    phone: string
-  }
-  error?: { message: string }
-  message?: string
-}
+type RegisterForm = z.infer<typeof registerSchema>;
 
-const Register: React.FC = () => {
-  const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  
-  const [formData, setFormData] = useState<RegisterFormData>({
-    username: '',
-    phone: '',
-    password: '',
-    confirmPassword: ''
-  })
+const Register = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    setError(null)
-  }
+  const form = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema as any),
+    defaultValues: {
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
-  const validateForm = (): boolean => {
-    if (!formData.username.trim()) {
-      setError('Username is required')
-      return false
-    }
-    if (formData.username.length < 3) {
-      setError('Username must be at least 3 characters long')
-      return false
-    }
-    if (!formData.phone.trim()) {
-      setError('Phone number is required')
-      return false
-    }
-    if (!/^\d{10,15}$/.test(formData.phone.replace(/\D/g, ''))) {
-      setError('Phone number must be between 10 and 15 digits')
-      return false
-    }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return false
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return false
-    }
-    return true
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
-
-    setIsLoading(true)
-    setError(null)
-
+  const onSubmit = async (data: RegisterForm) => {
+    setIsLoading(true);
     try {
-      const result: RegisterResponse = await authClient.register(
-        formData.username,
-        formData.phone.replace(/\D/g, ''),
-        formData.password
-      )
-
-      if (result.success && result.data) {
-        // Store user data for OTP verification
-        localStorage.setItem('pendingVerification', JSON.stringify({
-          user_id: result.data.user_id,
-          username: formData.username,
-          phone: result.data.phone
-        }))
-        
-        // Redirect to OTP verification page
-        navigate('/verify-otp')
-      } else {
-        const rawMsg = result.error?.message || result.message || 'Registration failed. Please try again.'
-        if (/DEFAULT role is missing/i.test(rawMsg)) {
-          setError('System misconfiguration: DEFAULT role missing. Run auth DB seed: "docker compose exec auth-service sh -c \"pnpm db:clean --yes && pnpm db:seed\""')
-        } else {
-          setError(rawMsg)
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error)
-      setError('Network error. Please check your connection and try again.')
+      const response = await authAPI.register({
+        username: data.username,
+        phone: data.phone,
+        password: data.password,
+      });
+      
+      toast({
+        title: 'Registration successful!',
+        description: 'Please check your phone for verification code.',
+      });
+      
+      // Navigate to OTP verification with username
+      navigate('/verify-otp', { state: { username: data.username, type: 'registration' } });
+    } catch (error: any) {
+      toast({
+        title: 'Registration failed',
+        description: error.message || 'An error occurred during registration',
+        variant: 'destructive',
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <>
-      <Helmet>
-        <title>Register - VidyalayaOne</title>
-        <meta name="description" content="Create your VidyalayaOne account to get started with modern school management." />
-      </Helmet>
-
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">V1</span>
-              </div>
-              <span className="font-bold text-xl text-white">VidyalayaOne</span>
-            </Link>
-            <h2 className="text-3xl font-bold text-white">Create your account</h2>
-            <p className="mt-2 text-white/80">Join thousands of schools using VidyalayaOne</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+            <GraduationCap className="h-8 w-8 text-white" />
           </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Join VidyalayaOne</h1>
+          <p className="text-white/80">Create your account to get started</p>
+        </div>
 
-          <Card className="bg-white shadow-lg">
-            <CardHeader>
-              <CardTitle>Register</CardTitle>
-              <CardDescription>
-                Fill in your details to create your account. We'll send an OTP to verify your phone number.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <Input
-                  label="Username *"
+        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-large">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+            <CardDescription className="text-center">
+              Enter your details to create your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
                   name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter your username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your username" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-
-                <Input
-                  label="Phone Number *"
+                
+                <FormField
+                  control={form.control}
                   name="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="9876543210"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input type="tel" placeholder="Enter your phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-
-                <Input
-                  label="Password *"
+                
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Enter your password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Create a password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-
-                <Input
-                  label="Confirm Password *"
+                
+                <FormField
+                  control={form.control}
                   name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Confirm your password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Confirm your password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
+                <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Account
                 </Button>
               </form>
+            </Form>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <Link
-                    to="/login"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Sign in here
-                  </Link>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="text-center text-white/60 text-xs">
-            <p>
-              By creating an account, you agree to our{' '}
-              <Link to="/terms" className="underline hover:text-white">Terms of Service</Link>
-              {' '}and{' '}
-              <Link to="/privacy" className="underline hover:text-white">Privacy Policy</Link>
-            </p>
-          </div>
-        </div>
+            <div className="mt-6 text-center text-sm">
+              <span className="text-muted-foreground">Already have an account? </span>
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default Register
+export default Register;

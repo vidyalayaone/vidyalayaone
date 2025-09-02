@@ -1,234 +1,199 @@
-import React from 'react'
-import { Helmet } from 'react-helmet-async'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import CTABand from '@/components/cta-band'
-import { pageSEO } from '@/lib/seo'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Shield, Users, Target, Zap, Heart, Award } from "lucide-react";
 
-const About: React.FC = () => {
-  const seo = pageSEO.about
-
-  const timeline = [
-    {
-      year: '2020',
-      title: 'Founded',
-      description: 'VidyalayaOne was founded with a mission to digitize Indian schools.'
-    },
-    {
-      year: '2021',
-      title: 'First Schools',
-      description: 'Launched pilot program with 10 progressive schools in Delhi and Mumbai.'
-    },
-    {
-      year: '2022',
-      title: 'Platform Launch',
-      description: 'Official platform launch with comprehensive school management modules.'
-    },
-    {
-      year: '2023',
-      title: 'Rapid Growth',
-      description: 'Expanded to 50+ schools across 10+ states in India.'
-    },
-    {
-      year: '2024',
-      title: 'Scale & Innovation',
-      description: 'Serving 100+ schools with advanced AI-powered features.'
-    }
-  ]
-
-  const leadership = [
-    {
-      name: 'Rajesh Kumar',
-      role: 'Founder & CEO',
-      bio: '15+ years in EdTech. Former Principal at Delhi Public School.',
-      image: '👨‍💼'
-    },
-    {
-      name: 'Priya Sharma',
-      role: 'CTO',
-      bio: 'Tech leader with experience at Microsoft and Amazon.',
-      image: '👩‍💻'
-    },
-    {
-      name: 'Dr. Anita Patel',
-      role: 'Head of Education',
-      bio: 'PhD in Education, 20+ years in curriculum development.',
-      image: '👩‍🎓'
-    }
-  ]
-
+const About = () => {
   const values = [
     {
-      title: 'Education First',
-      description: 'Every decision we make is guided by what\'s best for students and educators.',
-      icon: '🎓'
+      icon: Target,
+      title: "Mission-Driven",
+      description: "Empowering educational institutions with technology that simplifies administration and enhances learning outcomes."
     },
     {
-      title: 'Innovation',
-      description: 'We continuously innovate to solve real problems faced by schools.',
-      icon: '💡'
+      icon: Heart,
+      title: "Student-Centric",
+      description: "Every feature we build puts students at the center, ensuring their educational journey is smooth and successful."
     },
     {
-      title: 'Accessibility',
-      description: 'Technology should be accessible to schools of all sizes and budgets.',
-      icon: '🌍'
+      icon: Shield,
+      title: "Security First",
+      description: "We prioritize the security and privacy of your school's data with enterprise-grade protection measures."
     },
     {
-      title: 'Trust',
-      description: 'We handle educational data with the highest levels of security and privacy.',
-      icon: '🔒'
+      icon: Zap,
+      title: "Innovation",
+      description: "Continuously evolving our platform with the latest technology to stay ahead of educational needs."
     }
-  ]
+  ];
+  
+  const team = [
+  {
+    name: "Abhijeet",
+    role: "Lead Developer",
+    background: "Architects the platform, leads system design, implements APIs, and oversees DevOps to ensure reliability and scalability.",
+    image: "A"
+  },
+  {
+    name: "Suyash",
+    role: "Frontend Developer & Cloud Engineer",
+    background: "Designs and develops intuitive user interfaces while managing cloud infrastructure for scalable, efficient, and cost-optimized deployments.",
+    image: "S"
+  },
+  {
+    name: "Aditya Raj",
+    role: "Backend Developer",
+    background: "Builds and maintains backend services, APIs, and integrations to power the platform's core functionality.",
+    image: "AD"
+  },
+  {
+    name: "Vardaan",
+    role: "Product Manager",
+    background: "Drives product vision, coordinates with schools, collects feedback, and plans features to align with user needs.",
+    image: "V"
+  }
+];
+
+  const achievements = [
+    { number: "500+", label: "Schools Served" },
+    { number: "2L+", label: "Students Managed" },
+    { number: "15K+", label: "Teachers Connected" },
+    { number: "99.9%", label: "Uptime" }
+  ];
+
+  const technologies = [
+    "Cloud Infrastructure",
+    "Data Encryption",
+    "Mobile-First Design",
+    "Real-time Sync",
+    "API Integration",
+    "Automated Backups",
+    "Multi-tenant Architecture",
+    "Progressive Web App"
+  ];
 
   return (
-    <>
-      <Helmet>
-        <title>{seo.title}</title>
-        <meta name="description" content={seo.description} />
-        <meta name="keywords" content={seo.keywords} />
-        <meta property="og:title" content={seo.title} />
-        <meta property="og:description" content={seo.description} />
-      </Helmet>
-
-      {/* Header */}
-      <section className="py-20 bg-gradient-hero text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             About VidyalayaOne
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-            We're on a mission to transform education in India through technology that empowers schools, teachers, and students.
+          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            We're transforming school management across India by providing intuitive, comprehensive, and affordable technology solutions that empower educational institutions to focus on what matters most - education.
           </p>
         </div>
       </section>
 
-      {/* Mission & Story */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Our Mission
-              </h2>
-              <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
-                To democratize access to world-class school management technology and help Indian educational institutions thrive in the digital age.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                We believe that every school, regardless of size or budget, deserves access to modern tools that can help them provide better education, engage parents more effectively, and operate more efficiently.
-              </p>
-            </div>
-
-            <div className="bg-gradient-card p-8 rounded-lg">
-              <h3 className="text-2xl font-bold mb-4">Our Story</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                VidyalayaOne was born out of frustration with the complex, expensive, and outdated systems that schools were forced to use. Our founders, having worked in education for decades, knew there had to be a better way.
-              </p>
-              <br />
-              <p className="text-muted-foreground leading-relaxed">
-                Starting with a simple idea - "What if school management software was actually designed for educators?" - we've built a platform that puts usability, affordability, and effectiveness at its core.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline */}
-      <section className="py-20 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Our Journey
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Key milestones in our mission to transform education
-            </p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-border"></div>
-            
-            <div className="space-y-12">
-              {timeline.map((item, index) => (
-                <div key={index} className={`flex items-center ${index % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`w-5/12 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                    <Card className="bg-white shadow-lg">
-                      <CardHeader>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                            {item.year}
-                          </div>
-                          <CardTitle className="text-xl">{item.title}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="text-base">
-                          {item.description}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
+      {/* Mission & Vision */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 rounded-xl bg-primary/10">
+                    <Target className="h-8 w-8 text-primary" />
                   </div>
-                  
-                  <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-white"></div>
+                  <CardTitle className="text-2xl">Our Mission</CardTitle>
                 </div>
-              ))}
-            </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  To democratize school management technology across India, making comprehensive administrative tools accessible and affordable for schools of all sizes. We believe every educational institution deserves world-class technology to enhance their operations and student outcomes.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-lg transition-all duration-300">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 rounded-xl bg-secondary/10">
+                    <Award className="h-8 w-8 text-secondary" />
+                  </div>
+                  <CardTitle className="text-2xl">Our Vision</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  To become India's most trusted school management platform, empowering millions of educators and students through innovative technology that simplifies administration and enhances the educational experience nationwide.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Values */}
+          <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {values.map((value, index) => {
+              const Icon = value.icon;
+              return (
+                <Card key={index} className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <CardHeader>
+                    <div className="flex justify-center mb-4">
+                      <div className="p-4 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <Icon className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl">{value.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {value.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Leadership */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Leadership Team
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Experienced leaders committed to transforming education
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {leadership.map((leader, index) => (
-              <Card key={index} className="text-center bg-gradient-card">
-                <CardHeader>
-                  <div className="text-6xl mb-4">{leader.image}</div>
-                  <CardTitle className="text-xl">{leader.name}</CardTitle>
-                  <CardDescription className="text-lg font-medium text-primary">
-                    {leader.role}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{leader.bio}</p>
-                </CardContent>
-              </Card>
+      {/* Stats Section */}
+      <section className="py-16 px-4 bg-muted/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Our Impact</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {achievements.map((achievement, index) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">
+                  {achievement.number}
+                </div>
+                <div className="text-muted-foreground font-medium">
+                  {achievement.label}
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Values */}
-      <section className="py-20 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Our Values
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              The principles that guide everything we do
-            </p>
-          </div>
-
+      {/* Team Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">Meet Our Team</h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Our diverse team combines deep educational expertise with cutting-edge technology skills to build solutions that truly understand school needs.
+          </p>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {values.map((value, index) => (
-              <Card key={index} className="text-center bg-white">
+            {team.map((member, index) => (
+              <Card key={index} className="text-center group hover:shadow-lg transition-all duration-300">
                 <CardHeader>
-                  <div className="text-4xl mb-4">{value.icon}</div>
-                  <CardTitle className="text-xl">{value.title}</CardTitle>
+                  <div className="flex justify-center mb-4">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+                      {member.image}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl">{member.name}</CardTitle>
+                  <CardDescription className="font-medium text-primary">
+                    {member.role}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-base">
-                    {value.description}
-                  </CardDescription>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {member.background}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -236,14 +201,50 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      <CTABand
-        title="Join us in transforming education"
-        subtitle="Be part of the digital transformation that's reshaping how schools operate across India."
-        primaryCTA="Start Your Journey"
-        secondaryCTA="Learn More"
-      />
-    </>
-  )
-}
+      {/* Technology Section */}
+      <section className="py-16 px-4 bg-muted/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8">Technology & Security</h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            Built on modern, scalable technology with enterprise-grade security to ensure your school's data is always safe and accessible.
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {technologies.map((tech, index) => (
+              <Card key={index} className="text-center p-4 hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {tech}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
 
-export default About
+      {/* Contact CTA */}
+      <section className="py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Want to Learn More?</h2>
+          <p className="text-muted-foreground mb-8 text-lg">
+            We'd love to hear from you and answer any questions about VidyalayaOne.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Card className="p-6 text-center">
+              <CardContent className="p-0">
+                <Users className="h-8 w-8 text-primary mx-auto mb-3" />
+                <h3 className="font-semibold mb-2">Get in Touch</h3>
+                <p className="text-sm text-muted-foreground">
+                  Contact our team for demos, questions, or partnership opportunities.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default About;

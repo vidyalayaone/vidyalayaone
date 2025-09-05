@@ -7,7 +7,7 @@ function runProductionSeeding() {
   // Step 1: Auth service - clean and seed
   console.log('📦 Cleaning and seeding auth-service...');
   try {
-    execSync('docker compose exec auth-service sh -c "pnpm db:clean --yes && pnpm db:seed"', { stdio: 'inherit' });
+    execSync('cd apps/auth-service && pnpm db:clean --yes && pnpm db:seed', { stdio: 'inherit' });
     console.log('✅ Auth service seeding completed');
   } catch (error) {
     console.error('❌ Auth service seeding failed');
@@ -17,7 +17,7 @@ function runProductionSeeding() {
   // Step 2: School service - clean only
   console.log('📦 Cleaning school-service...');
   try {
-    execSync('docker compose exec school-service sh -c "pnpm db:clean --yes"', { stdio: 'inherit' });
+    execSync('cd apps/school-service && pnpm db:clean --yes', { stdio: 'inherit' });
     console.log('✅ School service cleaning completed');
   } catch (error) {
     console.error('❌ School service cleaning failed');
@@ -27,7 +27,7 @@ function runProductionSeeding() {
   // Step 3: Profile service - clean only
   console.log('📦 Cleaning profile-service...');
   try {
-    execSync('docker compose exec profile-service sh -c "pnpm db:clean --yes"', { stdio: 'inherit' });
+    execSync('cd apps/profile-service && pnpm db:clean --yes', { stdio: 'inherit' });
     console.log('✅ Profile service cleaning completed');
   } catch (error) {
     console.error('❌ Profile service cleaning failed');

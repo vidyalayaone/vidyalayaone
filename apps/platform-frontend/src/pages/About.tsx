@@ -32,13 +32,13 @@ const About = () => {
     name: "Abhijeet Singh Thakur",
     role: "Lead Developer",
     background: "Architects the platform, leads system design, implements APIs, and oversees DevOps to ensure reliability and scalability.",
-    image: "A"
+    image: "/Abhijeet.jpeg"
   },
   {
     name: "Suyash Pant",
     role: "Frontend Developer & Cloud Engineer",
     background: "Designs and develops intuitive user interfaces while managing cloud infrastructure for scalable, efficient, and cost-optimized deployments.",
-    image: "S"
+    image: "/Suyash.jpeg"
   },
   {
     name: "Aditya Raj",

@@ -11,7 +11,7 @@ docker compose up
 
 # step2: apply migrations
 ```
-node migrate.js
+node migrate-dev.js
 ```
 
 # step3: seed the databases

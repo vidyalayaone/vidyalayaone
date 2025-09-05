@@ -108,50 +108,6 @@ async function createGlobalSubjects() {
       { name: "Chemistry", code: "CHEM", description: "Chemistry and chemical sciences" },
       { name: "Biology", code: "BIO", description: "Biology and life sciences" },
       
-      // Higher secondary subjects (11th and 12th)
-      { name: "Economics", code: "ECO", description: "Economics and business studies" },
-      { name: "Political Science", code: "POL", description: "Political science and governance" },
-      { name: "Psychology", code: "PSY", description: "Psychology and human behavior" },
-      { name: "Sociology", code: "SOC", description: "Sociology and social studies" },
-      { name: "Philosophy", code: "PHIL", description: "Philosophy and ethics" },
-      { name: "Accountancy", code: "ACC", description: "Accountancy and financial management" },
-      { name: "Business Studies", code: "BS", description: "Business studies and entrepreneurship" },
-      { name: "Informatics Practices", code: "IP", description: "Advanced computer applications" },
-      { name: "Biotechnology", code: "BIOTECH", description: "Biotechnology and applied biology" },
-      { name: "Home Science", code: "HS", description: "Home science and family studies" },
-      
-      // Language subjects
-      { name: "Marathi", code: "MAR", description: "Marathi language (regional)" },
-      { name: "Tamil", code: "TAM", description: "Tamil language (regional)" },
-      { name: "Telugu", code: "TEL", description: "Telugu language (regional)" },
-      { name: "Kannada", code: "KAN", description: "Kannada language (regional)" },
-      { name: "Malayalam", code: "MAL", description: "Malayalam language (regional)" },
-      { name: "Bengali", code: "BEN", description: "Bengali language (regional)" },
-      { name: "Gujarati", code: "GUJ", description: "Gujarati language (regional)" },
-      { name: "Punjabi", code: "PUN", description: "Punjabi language (regional)" },
-      { name: "Urdu", code: "URD", description: "Urdu language" },
-      { name: "French", code: "FR", description: "French language (foreign)" },
-      { name: "German", code: "GER", description: "German language (foreign)" },
-      { name: "Spanish", code: "SPA", description: "Spanish language (foreign)" },
-      
-      // Vocational and skill subjects
-      { name: "Engineering Graphics", code: "EG", description: "Technical drawing and graphics" },
-      { name: "Agriculture", code: "AGR", description: "Agriculture and farming" },
-      { name: "Fashion Designing", code: "FD", description: "Fashion and textile design" },
-      { name: "Mass Media", code: "MM", description: "Mass media and communication" },
-      { name: "Travel and Tourism", code: "TT", description: "Travel, tourism and hospitality" },
-      { name: "Retail", code: "RET", description: "Retail management and sales" },
-      { name: "Security", code: "SEC", description: "Security services and management" },
-      { name: "Automobile", code: "AUTO", description: "Automobile technology and maintenance" },
-      { name: "Beauty and Wellness", code: "BW", description: "Beauty therapy and wellness" },
-      { name: "Healthcare", code: "HC", description: "Healthcare and nursing" },
-      { name: "IT Applications", code: "ITA", description: "Information technology applications" },
-      
-      // Special subjects
-      { name: "Yoga", code: "YOGA", description: "Yoga and meditation" },
-      { name: "Life Skills", code: "LS", description: "Life skills and personality development" },
-      { name: "Career Guidance", code: "CG", description: "Career counseling and guidance" },
-      { name: "Financial Literacy", code: "FL", description: "Financial planning and literacy" }
     ]
   };
 

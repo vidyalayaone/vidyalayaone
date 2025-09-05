@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Users, Target, Zap, Heart, Award } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const About = () => {
   const values = [
@@ -28,13 +29,13 @@ const About = () => {
   
   const team = [
   {
-    name: "Abhijeet",
+    name: "Abhijeet Singh Thakur",
     role: "Lead Developer",
     background: "Architects the platform, leads system design, implements APIs, and oversees DevOps to ensure reliability and scalability.",
     image: "A"
   },
   {
-    name: "Suyash",
+    name: "Suyash Pant",
     role: "Frontend Developer & Cloud Engineer",
     background: "Designs and develops intuitive user interfaces while managing cloud infrastructure for scalable, efficient, and cost-optimized deployments.",
     image: "S"
@@ -46,7 +47,7 @@ const About = () => {
     image: "AD"
   },
   {
-    name: "Vardaan",
+    name: "Vardaan Vig",
     role: "Product Manager",
     background: "Drives product vision, coordinates with schools, collects feedback, and plans features to align with user needs.",
     image: "V"
@@ -149,25 +150,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-muted/50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Impact</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {achievements.map((achievement, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">
-                  {achievement.number}
-                </div>
-                <div className="text-muted-foreground font-medium">
-                  {achievement.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Team Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
@@ -181,9 +163,19 @@ const About = () => {
               <Card key={index} className="text-center group hover:shadow-lg transition-all duration-300">
                 <CardHeader>
                   <div className="flex justify-center mb-4">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-                      {member.image}
-                    </div>
+                    {member.image.startsWith('/') ? (
+                      <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10">
+                        <img 
+                          src={member.image} 
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
+                        {member.image}
+                      </div>
+                    )}
                   </div>
                   <CardTitle className="text-xl">{member.name}</CardTitle>
                   <CardDescription className="font-medium text-primary">
@@ -231,15 +223,17 @@ const About = () => {
             We'd love to hear from you and answer any questions about VidyalayaOne.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Card className="p-6 text-center">
-              <CardContent className="p-0">
-                <Users className="h-8 w-8 text-primary mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Get in Touch</h3>
-                <p className="text-sm text-muted-foreground">
-                  Contact our team for demos, questions, or partnership opportunities.
-                </p>
-              </CardContent>
-            </Card>
+            <Link to="/contact" className="block">
+              <Card className="p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                <CardContent className="p-0">
+                  <Users className="h-8 w-8 text-primary mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                  <h3 className="font-semibold mb-2">Get in Touch</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Contact our team for demos, questions, or partnership opportunities.
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </section>

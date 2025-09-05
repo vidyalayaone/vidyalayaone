@@ -203,11 +203,11 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Start with Just ₹1
+              Free Trial Available
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Experience the full power of VidyalayaOne with our comprehensive trial. 
-              No hidden costs, no commitments.
+              Get started with VidyalayaOne for just ₹1 and explore all features. 
+              No hidden costs, no long-term commitments.
             </p>
             
             <div className="inline-flex items-center gap-4 bg-gradient-card rounded-2xl p-8 shadow-large">
@@ -237,7 +237,7 @@ const Home = () => {
 
             <div className="mt-8">
               <Button asChild size="lg" variant="hero">
-                <Link to="/pricing">View All Plans</Link>
+                <Link to="/pricing">Start Free Trial</Link>
               </Button>
             </div>
           </div>
@@ -251,8 +251,8 @@ const Home = () => {
             Ready to Transform Your School?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join hundreds of schools already using VidyalayaOne to streamline operations 
-            and enhance educational outcomes.
+            Start your digital transformation journey with VidyalayaOne and experience 
+            the future of school management.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

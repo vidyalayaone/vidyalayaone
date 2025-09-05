@@ -47,10 +47,6 @@ const HowItWorks = () => {
       answer: "You get full access to all VidyalayaOne features for 30 days. You can add students, manage classes, communicate with parents, and explore all administrative tools."
     },
     {
-      question: "Can I change my plan later?",
-      answer: "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
-    },
-    {
       question: "Is my school data secure?",
       answer: "Absolutely. We use enterprise-grade security measures including data encryption, secure servers, and regular backups to protect your school's information."
     },

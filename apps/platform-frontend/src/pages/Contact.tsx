@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Phone, Mail, Clock, MessageSquare, Headphones, Users } from "lucide-react";
-import { contactAPI } from "@/lib/api";
+import { contactAPI } from "@/lib/contactAPI";
 
 const Contact = () => {
   const [formData, setFormData] = useState({

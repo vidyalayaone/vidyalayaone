@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 // Function to run migrations
 function runMigrations() {
-  const services = ['auth-service', 'school-service', 'profile-service', 'attendance-service'];
+  const services = ['auth-service', 'school-service', 'profile-service', 'attendance-service', 'payment-service'];
   
   console.log('🚀 Running database migrations...');
   
@@ -10,7 +10,7 @@ function runMigrations() {
     console.log(`📦 Running migration for ${service}...`);
     
     try {
-      execSync(`docker compose exec ${service} sh -c "pnpm prisma migrate deploy"`, { stdio: 'inherit' });
+      execSync(`cd apps/${service} && pnpm prisma migrate deploy`, { stdio: 'inherit' });
       console.log(`✅ Migration completed for ${service}`);
     } catch (error) {
       console.error(`❌ Migration failed for ${service}`);

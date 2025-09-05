@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useSchoolStore } from '@/store/schoolStore';
+import { useNavigate } from 'react-router-dom';
 import { authAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,26 +17,68 @@ import {
   CreditCard,
   Shield,
   Plus,
-  ArrowRight
+  ArrowRight,
+  MapPin,
+  Phone,
+  Mail,
+  Calendar,
+  Building,
+  Award,
+  Globe
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuthStore();
+  const { school, classes, totalSections, totalSubjects, setupProgress, setSchoolData } = useSchoolStore();
+
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
-  const { school, setupProgress, setSchool } = useSchoolStore();
+
+  console.log('school.isActive:', school?.isActive);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
     const fetchSchoolData = async () => {
       try {
-        const response = await authAPI.getMySchool();
-        setSchool(response.data?.school || null);
+        // First try to get detailed school data
+        try {
+          const response = await authAPI.getMySchoolDetailed();
+          setSchoolData(response.data);
+        } catch (detailedError: any) {
+          // Fallback to basic school data if detailed endpoint fails
+          console.warn('Detailed school data not available, falling back to basic data:', detailedError);
+          const response = await authAPI.getMySchool();
+          if (response.data?.school) {
+            setSchoolData({
+              school: response.data.school,
+              classes: [],
+              totalSections: 0,
+              totalSubjects: 0,
+              setupProgress: {
+                schoolCreated: true,
+                classesAdded: false,
+                sectionsAdded: false,
+                subjectsAdded: false,
+                paymentCompleted: false,
+              }
+            });
+          } else {
+            // No school found
+            setSchoolData({
+              school: null,
+              classes: [],
+              totalSections: 0,
+              totalSubjects: 0,
+              setupProgress: {
+                schoolCreated: false,
+                classesAdded: false,
+                sectionsAdded: false,
+                subjectsAdded: false,
+                paymentCompleted: false,
+              }
+            });
+          }
+        }
       } catch (error: any) {
         console.error('Error fetching school data:', error);
         toast({
@@ -50,7 +92,7 @@ const Dashboard = () => {
     };
 
     fetchSchoolData();
-  }, [isAuthenticated, navigate, setSchool]);
+  }, [setSchoolData]);
 
   const getSetupProgress = () => {
     const steps = [
@@ -58,7 +100,6 @@ const Dashboard = () => {
       setupProgress.classesAdded,
       setupProgress.sectionsAdded,
       setupProgress.subjectsAdded,
-      setupProgress.paymentCompleted,
     ];
     return (steps.filter(Boolean).length / steps.length) * 100;
   };
@@ -66,14 +107,55 @@ const Dashboard = () => {
   const getApprovalStatusBadge = () => {
     if (!school) return null;
     
+    // If school is active, it means it's approved regardless of metaData status
+    if (school.isActive) {
+      return <Badge variant="success">Approved</Badge>;
+    }
+    
+    const approvalStatus = school.metaData?.approvalStatus || 'pending';
+    
     const statusConfig = {
       pending: { variant: 'warning' as const, label: 'Pending Approval' },
       approved: { variant: 'success' as const, label: 'Approved' },
       rejected: { variant: 'destructive' as const, label: 'Rejected' },
     };
 
-    const config = statusConfig[school.approvalStatus];
+    const config = statusConfig[approvalStatus as keyof typeof statusConfig];
+    
+    // If approvalStatus is not one of the expected values, default to pending
+    if (!config) {
+      return <Badge variant="warning">Pending Approval</Badge>;
+    }
+    
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getNextAction = () => {
+    if (!setupProgress.classesAdded) {
+      return {
+        label: 'Add Classes',
+        description: 'Configure the classes offered by your school',
+        route: '/setup/classes',
+        icon: Users,
+      };
+    }
+    if (!setupProgress.sectionsAdded) {
+      return {
+        label: 'Add Sections',
+        description: 'Create sections for each class',
+        route: '/setup/sections',
+        icon: BookOpen,
+      };
+    }
+    if (!setupProgress.subjectsAdded) {
+      return {
+        label: 'Add Subjects',
+        description: 'Configure subjects for each class and section',
+        route: '/setup/subjects',
+        icon: BookOpen,
+      };
+    }
+    return null;
   };
 
   if (isLoading) {
@@ -120,7 +202,7 @@ const Dashboard = () => {
                   onClick={() => navigate('/setup/school')}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Create School Profile
+                  Create School
                 </Button>
               </CardContent>
             </Card>
@@ -146,172 +228,341 @@ const Dashboard = () => {
           {getApprovalStatusBadge()}
         </div>
 
-        {/* School Details Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card className="bg-gradient-card border-0 shadow-medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                School Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Type</p>
-                  <p className="font-medium">{school.type}</p>
+        {/* School Information Card */}
+        <Card className="mb-8 bg-gradient-card border-0 shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              School Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">School Level</p>
+                    <p className="font-medium capitalize">{school.level?.replace('_', ' ')}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Board</p>
-                  <p className="font-medium">{school.affiliatedBoard}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Principal</p>
-                  <p className="font-medium">{school.principalName}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Students</p>
-                  <p className="font-medium">{school.studentStrength}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm">Address</p>
-                <p className="font-medium">{school.address}</p>
-              </div>
-            </CardContent>
-          </Card>
+                
+                {school.board && (
+                  <div className="flex items-center gap-3">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Affiliated Board</p>
+                      <p className="font-medium">{school.board}</p>
+                    </div>
+                  </div>
+                )}
 
-          {/* Setup Progress Card */}
-          <Card className="bg-gradient-card border-0 shadow-medium">
+                {school.principalName && (
+                  <div className="flex items-center gap-3">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Principal</p>
+                      <p className="font-medium">{school.principalName}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {school.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{school.email}</p>
+                    </div>
+                  </div>
+                )}
+
+                {school.phoneNumbers && school.phoneNumbers.length > 0 && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="font-medium">{school.phoneNumbers[0]}</p>
+                    </div>
+                  </div>
+                )}
+
+                {school.establishedYear && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Established</p>
+                      <p className="font-medium">{school.establishedYear}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">{classes.length}</div>
+                  <p className="text-sm text-muted-foreground">Classes</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">{totalSections}</div>
+                  <p className="text-sm text-muted-foreground">Sections</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary">{totalSubjects}</div>
+                  <p className="text-sm text-muted-foreground">Subjects</p>
+                </div>
+
+                {school.metaData?.studentStrength && (
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-primary">{school.metaData.studentStrength}</div>
+                    <p className="text-sm text-muted-foreground">Students</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Address */}
+            {school.address && (
+              <div className="flex items-start gap-3">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Address</p>
+                  <p className="font-medium">
+                    {typeof school.address === 'object' 
+                      ? `${school.address.city}, ${school.address.state}` 
+                      : school.address}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* School Portal Link */}
+            {school.subdomain && school.isActive && (
+              <div className="flex items-center gap-3 pt-4 border-t">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">School Portal</p>
+                  <p className="font-medium text-primary">{school.subdomain}.vidyalayaone.com</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => window.open(`https://${school.subdomain}.vidyalayaone.com`, '_blank')}>
+                  Visit Portal
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Classes Overview */}
+        {classes.length > 0 && (
+          <Card className="mb-8 bg-gradient-card border-0 shadow-medium">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-primary" />
-                Setup Progress
+                <BookOpen className="h-5 w-5 text-primary" />
+                Classes Overview
               </CardTitle>
               <CardDescription>
-                Complete all steps to activate your school management system
+                Overview of all classes and their sections
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(getSetupProgress())}%
-                  </span>
-                </div>
-                <Progress value={getSetupProgress()} className="h-2" />
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { key: 'schoolCreated', label: 'School Profile', icon: GraduationCap },
-                  { key: 'classesAdded', label: 'Classes', icon: Users },
-                  { key: 'sectionsAdded', label: 'Sections', icon: BookOpen },
-                  { key: 'subjectsAdded', label: 'Subjects', icon: BookOpen },
-                  { key: 'paymentCompleted', label: 'Payment', icon: CreditCard },
-                ].map((step) => (
-                  <div key={step.key} className="flex items-center gap-3">
-                    {setupProgress[step.key as keyof typeof setupProgress] ? (
-                      <CheckCircle className="h-4 w-4 text-success" />
-                    ) : (
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className={`text-sm ${
-                      setupProgress[step.key as keyof typeof setupProgress] 
-                        ? 'text-foreground' 
-                        : 'text-muted-foreground'
-                    }`}>
-                      {step.label}
-                    </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {classes.map((cls) => (
+                  <div key={cls.id} className="p-4 bg-background/50 rounded-lg border">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">{cls.name}</h3>
+                      <Badge variant="outline">{cls.academicYear}</Badge>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Sections:</span>
+                        <span className="font-medium">{cls.sections.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subjects:</span>
+                        <span className="font-medium">{cls.subjects.length}</span>
+                      </div>
+                      {cls.sections.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {cls.sections.map((section) => (
+                            <Badge key={section.id} variant="secondary" className="text-xs">
+                              {section.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </div>
+        )}
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {!setupProgress.classesAdded && (
-            <Card className="group hover:shadow-medium transition-smooth cursor-pointer" 
-                  onClick={() => navigate('/setup/classes')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-smooth">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold">Add Classes</h3>
+        {/* Setup Progress */}
+        <Card className="bg-gradient-card border-0 shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-primary" />
+              Setup Progress
+            </CardTitle>
+            <CardDescription>
+              Complete all steps to activate your school management system
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-lg font-semibold">Overall Progress</span>
+                  <span className="text-lg font-semibold text-primary">
+                    {Math.round(getSetupProgress())}%
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Configure the classes offered by your school
-                </p>
-                <div className="flex items-center text-primary text-sm font-medium">
-                  Set up now <ArrowRight className="ml-1 h-4 w-4" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                <Progress value={getSetupProgress()} className="h-3 mb-4" />
+              </div>
 
-          {setupProgress.classesAdded && !setupProgress.sectionsAdded && (
-            <Card className="group hover:shadow-medium transition-smooth cursor-pointer" 
-                  onClick={() => navigate('/setup/sections')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-smooth">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold">Add Sections</h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Create sections for each class
-                </p>
-                <div className="flex items-center text-primary text-sm font-medium">
-                  Continue setup <ArrowRight className="ml-1 h-4 w-4" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { 
+                    key: 'schoolCreated', 
+                    label: 'School Profile', 
+                    icon: GraduationCap,
+                    description: 'Basic school information'
+                  },
+                  { 
+                    key: 'classesAdded', 
+                    label: 'Classes', 
+                    icon: Users,
+                    description: 'Academic classes setup'
+                  },
+                  { 
+                    key: 'sectionsAdded', 
+                    label: 'Sections', 
+                    icon: BookOpen,
+                    description: 'Class sections created'
+                  },
+                  { 
+                    key: 'subjectsAdded', 
+                    label: 'Subjects', 
+                    icon: BookOpen,
+                    description: 'Subjects configured'
+                  },
+                ].map((step) => {
+                  const isCompleted = setupProgress[step.key as keyof typeof setupProgress];
+                  const StepIcon = step.icon;
+                  
+                  return (
+                    <div 
+                      key={step.key} 
+                      className={`p-4 rounded-lg border text-center transition-all ${
+                        isCompleted 
+                          ? 'bg-success/10 border-success/20' 
+                          : 'bg-muted/50 border-border'
+                      }`}
+                    >
+                      <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 ${
+                        isCompleted ? 'bg-success/20' : 'bg-muted'
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle className="h-6 w-6 text-success" />
+                        ) : (
+                          <StepIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <h3 className={`font-semibold mb-1 ${
+                        isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
+                        {step.label}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {step.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
 
-          {setupProgress.sectionsAdded && !setupProgress.subjectsAdded && (
-            <Card className="group hover:shadow-medium transition-smooth cursor-pointer" 
-                  onClick={() => navigate('/setup/subjects')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-smooth">
-                    <BookOpen className="h-5 w-5 text-primary" />
+              {/* Continue Button */}
+              {getNextAction() && (
+                <div className="flex items-center justify-between p-6 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      {(() => {
+                        const NextIcon = getNextAction()!.icon;
+                        return <NextIcon className="h-6 w-6 text-primary" />;
+                      })()}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">{getNextAction()!.label}</h3>
+                      <p className="text-muted-foreground">{getNextAction()!.description}</p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold">Add Subjects</h3>
+                  <Button 
+                    size="lg" 
+                    onClick={() => navigate(`${getNextAction()!.route}?schoolId=${school.id}`)}
+                    className="shrink-0"
+                  >
+                    Continue Setup
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Configure subjects for each class and section
-                </p>
-                <div className="flex items-center text-primary text-sm font-medium">
-                  Continue setup <ArrowRight className="ml-1 h-4 w-4" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
 
-          {school.approvalStatus === 'approved' && school.subdomain && (
-            <Card className="group hover:shadow-medium transition-smooth">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-success/10 rounded-lg">
-                    <Shield className="h-5 w-5 text-success" />
+              {/* All Setup Complete */}
+              {!getNextAction() && (
+                <div className="text-center p-8 bg-success/5 rounded-lg border border-success/20">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-success/10 rounded-full mb-4">
+                    {(() => {
+                      // If school is active, it means it's approved
+                      if (school.isActive) {
+                        return <CheckCircle className="h-8 w-8 text-success" />;
+                      }
+                      
+                      const approvalStatus = school.metaData?.approvalStatus || 'pending';
+                      if (approvalStatus === 'approved') {
+                        return <CheckCircle className="h-8 w-8 text-success" />;
+                      } else {
+                        return <Clock className="h-8 w-8 text-warning" />;
+                      }
+                    })()}
                   </div>
-                  <h3 className="font-semibold">School Portal</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-success">Setup Complete!</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {(() => {
+                      // If school is active, it means it's approved and ready to use
+                      if (school.isActive) {
+                        return 'Your school management system is ready to use';
+                      }
+                      
+                      const approvalStatus = school.metaData?.approvalStatus || 'pending';
+                      if (approvalStatus === 'approved') {
+                        return 'Your school management system is ready to use';
+                      } else if (approvalStatus === 'rejected') {
+                        return 'Your school setup is complete, but approval was rejected. Please contact support.';
+                      } else {
+                        return 'Your school setup is complete and waiting for approval';
+                      }
+                    })()}
+                  </p>
+                  {school.subdomain && school.isActive && (
+                    <Button 
+                      size="lg" 
+                      onClick={() => window.open(`https://${school.subdomain}.vidyalayaone.com`, '_blank')}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Access School Portal
+                    </Button>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Access your live school management system
-                </p>
-                <Button variant="success" size="sm" className="w-full">
-                  Open Portal
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

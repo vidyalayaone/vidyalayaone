@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      axios:
+        specifier: ^1.6.0
+        version: 1.11.0
     devDependencies:
       typescript:
         specifier: ^5.8.3
@@ -7819,7 +7823,7 @@ snapshots:
 
   razorpay@2.9.6:
     dependencies:
-      axios: 1.10.0
+      axios: 1.11.0
     transitivePeerDependencies:
       - debug
 

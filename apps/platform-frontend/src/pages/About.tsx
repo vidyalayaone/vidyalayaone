@@ -44,13 +44,13 @@ const About = () => {
     name: "Aditya Raj",
     role: "Backend Developer",
     background: "Builds and maintains backend services, APIs, and integrations to power the platform's core functionality.",
-    image: "AD"
+    image: "/Aditya-3.jpeg"
   },
   {
     name: "Vardaan Vig",
     role: "Product Manager",
     background: "Drives product vision, coordinates with schools, collects feedback, and plans features to align with user needs.",
-    image: "V"
+    image: "/Vardaan.jpeg"
   }
 ];
 

@@ -8,19 +8,20 @@ import { toast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isAuthenticated, user, logout, refreshToken } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const location = useLocation();
 
   const handleLogout = async () => {
     try {
-      if (refreshToken) {
-        await authAPI.logout(refreshToken);
-      }
-      logout();
+      await logout();
       toast({ title: 'Logged out successfully' });
     } catch (error) {
       console.error('Logout error:', error);
-      logout(); // Force logout on error
+      toast({ 
+        title: 'Logout failed', 
+        description: 'There was an error logging out. Please try again.',
+        variant: 'destructive' 
+      });
     }
   };
 

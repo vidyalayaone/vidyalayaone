@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createSchool } from "../controllers/createSchool";
 import { getSchoolById } from "../controllers/getSchoolById";
+import { getSchoolDetailed } from "../controllers/getSchoolDetailed";
 // import { updateSchool } from "../controllers/updateSchool";
 import { getSchoolBySubdomain } from "../controllers/getSchoolBySubdomain";
 import { approveSchool } from "../controllers/approveSchool";
@@ -17,12 +18,14 @@ import { getSubjectsBulk } from "../controllers/getSubjectsBulk";
 import { getSectionDetails } from "../controllers/getSectionDetails";
 import { getSectionStudents } from "../controllers/getSectionStudents";
 import { assignClassTeacher } from "../controllers/assignClassTeacher";
+import { getGlobalSubjects } from "../controllers/getGlobalSubjects";
 // import { getSectionTimetable } from "../controllers/getSectionTimetable";
 
 const router: Router = Router();
 
 router.post('/create', createSchool);
 router.get('/get-by-id/:schoolId', getSchoolById);
+router.get('/get-detailed/:schoolId', getSchoolDetailed);
 router.get('/get-by-subdomain/:subdomain', getSchoolBySubdomain);
 // router.put('/update/:schoolId', updateSchool); // needs to be updated
 router.patch('/:schoolId/plan', updateSchoolPlan);
@@ -41,6 +44,7 @@ router.post('/internal/subjects/bulk', getSubjectsBulk);
 
 // Subject management routes
 router.get('/subjects', getSubjects);
+router.get('/subjects/global', getGlobalSubjects);
 router.post('/subjects/global', createGlobalSubjects); // needs to be updated
 router.post('/subjects', createClassSubjects); // needs to be updated
 

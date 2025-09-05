@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,7 +22,11 @@ type LoginForm = z.infer<typeof loginSchema>;
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuthStore();
+
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema as any),
@@ -49,7 +53,8 @@ const Login = () => {
           description: 'You have been successfully logged in.',
         });
         
-        navigate('/dashboard');
+        // Navigate to intended destination or dashboard
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
       toast({

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { School, ClassSection, Subject } from '@/lib/api';
+import { School, SchoolClass, DetailedSchoolData } from '@/lib/api';
 
 interface SetupProgress {
   schoolCreated: boolean;
@@ -12,18 +12,16 @@ interface SetupProgress {
 
 interface SchoolState {
   school: School | null;
+  classes: SchoolClass[];
+  totalSections: number;
+  totalSubjects: number;
   setupProgress: SetupProgress;
-  classesSections: ClassSection[];
-  subjects: Subject[];
-  availableSubjects: Record<string, string[]>;
   isLoading: boolean;
 
   // Actions
+  setSchoolData: (data: DetailedSchoolData) => void;
   setSchool: (school: School | null) => void;
   updateSetupProgress: (progress: Partial<SetupProgress>) => void;
-  setClassesSections: (classesSections: ClassSection[]) => void;
-  setSubjects: (subjects: Subject[]) => void;
-  setAvailableSubjects: (subjects: Record<string, string[]>) => void;
   setLoading: (loading: boolean) => void;
   reset: () => void;
 }
@@ -40,11 +38,21 @@ export const useSchoolStore = create<SchoolState>()(
   persist(
     (set, get) => ({
       school: null,
+      classes: [],
+      totalSections: 0,
+      totalSubjects: 0,
       setupProgress: initialSetupProgress,
-      classesSections: [],
-      subjects: [],
-      availableSubjects: {},
       isLoading: false,
+
+      setSchoolData: (data) => {
+        set({
+          school: data.school,
+          classes: data.classes,
+          totalSections: data.totalSections,
+          totalSubjects: data.totalSubjects,
+          setupProgress: data.setupProgress,
+        });
+      },
 
       setSchool: (school) => {
         set({ school });
@@ -62,22 +70,16 @@ export const useSchoolStore = create<SchoolState>()(
         set((state) => ({
           setupProgress: { ...state.setupProgress, ...progress },
         })),
-
-      setClassesSections: (classesSections) => set({ classesSections }),
-      
-      setSubjects: (subjects) => set({ subjects }),
-      
-      setAvailableSubjects: (availableSubjects) => set({ availableSubjects }),
       
       setLoading: (isLoading) => set({ isLoading }),
 
       reset: () =>
         set({
           school: null,
+          classes: [],
+          totalSections: 0,
+          totalSubjects: 0,
           setupProgress: initialSetupProgress,
-          classesSections: [],
-          subjects: [],
-          availableSubjects: {},
           isLoading: false,
         }),
     }),
@@ -85,9 +87,10 @@ export const useSchoolStore = create<SchoolState>()(
       name: 'vidyalaya-school',
       partialize: (state) => ({
         school: state.school,
+        classes: state.classes,
+        totalSections: state.totalSections,
+        totalSubjects: state.totalSubjects,
         setupProgress: state.setupProgress,
-        classesSections: state.classesSections,
-        subjects: state.subjects,
       }),
     }
   )

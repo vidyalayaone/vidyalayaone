@@ -6,6 +6,7 @@ import { login } from "../controllers/login";
 import { refreshToken } from "../controllers/refreshToken";
 import { getMe } from "../controllers/getMe";
 import { getMySchool } from "../controllers/getMySchool";
+import { getMySchoolDetailed } from "../controllers/getMySchoolDetailed";
 import { forgotPassword } from '../controllers/forgotPassword';
 import { verifyOtpForPasswordReset } from '../controllers/verifyOtpForPasswordReset';
 import { resetPassword } from '../controllers/resetPassword';
@@ -50,6 +51,7 @@ router.post('/reset-password', strictLimiter, resetPassword); // needs to be upd
 // protected = true
 router.get('/me', authLimiter, getMe);
 router.get('/my-school', authLimiter, getMySchool);
+router.get('/my-school-detailed', authLimiter, getMySchoolDetailed);
 router.post('/logout', authLimiter, logout);
 router.post('/update-admin-with-schoolId', updateAdminWithSchoolId);
 

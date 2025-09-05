@@ -12,7 +12,10 @@ const api = axios.create({
 
 // Request interceptor to add JWT token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('vidyalaya_access_token');
+  // Get auth store dynamically to avoid circular dependency
+  const authStore = (window as any).__AUTH_STORE__;
+  const token = authStore?.getState?.()?.accessToken || localStorage.getItem('vidyalaya_access_token');
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,30 +31,51 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      const refreshToken = localStorage.getItem('vidyalaya_refresh_token');
+      // Get auth store dynamically
+      const authStore = (window as any).__AUTH_STORE__;
+      const refreshToken = authStore?.getState?.()?.refreshToken || localStorage.getItem('vidyalaya_refresh_token');
+      
       if (refreshToken) {
         try {
           const refreshResponse = await api.post('/auth/refresh-token', { refreshToken });
           if (refreshResponse.data.success) {
             const { accessToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
-            localStorage.setItem('vidyalaya_access_token', accessToken);
-            localStorage.setItem('vidyalaya_refresh_token', newRefreshToken);
+            
+            // Update tokens through auth store if available
+            if (authStore?.getState?.()?.updateTokensFromStorage) {
+              authStore.getState().updateTokensFromStorage(accessToken, newRefreshToken);
+            } else {
+              // Fallback to localStorage
+              localStorage.setItem('vidyalaya_access_token', accessToken);
+              localStorage.setItem('vidyalaya_refresh_token', newRefreshToken);
+            }
+            
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return api(originalRequest);
           }
         } catch (refreshError) {
-          // Refresh failed, redirect to login
-          localStorage.removeItem('vidyalaya_access_token');
-          localStorage.removeItem('vidyalaya_refresh_token');
-          window.location.href = '/login';
+          // Refresh failed, logout user
+          if (authStore?.getState?.()?.logout) {
+            authStore.getState().logout();
+          } else {
+            // Fallback cleanup
+            localStorage.removeItem('vidyalaya_access_token');
+            localStorage.removeItem('vidyalaya_refresh_token');
+            window.location.href = '/login';
+          }
           return Promise.reject(refreshError);
         }
       }
       
-      // No refresh token, redirect to login
-      localStorage.removeItem('vidyalaya_access_token');
-      localStorage.removeItem('vidyalaya_refresh_token');
-      window.location.href = '/login';
+      // No refresh token, logout user
+      if (authStore?.getState?.()?.logout) {
+        authStore.getState().logout();
+      } else {
+        // Fallback cleanup
+        localStorage.removeItem('vidyalaya_access_token');
+        localStorage.removeItem('vidyalaya_refresh_token');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -69,16 +93,84 @@ export interface User {
 export interface School {
   id: string;
   name: string;
-  type: string;
-  address: string;
-  principalName: string;
-  contactEmail: string;
-  contactPhone: string;
-  affiliatedBoard: string;
-  studentStrength: number;
-  planType?: string;
-  approvalStatus: 'pending' | 'approved' | 'rejected';
   subdomain?: string;
+  address: {
+    address1: string;
+    address2?: string;
+    locality: string;
+    city: string;
+    state: string;
+    country: string;
+    pinCode: string;
+    landmark?: string;
+  };
+  level: 'primary' | 'secondary' | 'higher_secondary' | 'mixed';
+  board?: string;
+  schoolCode?: string;
+  phoneNumbers: string[];
+  email?: string;
+  principalName?: string;
+  establishedYear?: number;
+  language?: string;
+  isActive: boolean;
+  metaData?: {
+    plan?: {
+      type: string;
+      features: string[];
+      maxStudents?: number;
+      expiresAt?: string;
+    };
+    approvalStatus?: 'pending' | 'approved' | 'rejected';
+    studentStrength?: number;
+    [key: string]: any;
+  };
+  fullUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DetailedSchoolData {
+  school: School;
+  classes: SchoolClass[];
+  totalSections: number;
+  totalSubjects: number;
+  setupProgress: {
+    schoolCreated: boolean;
+    classesAdded: boolean;
+    sectionsAdded: boolean;
+    subjectsAdded: boolean;
+    paymentCompleted: boolean;
+  };
+}
+
+export interface SchoolClass {
+  id: string;
+  name: string;
+  academicYear: string;
+  sections: SchoolSection[];
+  subjects: SchoolSubject[];
+  metaData?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchoolSection {
+  id: string;
+  name: string;
+  classTeacherId?: string;
+  metaData?: any;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchoolSubject {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  metaData?: any;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ClassSection {
@@ -178,6 +270,14 @@ export const authAPI = {
     return response.data;
   },
 
+  getMySchoolDetailed: async () => {
+    const response: AxiosResponse<BackendResponse<DetailedSchoolData>> = await api.get('/auth/my-school-detailed');
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to fetch detailed school data');
+    }
+    return response.data;
+  },
+
   logout: async (refreshToken: string) => {
     const response: AxiosResponse<BackendResponse> = await api.post('/auth/logout', { refreshToken });
     if (!response.data.success) {
@@ -197,9 +297,9 @@ export const authAPI = {
 
 // School API
 export const schoolAPI = {
-  create: async (data: Omit<School, 'id' | 'approvalStatus' | 'subdomain'>) => {
-    const response: AxiosResponse<{ school: School }> = await api.post('/school/create', data);
-    return response.data;
+  create: async (data: Omit<School, 'id' | 'isActive' | 'fullUrl' | 'createdAt' | 'updatedAt'>) => {
+    const response: AxiosResponse<{ success: boolean; data: { school: School }; message: string }> = await api.post('/school/create', data);
+    return response.data.data;
   },
 
   updatePlan: async (schoolId: string, planType: string) => {
@@ -207,18 +307,44 @@ export const schoolAPI = {
     return response.data;
   },
 
-  addClasses: async (data: { schoolId: string; classes: string[] }) => {
+  addClasses: async (data: { schoolId: string; classes: string[]; academicYear: string }) => {
     const response: AxiosResponse<{ message: string }> = await api.post('/school/classes', data);
     return response.data;
   },
 
-  addSections: async (data: { schoolId: string; sections: ClassSection[] }) => {
+  addSections: async (data: { schoolId: string; academicYear: string; sections: Array<{ className: string; sectionNames: string[] }> }) => {
     const response: AxiosResponse<{ message: string }> = await api.post('/school/sections', data);
     return response.data;
   },
 
-  getClassesSections: async (schoolId: string) => {
-    const response: AxiosResponse<{ classesSections: ClassSection[] }> = await api.get(`/school/classes-sections/${schoolId}`);
+  getClassesSections: async (schoolId: string, academicYear?: string) => {
+    const params = academicYear ? `?academicYear=${academicYear}` : '';
+    const response: AxiosResponse<{ 
+      success: boolean; 
+      data: { 
+        school: { id: string; name: string };
+        academicYear: string;
+        classes: Array<{
+          id: string;
+          name: string;
+          sections: Array<{
+            id: string;
+            name: string;
+            createdAt: string;
+            updatedAt: string;
+          }>;
+          subjects: Array<{
+            id: string;
+            name: string;
+            code: string;
+          }>;
+          createdAt: string;
+          updatedAt: string;
+        }>;
+        totalClasses: number;
+        totalSections: number;
+      }
+    }> = await api.get(`/school/classes-sections/${schoolId}${params}`);
     return response.data;
   },
 
@@ -227,8 +353,31 @@ export const schoolAPI = {
     return response.data;
   },
 
-  addSubjects: async (data: { schoolId: string; subjects: Subject[] }) => {
-    const response: AxiosResponse<{ message: string }> = await api.post('/school/subjects', data);
+  getGlobalSubjects: async () => {
+    const response: AxiosResponse<{ 
+      success: boolean; 
+      data: { 
+        subjects: Array<{
+          id: string;
+          name: string;
+          code: string;
+          description?: string;
+        }>;
+        totalSubjects: number;
+      }
+    }> = await api.get('/school/subjects/global');
+    return response.data;
+  },
+
+  createClassSubjects: async (data: { 
+    schoolId: string; 
+    academicYear: string; 
+    classSubjects: Array<{
+      className: string;
+      subjectNames: string[];
+    }>;
+  }) => {
+    const response: AxiosResponse<{ success: boolean; message: string }> = await api.post('/school/subjects', data);
     return response.data;
   },
 };

@@ -67,6 +67,16 @@ export async function getClassesAndSections(req: Request, res: Response): Promis
           orderBy: {
             name: 'asc'
           }
+        },
+        subjects: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          },
+          orderBy: {
+            name: 'asc'
+          }
         }
       },
       orderBy: {
@@ -90,6 +100,11 @@ export async function getClassesAndSections(req: Request, res: Response): Promis
             name: section.name,
             createdAt: section.createdAt,
             updatedAt: section.updatedAt
+          })),
+          subjects: cls.subjects.map(subject => ({
+            id: subject.id,
+            name: subject.name,
+            code: subject.code
           })),
           createdAt: cls.createdAt,
           updatedAt: cls.updatedAt

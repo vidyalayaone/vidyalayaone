@@ -109,6 +109,7 @@ async function main() {
     
     // Class management
     'class.view',
+    'class.create',
     'class.update',
     'class.delete',
     'class.manage_sections',
@@ -211,7 +212,7 @@ async function main() {
   
   // --- Create a sample user assigned to DEFAULT role (mirrors register flow) ---
   const defaultUsername = 'first_user';
-  const defaultRawPassword = 'avngr___stark';
+  const defaultRawPassword = 'password123';
   const defaultPasswordHash = await bcrypt.hash(defaultRawPassword, config.security.bcryptSaltRounds);
 
   const defaultUser = await prisma.user.upsert({

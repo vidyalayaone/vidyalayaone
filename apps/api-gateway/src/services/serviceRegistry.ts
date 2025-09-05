@@ -40,6 +40,7 @@ class ServiceRegistry {
         { path: '/refresh-token', method: 'POST', isProtected: false },
         { path: '/me', method: 'GET', isProtected: true },
         { path: '/my-school', method: 'GET', isProtected: true },
+        { path: '/my-school-detailed', method: 'GET', isProtected: true },
         { path: '/logout', method: 'POST', isProtected: true },
         { path: '/update-admin-with-subdomain', method: 'POST', isProtected: true },
         { path: '/seed-roles', method: 'POST', isProtected: true },

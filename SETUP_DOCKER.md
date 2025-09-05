@@ -16,7 +16,7 @@ node migrate.js
 
 # step3: seed the databases
 ```
-node seeding.js
+node seeding-dev.js
 ```
 
 # stopping the containers

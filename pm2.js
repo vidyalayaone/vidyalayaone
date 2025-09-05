@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 
 // Function to run migrations
 function runMigrations() {
-  const services = ['auth-service', 'school-service', 'profile-service', 'attendance-service', 'payment-service'];
+  const services = ['auth-service', 'school-service', 'profile-service', 'attendance-service', 'payment-service', 'api-gateway'];
   
   console.log('🚀 Running pm2 for services...');
   

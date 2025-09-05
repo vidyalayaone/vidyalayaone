@@ -13,7 +13,6 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
 
     const { subjects } = validation.data;
     const userData = getUser(req);
-    const userId = userData?.id; 
     const { context } = getSchoolContext(req);
 
     // Only admin can create global subjects and only from platform context
@@ -26,7 +25,7 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
       return;
     }
 
-    if(!hasPermission(PERMISSIONS.SUBJECT.CREATE, userData)){
+    if (!hasPermission(PERMISSIONS.SUBJECT.CREATE, userData)) {
       res.status(403).json({
         success: false,
         error: { message: 'You do not have permission to create global subjects' },
@@ -35,28 +34,24 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
       return;
     }
 
-    // Create subjects in a transaction
-    const createdSubjects = await prisma.$transaction(async (tx) => {
-      const subjectPromises = subjects.map(subject => 
-        tx.subject.upsert({
-          where: {
-            name: subject.name
-          },
-          update: {
-            code: subject.code,
-            description: subject.description,
-            updatedAt: new Date()
-          },
-          create: {
-            name: subject.name,
-            code: subject.code,
-            description: subject.description || null
-          }
-        })
-      );
+    // Create subjects in a batch transaction
+    const operations = subjects.map(subject =>
+      prisma.subject.upsert({
+        where: { name: subject.name },
+        update: {
+          code: subject.code,
+          description: subject.description,
+          updatedAt: new Date()
+        },
+        create: {
+          name: subject.name,
+          code: subject.code,
+          description: subject.description || null
+        }
+      })
+    );
 
-      return Promise.all(subjectPromises);
-    });
+    const createdSubjects = await prisma.$transaction(operations);
 
     res.status(201).json({
       success: true,
@@ -69,7 +64,7 @@ export async function createGlobalSubjects(req: Request, res: Response): Promise
 
   } catch (error: any) {
     console.error('Error creating global subjects:', error);
-    
+
     // Handle unique constraint violations
     if (error.code === 'P2002') {
       res.status(409).json({

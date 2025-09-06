@@ -17,3 +17,12 @@ cd ..
 cp -r apps/platform-frontend/dist/* /var/www/platform-frontend/
 sudo nginx -t
 sudo systemctl reload nginx
+
+school-frontend -
+cd apps/school-frontend
+pnpm build
+cd ..
+cd ..
+cp -r apps/school-frontend/dist/* /var/www/school-frontend/
+sudo nginx -t
+sudo systemctl reload nginx

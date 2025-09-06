@@ -33,7 +33,7 @@ export async function verifyOtpForRegistration(req: Request, res: Response) {
       return;
     }
 
-    if (user.isPhoneVerified) {
+    if (user.isEmailVerified) {
       res.status(400).json({
         success: false,
         error: { message: 'User is already verified' },
@@ -57,8 +57,8 @@ export async function verifyOtpForRegistration(req: Request, res: Response) {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        isPhoneVerified: true,
-        phoneVerifiedAt: new Date()
+        isEmailVerified: true,
+        emailVerifiedAt: new Date()
       }
     });
 

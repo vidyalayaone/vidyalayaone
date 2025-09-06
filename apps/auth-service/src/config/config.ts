@@ -20,13 +20,6 @@ interface Config {
     accessExpiresIn: string;
     refreshExpiresIn: string;
   };
-  email: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    from: string;
-  };
   security: {
     bcryptSaltRounds: number;
     otpExpiresIn: number;
@@ -46,6 +39,13 @@ interface Config {
       timeout: number;
     };
   };
+  ses: {
+    smtpHost: string;
+    smtpPort: number;
+    smtpUser: string;
+    smtpPass: string;
+    smtpFrom: string;
+  };
 }
 
 const config: Config = {
@@ -62,13 +62,6 @@ const config: Config = {
     refreshSecret: process.env.JWT_REFRESH_SECRET || '',
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '7d',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  },
-  email: {
-    host: process.env.EMAIL_HOST || '',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    user: process.env.EMAIL_USER || '',
-    password: process.env.EMAIL_PASSWORD || '',
-    from: process.env.EMAIL_FROM || '',
   },
   security: {
     bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
@@ -88,7 +81,14 @@ const config: Config = {
       url: process.env.SCHOOL_SERVICE_URL || 'http://school-service:3002',
       timeout: parseInt(process.env.SCHOOL_SERVICE_TIMEOUT || '30000', 10),
     },
-  }
+  },
+  ses: {
+    smtpHost: process.env.SES_SMTP_HOST || '',
+    smtpPort: parseInt(process.env.SES_SMTP_PORT || '587', 10),
+    smtpUser: process.env.SES_SMTP_USER || '',
+    smtpPass: process.env.SES_SMTP_PASS || '',
+    smtpFrom: process.env.SES_SMTP_FROM || '',
+  },
 };
 
 export default config;

@@ -40,7 +40,7 @@ export async function getMe(req: Request, res: Response): Promise<void> {
         username: true,
         role: true,
         schoolId: true,
-        isPhoneVerified: true,
+        isEmailVerified: true,
         createdAt: true,
         updatedAt: true,
         email: true,

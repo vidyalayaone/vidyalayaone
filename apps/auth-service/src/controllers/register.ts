@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import DatabaseService from '../services/database';
-import { createAndSendOtpToPhone } from '../services/otpService';
+import { createAndSendOtpToEmail } from '../services/otpService';
 import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { registerSchema } from '../validations/validationSchemas';
 import config from '../config/config';
@@ -14,7 +14,7 @@ export async function register(req: Request, res: Response) {
     const validation = validateInput(registerSchema, req.body, res);
     if (!validation.success) return;
     
-    const { username, phone, password } = validation.data;
+    const { username, phone, email, password } = validation.data;
     const { context } = getSchoolContext(req);
 
     if (context !== 'platform') {
@@ -43,12 +43,13 @@ export async function register(req: Request, res: Response) {
     const existingUser = await prisma.user.findUnique({ where: { username } });
     
     if (existingUser) {
-      if (!existingUser.isPhoneVerified) {
+      if (!existingUser.isEmailVerified) {
         // Update existing unverified user
         const passwordHash = await bcrypt.hash(password, config.security.bcryptSaltRounds);
         const updatedUser = await prisma.user.update({
           where: { id: existingUser.id },
           data: {
+            email,
             phone,
             passwordHash,
             isActive: true,
@@ -60,19 +61,18 @@ export async function register(req: Request, res: Response) {
         });
 
         // Send OTP
-        await createAndSendOtpToPhone({ 
+        await createAndSendOtpToEmail({ 
           userId: updatedUser.id, 
-          phone, 
-          isTestSms: true, 
+          email, 
           purpose: 'registration' 
         });
 
         res.status(200).json({
           success: true,
-          message: 'Registration successful. Please verify your phone number.',
+          message: 'Registration successful. Please verify your email address.',
           data: { 
             user_id: updatedUser.id, 
-            phone: maskPhoneNumber(phone) 
+            email: email
           },
           timestamp: new Date().toISOString()
         });
@@ -91,6 +91,7 @@ export async function register(req: Request, res: Response) {
       const passwordHash = await bcrypt.hash(password, config.security.bcryptSaltRounds);
       const newUser = await prisma.user.create({
         data: {
+          email,
           username,
           phone,
           passwordHash,
@@ -102,19 +103,18 @@ export async function register(req: Request, res: Response) {
       });
 
       // Send OTP
-      await createAndSendOtpToPhone({ 
+      await createAndSendOtpToEmail({ 
         userId: newUser.id, 
-        phone, 
-        isTestSms: true, 
+        email, 
         purpose: 'registration' 
       });
 
       res.status(201).json({
         success: true,
-        message: 'Registration successful. Please verify your phone number.',
+        message: 'Registration successful. Please verify your email address.',
         data: { 
           user_id: newUser.id, 
-          phone: maskPhoneNumber(phone) 
+          email: email
         },
         timestamp: new Date().toISOString()
       });

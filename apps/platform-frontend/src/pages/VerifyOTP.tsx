@@ -45,7 +45,7 @@ const VerifyOTP = () => {
       if (type === 'registration') {
         await authAPI.verifyRegistrationOTP({ username, otp: data.otp });
         toast({
-          title: 'Phone verified successfully!',
+          title: 'Email verified successfully!',
           description: 'You can now sign in to your account.',
         });
         navigate('/login');
@@ -74,7 +74,7 @@ const VerifyOTP = () => {
       await authAPI.resendOTP(username, type === 'registration' ? 'registration' : 'password_reset');
       toast({
         title: 'OTP sent successfully!',
-        description: 'Please check your phone for the new verification code.',
+        description: 'Please check your email for the new verification code.',
       });
     } catch (error: any) {
       toast({
@@ -98,15 +98,15 @@ const VerifyOTP = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
             <Mail className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Verify Your Phone</h1>
-          <p className="text-white/80">Enter the 6-digit code sent to your phone</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Verify Your Email</h1>
+          <p className="text-white/80">Enter the 6-digit code sent to your email</p>
         </div>
 
         <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-large">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Enter Verification Code</CardTitle>
             <CardDescription className="text-center">
-              We sent a verification code to your phone
+              We sent a verification code to your email
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -25,6 +25,7 @@
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@prisma/client": "^6.10.1",
+    "@sendgrid/mail": "^8.1.5",
     "@vidyalayaone/common-middleware": "workspace:*",
     "@vidyalayaone/common-utils": "workspace:*",
     "@vidyalayaone/logger": "workspace:*",

@@ -198,8 +198,8 @@ interface BackendResponse<T = any> {
 
 // Auth API
 export const authAPI = {
-  register: async (data: { username: string; phone: string; password: string }) => {
-    const response: AxiosResponse<BackendResponse<{ user_id: string; phone: string }>> = await api.post('/auth/register', data);
+  register: async (data: { username: string; email: string; password: string }) => {
+    const response: AxiosResponse<BackendResponse<{ user_id: string; email: string }>> = await api.post('/auth/register', data);
     if (!response.data.success) {
       throw new Error(response.data.error?.message || 'Registration failed');
     }

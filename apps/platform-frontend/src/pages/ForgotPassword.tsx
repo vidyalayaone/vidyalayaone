@@ -28,7 +28,7 @@ const ForgotPassword = () => {
       await authAPI.forgotPassword(formData.username);
       toast({
         title: "Reset code sent!",
-        description: "Please check your phone for the password reset code.",
+        description: "Please check your email for the password reset code.",
       });
       setStep('otp');
     } catch (error: any) {
@@ -130,7 +130,7 @@ const ForgotPassword = () => {
       await authAPI.resendOTP(formData.username, 'password_reset');
       toast({
         title: "Code resent!",
-        description: "A new reset code has been sent to your phone.",
+        description: "A new reset code has been sent to your email.",
       });
     } catch (error: any) {
       toast({
@@ -184,7 +184,7 @@ const ForgotPassword = () => {
             
             <CardDescription>
               {step === 'username' && "Enter your username and we'll send you a reset code."}
-              {step === 'otp' && `We've sent a reset code to your phone`}
+              {step === 'otp' && `We've sent a reset code to your email`}
               {step === 'reset' && "Enter your new password below."}
             </CardDescription>
           </CardHeader>

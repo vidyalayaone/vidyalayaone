@@ -39,26 +39,28 @@ async function main() {
   // Create / update the platform user and attach the PLATFORM_ADMIN role
   const username = 'abhijeetst22';
   const rawPassword = 'avngr___stark';
+  const email = 'thakurabhijeetsingh79@gmail.com'
   const passwordHash = await bcrypt.hash(rawPassword, config.security.bcryptSaltRounds);
 
   const user = await prisma.user.upsert({
     where: { username },
     update: {
       passwordHash,
+      email,
       isActive: true,
-      isPhoneVerified: true,
-      phoneVerifiedAt: new Date(),
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
       roleId: platformRoleFinal.id,
       schoolId: PLATFORM_SCHOOL_ID,
       updatedAt: new Date(),
     },
     create: {
       username,
-      phone: '0000000000',
       passwordHash,
       isActive: true,
-      isPhoneVerified: true,
-      phoneVerifiedAt: new Date(),
+      isEmailVerified: true,
+      email,
+      emailVerifiedAt: new Date(),
       roleId: platformRoleFinal.id,
       schoolId: PLATFORM_SCHOOL_ID,
     },
@@ -66,7 +68,7 @@ async function main() {
 
   console.log('✅ Created or updated user:', user.username);
   console.log(`   • role assigned: PLATFORM_ADMIN (roleId=${platformRoleFinal.id})`);
-  console.log('   • credentials -> username:', username, 'password: password123');
+  console.log('   • credentials -> username:', username, 'password: avngr___stark');
 
   // --- New: create DEFAULT role with important admin permissions (excluding platform admin) ---
   const defaultRoleName = 'DEFAULT';
@@ -213,26 +215,27 @@ async function main() {
   // --- Create a sample user assigned to DEFAULT role (mirrors register flow) ---
   const defaultUsername = 'first_user';
   const defaultRawPassword = 'password123';
+  const defaultEmail = 'thakurabhijeetsingh79@gmail.com';
   const defaultPasswordHash = await bcrypt.hash(defaultRawPassword, config.security.bcryptSaltRounds);
 
   const defaultUser = await prisma.user.upsert({
     where: { username: defaultUsername },
     update: {
       passwordHash: defaultPasswordHash,
-      phone: '1111111111',
+      email: defaultEmail,
       isActive: true,
-      isPhoneVerified: true,
-      phoneVerifiedAt: new Date(),
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
       roleId: defaultRoleFinal.id,
       updatedAt: new Date(),
     },
     create: {
       username: defaultUsername,
-      phone: '1111111111',
+      email: defaultEmail,
       passwordHash: defaultPasswordHash,
       isActive: true,
-      isPhoneVerified: true,
-      phoneVerifiedAt: new Date(),
+      isEmailVerified: true,
+      emailVerifiedAt: new Date(),
       roleId: defaultRoleFinal.id,
     },
   });

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { createAndSendOtpToPhone } from '../services/otpService';
+import { createAndSendOtpToEmail } from '../services/otpService';
 import { validateInput } from '@vidyalayaone/common-utils';
 import { resendOtpSchema } from '../validations/validationSchemas';
 import { OtpPurpose } from '../generated/client/'
@@ -24,7 +24,7 @@ export async function resendOtp(req: Request, res: Response) {
       return;
     }
 
-    if (purpose === 'registration' && user.isPhoneVerified) {
+    if (purpose === 'registration' && user.isEmailVerified) {
       res.status(400).json({
         success: false,
         error: { message: 'User already verified' },
@@ -34,10 +34,9 @@ export async function resendOtp(req: Request, res: Response) {
     }
 
     // Resend OTP
-    await createAndSendOtpToPhone({
+    await createAndSendOtpToEmail({
       userId: user.id,
-      phone: user.phone!,
-      isTestSms: true,
+      email: user.email!,
       purpose: purpose as OtpPurpose,
     });
 

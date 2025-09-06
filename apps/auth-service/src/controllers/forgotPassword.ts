@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import DatabaseService from '../services/database';
-import { createAndSendOtpToPhone } from '../services/otpService';
+import { createAndSendOtpToEmail } from '../services/otpService';
 import { getSchoolContext, validateInput } from '@vidyalayaone/common-utils';
 import { forgotPasswordSchema } from '../validations/validationSchemas';
 import { OtpPurpose } from '../generated/client';
@@ -29,17 +29,16 @@ export async function forgotPassword(req: Request, res: Response) {
     
     // Send OTP to user's phone (or use email alternative)
     if (user.phone) {
-      await createAndSendOtpToPhone({
+      await createAndSendOtpToEmail({
         userId: user.id,
-        phone: user.phone,
-        isTestSms: process.env.NODE_ENV !== 'production',
+        email: user.email!,
         purpose: OtpPurpose.password_reset,
       });
     }
     else{
       res.status(400).json({
         success: false,
-        error: { message: 'No phone number associated with this account' },
+        error: { message: 'No email address associated with this account' },
         timestamp: new Date().toISOString()
       });
       return;
@@ -47,7 +46,7 @@ export async function forgotPassword(req: Request, res: Response) {
 
     res.status(200).json({
       success: true,
-      message: `OTP sent to ${maskPhoneNumber(user.phone)}. Please check your messages.`,
+      message: `OTP sent to ${user.email}. Please check your inbox.`,
       timestamp: new Date().toISOString()
     });
     return;

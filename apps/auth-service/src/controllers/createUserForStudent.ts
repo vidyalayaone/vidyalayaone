@@ -78,8 +78,8 @@ export async function createUserForStudent(req: Request, res: Response) {
         schoolId,
         roleId: role.id,
         isActive: true,
-        isPhoneVerified: true, // Auto-verify for internal creation
-        isEmailVerified: false, // Email can be verified later
+        isPhoneVerified: false,
+        isEmailVerified: false,
       },
       select: {
         id: true,
@@ -91,9 +91,6 @@ export async function createUserForStudent(req: Request, res: Response) {
         createdAt: true,
       },
     });
-
-    console.log('Student username:', username);
-    console.log('Temporary password for student:', password);
 
     res.status(201).json({
       success: true,

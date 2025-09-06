@@ -13,7 +13,7 @@ import { Loader2, GraduationCap } from 'lucide-react';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must not exceed 30 characters'),
-  phone: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
+  email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -31,7 +31,7 @@ const Register = () => {
     resolver: zodResolver(registerSchema as any),
     defaultValues: {
       username: '',
-      phone: '',
+      email: '',
       password: '',
       confirmPassword: '',
     },
@@ -42,13 +42,13 @@ const Register = () => {
     try {
       const response = await authAPI.register({
         username: data.username,
-        phone: data.phone,
+        email: data.email,
         password: data.password,
       });
       
       toast({
         title: 'Registration successful!',
-        description: 'Please check your phone for verification code.',
+        description: 'Please check your email for verification code.',
       });
       
       // Navigate to OTP verification with username
@@ -101,12 +101,12 @@ const Register = () => {
                 
                 <FormField
                   control={form.control}
-                  name="phone"
+                  name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Enter your phone number" {...field} />
+                        <Input type="email" placeholder="Enter your email address" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

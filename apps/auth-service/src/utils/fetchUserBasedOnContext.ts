@@ -55,10 +55,10 @@ export async function fetchUserByUsernameAndContext(res: Response, prisma: any, 
     return;
   }
 
-  if (!user.isPhoneVerified) {
+  if (!user.isEmailVerified) {
     res.status(403).json({
       success: false,
-      error: { message: 'Phone number not verified' },
+      error: { message: 'Email address not verified' },
       timestamp: new Date().toISOString()
     });
     return;

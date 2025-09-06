@@ -43,9 +43,7 @@ export async function createAndSendOtpToPhone({
   });
 
   // Send SMS
-  // await SmsService.sendOtpSMS(phone, otp, isTestSms);
-  console.log(`OTP: ${otp} (expires in ${config.security.otpExpiresIn} minutes)`);
-  console.log(`✅ OTP sent to phone: ${phone}`);
+  await SmsService.sendOtpSMS(phone, otp, isTestSms);
 }
 
 /**

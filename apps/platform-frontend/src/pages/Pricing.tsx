@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const Pricing = () => {
   const trialPlan = {
     name: "Free Trial",
-    price: "₹1",
+    price: "Free",
     period: "for 30 days",
     description: "Explore all features with full access",
     icon: Star,
@@ -48,19 +48,19 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Start Your Free Trial
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Experience the full power of VidyalayaOne for just ₹1. Complete access to all features with no restrictions.
+            Experience the full power of VidyalayaOne with complete access to all features - completely free for 30 days.
           </p>
         </div>
       </section>
 
       {/* Pricing Plans */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Current Offering</h2>
           
@@ -147,7 +147,7 @@ const Pricing = () => {
       </section>
 
       {/* Enterprise Section */}
-      <section className="py-20 px-4 bg-muted/50">
+      <section className="py-16 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Need Something Custom?</h2>
@@ -186,14 +186,14 @@ const Pricing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">What's included in the ₹1 trial?</CardTitle>
+                <CardTitle className="text-lg">What's included in the Free Trial?</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">Full access to all features for 30 days. No restrictions, no limitations - you get the complete VidyalayaOne experience.</p>

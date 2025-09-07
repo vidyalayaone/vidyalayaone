@@ -63,7 +63,7 @@ const Home = () => {
     {
       step: '03',
       title: 'Start Trial',
-      description: 'Begin with our ₹1 trial to explore all features.',
+      description: 'Begin with our Free Trial to explore all features.',
     },
     {
       step: '04',
@@ -75,24 +75,24 @@ const Home = () => {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-hero overflow-hidden">
+      <section className="relative py-16 lg:py-24 bg-gradient-hero overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:60px_60px]" />
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               Transform Your School with{' '}
-              <span className="bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-blue-200 to-cyan-200 bg-clip-text text-transparent">
                 VidyalayaOne
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
               Complete school management system designed for modern education. 
               Streamline administration, enhance learning, and connect your school community.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button asChild size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
                 <Link to="/register" className="flex items-center gap-2">
                   Start Free Trial
@@ -104,93 +104,107 @@ const Home = () => {
               </Button>
             </div>
             
-            <div className="flex items-center justify-center gap-6 mt-12 text-white/80">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>₹1 Trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                <span>Quick Setup</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5" />
-                <span>24/7 Support</span>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Everything Your School Needs
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Comprehensive features designed to simplify school management and enhance educational outcomes.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="group hover:shadow-medium transition-smooth bg-gradient-card border-0">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-smooth">
-                      <feature.icon className="h-6 w-6 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => {
+              // Add some color variety to specific cards
+              const isAccentCard = index === 1 || index === 4; // Academic Excellence & Data Security
+              const isSecondaryCard = index === 2 || index === 5; // Admin Control & Analytics
+              
+              return (
+                <Card key={index} className={`group hover:shadow-medium transition-smooth border-0 h-full ${
+                  isAccentCard 
+                    ? 'bg-gradient-to-br from-accent/5 to-accent/10 hover:from-accent/10 hover:to-accent/15' 
+                    : isSecondaryCard 
+                      ? 'bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/15'
+                      : 'bg-gradient-card'
+                }`}>
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-lg transition-smooth ${
+                        isAccentCard 
+                          ? 'bg-accent/10 group-hover:bg-accent/20' 
+                          : isSecondaryCard 
+                            ? 'bg-secondary/10 group-hover:bg-secondary/20'
+                            : 'bg-primary/10 group-hover:bg-primary/20'
+                      }`}>
+                        <feature.icon className={`h-6 w-6 ${
+                          isAccentCard 
+                            ? 'text-accent' 
+                            : isSecondaryCard 
+                              ? 'text-secondary'
+                              : 'text-primary'
+                        }`} />
+                      </div>
+                      <CardTitle className="text-lg">{feature.title}</CardTitle>
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base leading-relaxed">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-sm leading-relaxed">
+                      {feature.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Get Started in 4 Simple Steps
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               From registration to going live, we make the setup process smooth and straightforward.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {steps.map((step, index) => (
               <div key={index} className="relative">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full text-white font-bold text-lg mb-4">
+                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-full text-white font-bold text-base mb-4 ${
+                    index === 1 ? 'bg-secondary' : index === 2 ? 'bg-accent' : 'bg-primary'
+                  }`}>
                     {step.step}
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     {step.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {step.description}
                   </p>
                 </div>
                 
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 -right-4 w-8 h-0.5 bg-primary/30" />
+                  <div className={`hidden lg:block absolute top-7 -right-3 w-6 h-0.5 ${
+                    index === 0 ? 'bg-secondary/30' : index === 1 ? 'bg-accent/30' : 'bg-primary/30'
+                  }`} />
                 )}
               </div>
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-10">
             <Button asChild size="lg" variant="hero">
               <Link to="/register">Start Your Journey</Link>
             </Button>
@@ -199,36 +213,36 @@ const Home = () => {
       </section>
 
       {/* Pricing Teaser */}
-      <section className="py-20 bg-background">
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Free Trial Available
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Get started with VidyalayaOne for just ₹1 and explore all features. 
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Get started with VidyalayaOne's Free Trial and explore all features. 
               No hidden costs, no long-term commitments.
             </p>
             
-            <div className="inline-flex items-center gap-4 bg-gradient-card rounded-2xl p-8 shadow-large">
+            <div className="inline-flex items-center gap-6 bg-gradient-to-r from-white via-blue-50 to-teal-50 rounded-2xl p-6 shadow-large max-w-md border border-blue-100">
               <div className="text-left">
-                <div className="text-4xl font-bold text-primary mb-2">₹1</div>
-                <div className="text-sm text-muted-foreground">Complete Trial Access</div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">Free</div>
+                <div className="text-xs text-muted-foreground">Complete Trial Access</div>
               </div>
-              <div className="h-12 w-px bg-border mx-4" />
+              <div className="h-10 w-px bg-gradient-to-b from-primary via-secondary to-accent" />
               <div className="text-left">
-                <div className="text-sm text-muted-foreground mb-2">Includes:</div>
-                <div className="text-sm space-y-1">
+                <div className="text-xs text-muted-foreground mb-2">Includes:</div>
+                <div className="text-xs space-y-1">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success" />
+                    <CheckCircle className="h-3 w-3 text-success" />
                     <span>Full feature access</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success" />
+                    <CheckCircle className="h-3 w-3 text-success" />
                     <span>Setup assistance</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success" />
+                    <CheckCircle className="h-3 w-3 text-success" />
                     <span>Priority support</span>
                   </div>
                 </div>
@@ -245,12 +259,12 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-primary">
+      <section className="py-16 bg-gradient-primary">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Ready to Transform Your School?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
             Start your digital transformation journey with VidyalayaOne and experience 
             the future of school management.
           </p>

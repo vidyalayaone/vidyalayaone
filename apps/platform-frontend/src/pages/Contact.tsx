@@ -97,7 +97,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Get in Touch
@@ -109,7 +109,7 @@ const Contact = () => {
       </section>
 
       {/* Contact Form & Office Info */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Form */}
@@ -235,7 +235,7 @@ const Contact = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className="py-12 px-4 bg-muted/50">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
           
@@ -246,7 +246,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground text-sm">
-                  You can start your ₹1 trial immediately after registration. Our team will approve your school within 24-48 hours, and you'll be fully operational.
+                  You can start your Free Trial immediately after registration. Our team will approve your school within 24-48 hours, and you'll be fully operational.
                 </p>
               </CardContent>
             </Card>

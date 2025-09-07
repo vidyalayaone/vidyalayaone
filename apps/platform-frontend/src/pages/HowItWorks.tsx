@@ -18,7 +18,7 @@ const HowItWorks = () => {
       icon: CreditCard,
       step: "2",
       title: "Choose Your Plan",
-      description: "Start with our ₹1 trial plan to explore all features, then upgrade to a plan that fits your school's needs.",
+      description: "Start with our Free Trial plan to explore all features, then upgrade to a plan that fits your school's needs.",
       details: "Our trial plan gives you full access for 30 days. After that, choose from Basic, Standard, or Premium plans based on your student count and feature requirements."
     },
     {
@@ -43,7 +43,7 @@ const HowItWorks = () => {
       answer: "The approval process typically takes 24-48 hours. Our team reviews your school information to ensure authenticity and compliance with our standards."
     },
     {
-      question: "What happens during the ₹1 trial period?",
+      question: "What happens during the Free Trial period?",
       answer: "You get full access to all VidyalayaOne features for 30 days. You can add students, manage classes, communicate with parents, and explore all administrative tools."
     },
     {
@@ -63,7 +63,7 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             How VidyalayaOne Works
@@ -75,7 +75,7 @@ const HowItWorks = () => {
       </section>
 
       {/* Steps Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="space-y-8">
             {steps.map((step, index) => {
@@ -121,7 +121,7 @@ const HowItWorks = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className="py-12 px-4 bg-muted/50">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
           <p className="text-muted-foreground mb-8">
@@ -129,7 +129,7 @@ const HowItWorks = () => {
           </p>
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link to="/register">
-              Start Your ₹1 Trial Today
+              Start Your Free Trial Today
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -137,7 +137,7 @@ const HowItWorks = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           

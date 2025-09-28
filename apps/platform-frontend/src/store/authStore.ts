@@ -96,13 +96,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       isAuthenticated: false,
       isInitialized: true 
     });
-    
-    // Clear school store data as well
-    useSchoolStore.getState().reset();
+    useSchoolStore.getState().clearAll();
   },
 
   initializeAuth: async () => {
     const { accessToken, refreshToken } = getTokensFromStorage();
+
+    // console.log('Initializing auth with tokens:', { accessToken, refreshToken });
     
     if (!accessToken || !refreshToken) {
       set({ isInitialized: true });
@@ -117,22 +117,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       
       // Try to get user data with the stored token
       const response = await authAPI.getMe();
-      
-      if (response.success && response.data) {
+
+      console.log('Auth initialization response:', response.data.user);
+            
+      if (response.data.success && response.data.user) {
         set({ 
-          user: response.data, 
+          user: response.data.user, 
           isAuthenticated: true,
-          isInitialized: true,
-          isLoading: false 
-        });
-      } else {
-        // Token is invalid, clear everything
-        removeTokensFromStorage();
-        set({ 
-          user: null, 
-          accessToken: null, 
-          refreshToken: null, 
-          isAuthenticated: false,
           isInitialized: true,
           isLoading: false 
         });

@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/store/authStore';
 import axios, { AxiosResponse } from 'axios';
 
 // Base API configuration
@@ -22,60 +23,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor to handle token expiration and refresh
+// Response interceptor to handle token expiration and logout
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-    
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      // Get auth store dynamically
-      const authStore = (window as any).__AUTH_STORE__;
-      const refreshToken = authStore?.getState?.()?.refreshToken || localStorage.getItem('vidyalaya_refresh_token');
-      
-      if (refreshToken) {
-        try {
-          const refreshResponse = await api.post('/auth/refresh-token', { refreshToken });
-          if (refreshResponse.data.success) {
-            const { accessToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
-            
-            // Update tokens through auth store if available
-            if (authStore?.getState?.()?.updateTokensFromStorage) {
-              authStore.getState().updateTokensFromStorage(accessToken, newRefreshToken);
-            } else {
-              // Fallback to localStorage
-              localStorage.setItem('vidyalaya_access_token', accessToken);
-              localStorage.setItem('vidyalaya_refresh_token', newRefreshToken);
-            }
-            
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return api(originalRequest);
-          }
-        } catch (refreshError) {
-          // Refresh failed, logout user
-          if (authStore?.getState?.()?.logout) {
-            authStore.getState().logout();
-          } else {
-            // Fallback cleanup
-            localStorage.removeItem('vidyalaya_access_token');
-            localStorage.removeItem('vidyalaya_refresh_token');
-            window.location.href = '/login';
-          }
-          return Promise.reject(refreshError);
-        }
-      }
-      
-      // No refresh token, logout user
-      if (authStore?.getState?.()?.logout) {
-        authStore.getState().logout();
-      } else {
-        // Fallback cleanup
-        localStorage.removeItem('vidyalaya_access_token');
-        localStorage.removeItem('vidyalaya_refresh_token');
-        window.location.href = '/login';
-      }
+    if (error.response?.status === 401) {
+      // Token expired, logout user from both frontend and backend
+      const { logout } = useAuthStore();
+      await logout();
     }
     return Promise.reject(error);
   }
@@ -259,7 +214,7 @@ export const authAPI = {
     if (!response.data.success) {
       throw new Error(response.data.error?.message || 'Failed to fetch user data');
     }
-    return response.data;
+    return response;
   },
 
   getMySchool: async () => {

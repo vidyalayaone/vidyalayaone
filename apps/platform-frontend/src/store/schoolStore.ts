@@ -24,6 +24,7 @@ interface SchoolState {
   updateSetupProgress: (progress: Partial<SetupProgress>) => void;
   setLoading: (loading: boolean) => void;
   reset: () => void;
+  clearAll: () => void;
 }
 
 const initialSetupProgress: SetupProgress = {
@@ -82,6 +83,21 @@ export const useSchoolStore = create<SchoolState>()(
           setupProgress: initialSetupProgress,
           isLoading: false,
         }),
+        // New method to clear both state and persistence
+      clearAll: () => {
+        // Reset the state
+        set({
+          school: null,
+          classes: [],
+          totalSections: 0,
+          totalSubjects: 0,
+          setupProgress: initialSetupProgress,
+          isLoading: false,
+        });
+        
+        // Clear from localStorage
+        useSchoolStore.persist.clearStorage();
+      },
     }),
     {
       name: 'vidyalaya-school',

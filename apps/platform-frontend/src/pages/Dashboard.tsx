@@ -35,7 +35,7 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
 
-  console.log('school.isActive:', school?.isActive);
+  // console.log('school.isActive:', school?.isActive);
 
   useEffect(() => {
     const fetchSchoolData = async () => {

@@ -33,7 +33,7 @@ class EmailService {
   }
 
   async sendOTPEmail(email: string, otp: string): Promise<void> {
-    const subject = "OnlyExams - Email Verification";
+    const subject = "Vidyalayaone - Email Verification";
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>OnlyExams Email Verification</h2>

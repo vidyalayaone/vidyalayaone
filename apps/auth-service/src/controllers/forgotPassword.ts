@@ -28,7 +28,7 @@ export async function forgotPassword(req: Request, res: Response) {
     }
     
     // Send OTP to user's phone (or use email alternative)
-    if (user.phone) {
+    if (user.email) {
       await createAndSendOtpToEmail({
         userId: user.id,
         email: user.email!,

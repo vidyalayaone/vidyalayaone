@@ -36,7 +36,7 @@ class EmailService {
     const subject = "Vidyalayaone - Email Verification";
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>OnlyExams Email Verification</h2>
+        <h2>Vidyalayaone Email Verification</h2>
         <p>Your verification code is:</p>
         <div style="background: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;">
           <h1 style="color: #007bff; font-size: 32px; margin: 0;">${otp}</h1>

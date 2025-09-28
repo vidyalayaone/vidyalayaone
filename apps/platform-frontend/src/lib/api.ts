@@ -220,7 +220,9 @@ export const authAPI = {
   getMySchool: async () => {
     const response: AxiosResponse<BackendResponse<{ school: School | null }>> = await api.get('/auth/my-school');
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Failed to fetch school data');
+      if (response.status !== 404) {
+        throw new Error(response.data.error?.message || 'Failed to fetch school data');
+      }
     }
     return response.data;
   },
@@ -228,7 +230,9 @@ export const authAPI = {
   getMySchoolDetailed: async () => {
     const response: AxiosResponse<BackendResponse<DetailedSchoolData>> = await api.get('/auth/my-school-detailed');
     if (!response.data.success) {
-      throw new Error(response.data.error?.message || 'Failed to fetch detailed school data');
+      if (response.status !== 404) {
+        throw new Error(response.data.error?.message || 'Failed to fetch detailed school data');
+      }
     }
     return response.data;
   },

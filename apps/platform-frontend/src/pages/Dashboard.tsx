@@ -37,62 +37,139 @@ const Dashboard = () => {
 
   // console.log('school.isActive:', school?.isActive);
 
+  // useEffect(() => {
+  //   const fetchSchoolData = async () => {
+  //     try {
+  //       // First try to get detailed school data
+  //       try {
+  //         const response = await authAPI.getMySchoolDetailed();
+  //         setSchoolData(response.data);
+  //       } catch (detailedError: any) {
+  //         // Fallback to basic school data if detailed endpoint fails
+  //         console.warn('Detailed school data not available, falling back to basic data:', detailedError);
+  //         const response = await authAPI.getMySchool();
+  //         if (response.data?.school) {
+  //           setSchoolData({
+  //             school: response.data.school,
+  //             classes: [],
+  //             totalSections: 0,
+  //             totalSubjects: 0,
+  //             setupProgress: {
+  //               schoolCreated: true,
+  //               classesAdded: false,
+  //               sectionsAdded: false,
+  //               subjectsAdded: false,
+  //               paymentCompleted: false,
+  //             }
+  //           });
+  //         } else {
+  //           // No school found
+  //           setSchoolData({
+  //             school: null,
+  //             classes: [],
+  //             totalSections: 0,
+  //             totalSubjects: 0,
+  //             setupProgress: {
+  //               schoolCreated: false,
+  //               classesAdded: false,
+  //               sectionsAdded: false,
+  //               subjectsAdded: false,
+  //               paymentCompleted: false,
+  //             }
+  //           });
+  //         }
+  //       }
+  //     } catch (error: any) {
+  //       console.error('Error fetching school data:', error);
+  //       toast({
+  //         title: 'Error loading school data',
+  //         description: 'Please try refreshing the page',
+  //         variant: 'destructive',
+  //       });
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   fetchSchoolData();
+  // }, [setSchoolData]);
   useEffect(() => {
-    const fetchSchoolData = async () => {
+  const fetchSchoolData = async () => {
+    try {
+      // First try to get detailed school data
       try {
-        // First try to get detailed school data
-        try {
-          const response = await authAPI.getMySchoolDetailed();
-          setSchoolData(response.data);
-        } catch (detailedError: any) {
-          // Fallback to basic school data if detailed endpoint fails
-          console.warn('Detailed school data not available, falling back to basic data:', detailedError);
-          const response = await authAPI.getMySchool();
-          if (response.data?.school) {
-            setSchoolData({
-              school: response.data.school,
-              classes: [],
-              totalSections: 0,
-              totalSubjects: 0,
-              setupProgress: {
-                schoolCreated: true,
-                classesAdded: false,
-                sectionsAdded: false,
-                subjectsAdded: false,
-                paymentCompleted: false,
-              }
-            });
-          } else {
-            // No school found
-            setSchoolData({
-              school: null,
-              classes: [],
-              totalSections: 0,
-              totalSubjects: 0,
-              setupProgress: {
-                schoolCreated: false,
-                classesAdded: false,
-                sectionsAdded: false,
-                subjectsAdded: false,
-                paymentCompleted: false,
-              }
-            });
-          }
+        const response = await authAPI.getMySchoolDetailed();
+        setSchoolData(response.data);
+      } catch (detailedError: any) {
+        // Fallback to basic school data if detailed endpoint fails
+        console.warn('Detailed school data not available, falling back to basic data:', detailedError);
+        const response = await authAPI.getMySchool();
+        if (response.data?.school) {
+          setSchoolData({
+            school: response.data.school,
+            classes: [],
+            totalSections: 0,
+            totalSubjects: 0,
+            setupProgress: {
+              schoolCreated: true,
+              classesAdded: false,
+              sectionsAdded: false,
+              subjectsAdded: false,
+              paymentCompleted: false,
+            }
+          });
+        } else {
+          // No school found
+          setSchoolData({
+            school: null,
+            classes: [],
+            totalSections: 0,
+            totalSubjects: 0,
+            setupProgress: {
+              schoolCreated: false,
+              classesAdded: false,
+              sectionsAdded: false,
+              subjectsAdded: false,
+              paymentCompleted: false,
+            }
+          });
         }
-      } catch (error: any) {
-        console.error('Error fetching school data:', error);
+      }
+    } catch (error: any) {
+      console.error('Error fetching school data:', error);
+      
+      // Only show toast error if it's NOT a 404 error
+      if (error.response?.status !== 404) {
         toast({
           title: 'Error loading school data',
           description: 'Please try refreshing the page',
           variant: 'destructive',
         });
-      } finally {
-        setIsLoading(false);
+      } else {
+        // Handle 404 silently or with different logic
+        console.log('School not found (404) - this is expected for new users');
+        // Optionally set default empty state for 404
+        setSchoolData({
+          school: null,
+          classes: [],
+          totalSections: 0,
+          totalSubjects: 0,
+          setupProgress: {
+            schoolCreated: false,
+            classesAdded: false,
+            sectionsAdded: false,
+            subjectsAdded: false,
+            paymentCompleted: false,
+          }
+        });
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchSchoolData();
-  }, [setSchoolData]);
+  fetchSchoolData();
+}, [setSchoolData]);
 
   const getSetupProgress = () => {
     const steps = [

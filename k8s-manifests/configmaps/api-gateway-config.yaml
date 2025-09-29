@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: vidyalayaone-prod
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  API_PREFIX: "/api/v1"
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  AUTH_SERVICE_TIMEOUT: "30000"
+  SCHOOL_SERVICE_URL: "http://school-service:3002"
+  SCHOOL_SERVICE_TIMEOUT: "30000"
+  PROFILE_SERVICE_URL: "http://profile-service:3003"
+  PROFILE_SERVICE_TIMEOUT: "30000"
+  ATTENDANCE_SERVICE_URL: "http://attendance-service:3004"
+  ATTENDANCE_SERVICE_TIMEOUT: "30000"
+  PAYMENT_SERVICE_URL: "http://payment-service:3005"
+  PAYMENT_SERVICE_TIMEOUT: "30000"
+  CORS_ORIGIN: "http://localhost:8080,http://localhost:8081"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX: "100"
+  PROXY_TIMEOUT: "30000"
+  PROXY_RETRIES: "3"

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-frontend-config
+  namespace: vidyalayaone-prod
+data:
+  VITE_API_BASE_URL: "http://localhost:3000/api/v1"

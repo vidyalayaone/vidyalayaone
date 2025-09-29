@@ -1,0 +1,69 @@
+# ------------------------------
+# Stage 1: Builder
+# ------------------------------
+FROM node:22.16.0-alpine AS builder
+
+# Install build tools for native modules
+RUN apk add --no-cache git python3 make g++ bash
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
+
+WORKDIR /app
+
+# Copy workspace root package files first for caching
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+
+# Install all dependencies (dev + prod)
+RUN pnpm install --frozen-lockfile
+
+# Copy all packages and service code
+COPY packages/ ./packages/
+COPY apps/auth-service/ ./apps/auth-service/
+
+# Build shared packages
+RUN pnpm build:packages
+
+# Move into service folder
+WORKDIR /app/apps/auth-service
+
+# Generate Prisma client
+RUN pnpm db:generate
+
+# Build the service
+RUN pnpm build
+
+# Prune dev dependencies for production
+RUN pnpm prune --prod
+
+# ------------------------------
+# Stage 2: Production
+# ------------------------------
+FROM node:22.16.0-alpine AS prod
+
+# Set working directory
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
+
+# Copy production-ready files from builder
+COPY --from=builder /app/apps/auth-service/dist ./apps/auth-service/dist
+COPY --from=builder /app/apps/auth-service/prisma ./apps/auth-service/prisma
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY apps/auth-service/package.json ./apps/auth-service/package.json
+
+# Security: run as non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+WORKDIR /app/apps/auth-service
+
+EXPOSE 3001
+
+# Start service
+CMD ["pnpm", "start"]

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: vidyalayaone-prod
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - protocol: TCP
+      port: 80          # internal ClusterIP port used by other services
+      targetPort: 3001  # container port
+  type: ClusterIP

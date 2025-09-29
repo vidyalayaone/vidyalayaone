@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: school-service-config
+  namespace: vidyalayaone-prod
+data:
+  NODE_ENV: "production"
+  PORT: "3002"
+  API_PREFIX: "/api/v1"
+  CORS_ORIGIN: "http://localhost:8080,http://localhost:8081"
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  AUTH_SERVICE_TIMEOUT: "30000"

@@ -954,6 +954,12 @@ importers:
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
+      '@types/node':
+        specifier: ^20.4.2
+        version: 20.19.18
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
 
   packages/common-utils:
     dependencies:
@@ -967,6 +973,12 @@ importers:
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
+      '@types/node':
+        specifier: ^20.4.2
+        version: 20.19.18
+      typescript:
+        specifier: ^5.6.3
+        version: 5.8.3
 
   packages/logger: {}
 
@@ -2417,6 +2429,9 @@ packages:
 
   '@types/multer@2.0.0':
     resolution: {integrity: sha512-C3Z9v9Evij2yST3RSBktxP9STm6OdMc5uR1xF1SGr98uv8dUlAL2hqwrZ3GVB3uyMyiegnscEK6PGtYvNrjTjw==}
+
+  '@types/node@20.19.18':
+    resolution: {integrity: sha512-KeYVbfnbsBCyKG8e3gmUqAfyZNcoj/qpEbHRkQkfZdKOBrU7QQ+BsTdfqLSWX9/m1ytYreMhpKvp+EZi3UFYAg==}
 
   '@types/node@22.17.0':
     resolution: {integrity: sha512-bbAKTCqX5aNVryi7qXVMi+OkB3w/OyblodicMbvE38blyAz7GxXf6XYhklokijuPwwVg9sDLKRxt0ZHXQwZVfQ==}
@@ -6043,6 +6058,10 @@ snapshots:
   '@types/multer@2.0.0':
     dependencies:
       '@types/express': 5.0.3
+
+  '@types/node@20.19.18':
+    dependencies:
+      undici-types: 6.21.0
 
   '@types/node@22.17.0':
     dependencies:

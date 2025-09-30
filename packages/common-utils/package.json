@@ -8,13 +8,16 @@
     "build": "tsc",
     "prepublish": "pnpm build"
   },
+  "dependencies": {
+    "express": "^5.1.0",
+    "zod": "^4.0.5"
+  },
   "devDependencies": {
-    "@types/express": "^5.0.3"
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.4.2",
+    "typescript": "^5.6.3"
   },
   "peerDependencies": {
     "express": "^5.1.0"
-  },
-  "dependencies": {
-    "zod": "^4.0.5"
   }
 }

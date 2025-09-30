@@ -1,15 +1,20 @@
 {
   "name": "@vidyalayaone/common-middleware",
   "version": "1.0.0",
-  "description": "Shared utilities for vidyalayaone services",
+  "description": "Shared middleware utilities for vidyalayaone services",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "prepublish": "pnpm build"
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3"
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.4.2",
+    "typescript": "^5.6.3"
   },
   "peerDependencies": {
     "express": "^5.1.0"

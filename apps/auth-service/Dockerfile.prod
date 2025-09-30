@@ -1,69 +1,97 @@
-# ------------------------------
-# Stage 1: Builder
-# ------------------------------
-FROM node:22.16.0-alpine AS builder
+# Base image with Node.js and pnpm support
+FROM node:22-alpine AS base
 
-# Install build tools for native modules
-RUN apk add --no-cache git python3 make g++ bash
-
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
-
-WORKDIR /app
-
-# Copy workspace root package files first for caching
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
-
-# Install all dependencies (dev + prod)
-RUN pnpm install --frozen-lockfile
-
-# Copy all packages and service code
-COPY packages/ ./packages/
-COPY apps/auth-service/ ./apps/auth-service/
-
-# Build shared packages
-RUN pnpm build:packages
-
-# Move into service folder
-WORKDIR /app/apps/auth-service
-
-# Generate Prisma client
-RUN pnpm db:generate
-
-# Build the service
-RUN pnpm build
-
-# Prune dev dependencies for production
-RUN pnpm prune --prod
-
-# ------------------------------
-# Stage 2: Production
-# ------------------------------
-FROM node:22.16.0-alpine AS prod
-
-# Set working directory
-WORKDIR /app
-
-# Set production environment
+# Set pnpm environment variables
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 ENV NODE_ENV=production
 
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
+# Enable pnpm via corepack
+RUN corepack enable
 
-# Copy production-ready files from builder
-COPY --from=builder /app/apps/auth-service/dist ./apps/auth-service/dist
-COPY --from=builder /app/apps/auth-service/prisma ./apps/auth-service/prisma
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY apps/auth-service/package.json ./apps/auth-service/package.json
+# Install curl for health checks (no apk upgrade to avoid bloat)
+RUN apk add --no-cache curl
 
-# Security: run as non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup \
+  && adduser -S appuser -u 1001 -G appgroup
+
+# =============================================================================
+# Dependencies stage - install full deps for building
+# =============================================================================
+FROM base AS deps
+
+WORKDIR /app
+
+# Copy workspace configs and package manifests
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/common-middleware/package.json ./packages/common-middleware/
+COPY packages/common-utils/package.json ./packages/common-utils/
+COPY packages/logger/package.json ./packages/logger/
+COPY apps/auth-service/package.json ./apps/auth-service/
+
+# Install all deps (including dev) to allow build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# =============================================================================
+# Build stage - compile packages and service
+# =============================================================================
+FROM deps AS build
+
+WORKDIR /app
+
+# Copy source and tsconfig
+COPY packages/ ./packages/
+COPY tsconfig.base.json ./
+
+# Build shared packages
+RUN pnpm run build:packages
+
+# Copy auth-service source
+COPY apps/auth-service ./apps/auth-service
+
+# Generate prisma client & build service
+WORKDIR /app/apps/auth-service
+RUN pnpm db:generate && pnpm run build
+
+# =============================================================================
+# Prune deps for production
+# =============================================================================
+FROM build AS prune
+WORKDIR /app
+
+# Run pnpm deploy to get only prod deps for auth-service
+RUN pnpm deploy --filter=@vidyalayaone/auth-service --prod --legacy /prod/auth-service
+
+# =============================================================================
+# Production stage - minimal runtime image
+# =============================================================================
+FROM base AS production
+
+WORKDIR /prod/auth-service
+
+# Copy pruned production deps
+COPY --from=prune /prod/auth-service ./
+
+# Copy built code (dist + prisma client)
+COPY --from=build /app/apps/auth-service/dist ./dist
+COPY --from=build /app/apps/auth-service/prisma ./prisma
+COPY --from=build /app/apps/auth-service/node_modules/prisma ./node_modules/prisma
+
+
+# Fix ownership
+RUN chown -R appuser:appgroup /prod/auth-service
+
+# Switch to non-root
 USER appuser
 
-WORKDIR /app/apps/auth-service
-
+# Expose app port
 EXPOSE 3001
 
+# Healthcheck for k8s
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
 # Start service
-CMD ["pnpm", "start"]
+CMD ["node", "dist/server.js"]

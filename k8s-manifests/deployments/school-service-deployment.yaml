@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: school-service-deployment
+  namespace: vidyalayaone-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: school-service
+  template:
+    metadata:
+      labels:
+        app: school-service
+    spec:
+      containers:
+      - name: school-service
+        image: asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/school-service:latest
+        ports:
+        - containerPort: 3002
+        envFrom:
+        - configMapRef:
+            name: school-service-config
+        - secretRef:
+            name: school-service-secret

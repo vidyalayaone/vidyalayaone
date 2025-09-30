@@ -1,61 +1,97 @@
-# Stage 1: Build
-FROM node:22.16.0-alpine AS builder
+# Base image with Node.js and pnpm support
+FROM node:22-alpine AS base
 
-# Install build tools
-RUN apk add --no-cache git python3 make g++
+# Set pnpm environment variables
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=production
 
-# Enable pnpm
-RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
+# Enable pnpm via corepack
+RUN corepack enable
+
+# Install curl for health checks (no apk upgrade to avoid bloat)
+RUN apk add --no-cache curl
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup \
+  && adduser -S appuser -u 1001 -G appgroup
+
+# =============================================================================
+# Dependencies stage - install full deps for building
+# =============================================================================
+FROM base AS deps
 
 WORKDIR /app
 
-# Copy root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+# Copy workspace configs and package manifests
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/common-middleware/package.json ./packages/common-middleware/
+COPY packages/common-utils/package.json ./packages/common-utils/
+COPY packages/logger/package.json ./packages/logger/
+COPY apps/school-service/package.json ./apps/school-service/
 
-# Copy packages and service code
+# Install all deps (including dev) to allow build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# =============================================================================
+# Build stage - compile packages and service
+# =============================================================================
+FROM deps AS build
+
+WORKDIR /app
+
+# Copy source and tsconfig
 COPY packages/ ./packages/
-COPY apps/school-service/ ./apps/school-service/
-
-# Install all dependencies (dev + prod) to build
-RUN pnpm install --frozen-lockfile
+COPY tsconfig.base.json ./
 
 # Build shared packages
-RUN pnpm build:packages
+RUN pnpm run build:packages
 
+# Copy school-service source
+COPY apps/school-service ./apps/school-service
+
+# Generate prisma client & build service
 WORKDIR /app/apps/school-service
+RUN pnpm db:generate && pnpm run build
 
-# Generate Prisma client
-RUN pnpm db:generate
-
-# Build the service
-RUN pnpm build
-
-# Stage 2: Production image (minimal)
-FROM node:22.16.0-alpine AS prod
-
+# =============================================================================
+# Prune deps for production
+# =============================================================================
+FROM build AS prune
 WORKDIR /app
 
-# Install runtime-only dependencies
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
-RUN pnpm install --frozen-lockfile --prod
+# Run pnpm deploy to get only prod deps for school-service
+RUN pnpm deploy --filter=@vidyalayaone/school-service --prod --legacy /prod/school-service
 
-# Copy only built output and Prisma client from builder
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/school-service/dist ./apps/school-service/dist
-COPY --from=builder /app/apps/school-service/prisma ./apps/school-service/prisma
-COPY --from=builder /app/apps/school-service/package.json ./apps/school-service/package.json
+# =============================================================================
+# Production stage - minimal runtime image
+# =============================================================================
+FROM base AS production
 
-WORKDIR /app/apps/school-service
+WORKDIR /prod/school-service
 
-# Remove unnecessary files to shrink image
-RUN rm -rf node_modules/.cache \
-    && rm -rf dist/**/*.map \
-    && rm -rf **/__tests__ \
-    && rm -rf **/*.ts
+# Copy pruned production deps
+COPY --from=prune /prod/school-service ./
 
-# Expose port
+# Copy built code (dist + prisma client)
+COPY --from=build /app/apps/school-service/dist ./dist
+COPY --from=build /app/apps/school-service/prisma ./prisma
+COPY --from=build /app/apps/school-service/node_modules/prisma ./node_modules/prisma
+
+
+# Fix ownership
+RUN chown -R appuser:appgroup /prod/school-service
+
+# Switch to non-root
+USER appuser
+
+# Expose app port
 EXPOSE 3002
 
-# Start the service
-CMD ["pnpm", "start"]
+# Healthcheck for k8s
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:3002/health || exit 1
+
+# Start service
+CMD ["node", "dist/server.js"]

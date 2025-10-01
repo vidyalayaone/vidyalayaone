@@ -13,4 +13,4 @@ data:
   OTP_EXPIRES_IN: "10"
   MAX_LOGIN_ATTEMPTS: "5"
   LOCKOUT_TIME: "15"
-  CORS_ORIGIN: "http://vidyalayaone.com,http://*.vidyalayaone.com"
+  CORS_ORIGIN: "https://vidyalayaone.com,https://*.vidyalayaone.com"

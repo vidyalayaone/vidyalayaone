@@ -17,7 +17,7 @@ data:
   ATTENDANCE_SERVICE_TIMEOUT: "30000"
   PAYMENT_SERVICE_URL: "http://payment-service:80"
   PAYMENT_SERVICE_TIMEOUT: "30000"
-  CORS_ORIGIN: "http://vidyalayaone.com,http://*.vidyalayaone.com"
+  CORS_ORIGIN: "https://vidyalayaone.com,https://*.vidyalayaone.com"
   RATE_LIMIT_WINDOW_MS: "900000"
   RATE_LIMIT_MAX: "100"
   PROXY_TIMEOUT: "30000"

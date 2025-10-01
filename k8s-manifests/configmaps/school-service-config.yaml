@@ -7,6 +7,6 @@ data:
   NODE_ENV: "production"
   PORT: "3002"
   API_PREFIX: "/api/v1"
-  CORS_ORIGIN: "http://vidyalayaone.com,http://*.vidyalayaone.com"
+  CORS_ORIGIN: "https://vidyalayaone.com,https://*.vidyalayaone.com"
   AUTH_SERVICE_URL: "http://auth-service:80"
   AUTH_SERVICE_TIMEOUT: "30000"

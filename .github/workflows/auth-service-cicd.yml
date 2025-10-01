@@ -54,7 +54,7 @@ jobs:
 
       - name: Install kubectl
         run: |
-          sudo apt-get update && sudo apt-get install -y kubectl
+          gcloud components install kubectl gke-gcloud-auth-plugin -q
 
       - name: Get credentials for GKE cluster
         run: |

@@ -90,7 +90,7 @@ export async function login(req: Request, res: Response) {
     if (!isPasswordValid) {
       res.status(401).json({
         success: false,
-        error: { message: 'Invalid username or password' },
+        error: { message: 'Invalid password' },
         timestamp: new Date().toISOString()
       });
       return;

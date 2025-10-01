@@ -1,0 +1,57 @@
+# ===============================
+# Stage 1: Build frontend
+# ===============================
+FROM node:22-alpine AS build
+
+# Set workdir
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable
+
+# Copy workspace and root package files
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+
+# Copy individual packages' package.json for dependency resolution
+COPY packages/common-middleware/package.json ./packages/common-middleware/
+COPY packages/common-utils/package.json ./packages/common-utils/
+COPY packages/logger/package.json ./packages/logger/
+COPY apps/school-frontend/package.json ./apps/school-frontend/
+
+# Install all dependencies (including dev)
+RUN pnpm install --frozen-lockfile
+
+# Copy all source code
+COPY packages/ ./packages/
+COPY apps/school-frontend ./apps/school-frontend
+COPY tsconfig.base.json ./
+
+# Build shared packages first
+RUN pnpm run build:packages
+
+# Build frontend
+WORKDIR /app/apps/school-frontend
+RUN pnpm run build
+
+# ===============================
+# Stage 2: Production image
+# ===============================
+FROM nginx:alpine AS prod
+
+# Remove default html
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy built frontend from builder
+COPY --from=build /app/apps/school-frontend/dist /usr/share/nginx/html
+
+# Copy custom nginx config (SPA fallback + /health)
+COPY apps/school-frontend/nginx.default.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80 (default nginx port)
+EXPOSE 80
+
+# Healthcheck for Kubernetes (optional; also keep container-level HEALTHCHECK)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost/health || exit 1
+
+# nginx default CMD is fine

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: school-frontend
+  namespace: vidyalayaone-prod
+spec:
+  selector:
+    app: school-frontend
+  ports:
+    - protocol: TCP
+      port: 80          # port exposed inside cluster
+      targetPort: 80    # container port
+  type: ClusterIP      # no external LoadBalancer needed

@@ -23,27 +23,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Setup Google Cloud SDK
-      - name: Setup GCP SDK
+      # 2. Authenticate with GCP
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # 3. Setup gcloud (optional, for kubectl & CLI)
+      - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: vidyalayaone
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
 
-      # 3. Configure Docker for GCP Artifact Registry
+
+      # 4. Configure Docker for GCP Artifact Registry
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker asia-south2-docker.pkg.dev
 
-      # 4. Build Docker image
+      # 5. Build Docker image
       - name: Build Docker Image
         run: docker build -f apps/auth-service/Dockerfile.prod -t auth-service:prod .
 
-      # 5. Tag the image for Artifact Registry
+      # 6. Tag the image for Artifact Registry
       - name: Tag Docker Image
         run: docker tag auth-service:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
 
-      # 6. Push image to Artifact Registry
+      # 7. Push image to Artifact Registry
       - name: Push Docker Image
         run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
 

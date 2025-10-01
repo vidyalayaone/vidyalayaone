@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: vidyalayaone-platform-frontend-cert
+  namespace: vidyalayaone-prod
+spec:
+  domains:
+    - "vidyalayaone.com"
+    - "www.vidyalayaone.com"

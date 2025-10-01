@@ -16,6 +16,7 @@ spec:
       containers:
       - name: api-gateway
         image: asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/api-gateway:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         envFrom:
@@ -23,3 +24,24 @@ spec:
             name: api-gateway-config
         - secretRef:
             name: api-gateway-secret
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          failureThreshold: 5
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

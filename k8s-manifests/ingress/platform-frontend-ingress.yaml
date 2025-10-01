@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vidyalayaone-platform-frontend-ingress
+  namespace: vidyalayaone-prod
+  annotations:
+    networking.gke.io/managed-certificates: "vidyalayaone-platform-frontend-cert"
+    kubernetes.io/ingress.global-static-ip-name: "vidyalayaone-static-ip-2"
+spec:
+  ingressClassName: gce
+  rules:
+    - host: vidyalayaone.com
+      http:
+        paths:
+          # Frontend SPA
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: platform-frontend
+                port:
+                  number: 80
+          # API proxy to API Gateway
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 80
+    - host: www.vidyalayaone.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: platform-frontend
+                port:
+                  number: 80
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 80

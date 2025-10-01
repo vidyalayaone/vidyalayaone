@@ -1,0 +1,61 @@
+name: Auth-Service CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/auth-service/**'
+      - 'packages/**'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'tsconfig.base.json'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Setup Google Cloud SDK
+      - name: Setup GCP SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: vidyalayaone
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      # 3. Configure Docker for GCP Artifact Registry
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker asia-south2-docker.pkg.dev
+
+      # 4. Build Docker image
+      - name: Build Docker Image
+        run: docker build -f apps/auth-service/Dockerfile.prod -t auth-service:prod .
+
+      # 5. Tag the image for Artifact Registry
+      - name: Tag Docker Image
+        run: docker tag auth-service:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
+
+      # 6. Push image to Artifact Registry
+      - name: Push Docker Image
+        run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
+
+      - name: Install kubectl
+        run: |
+          sudo apt-get update && sudo apt-get install -y kubectl
+
+      - name: Get credentials for GKE cluster
+        run: |
+          gcloud container clusters get-credentials vidyalayaone-cluster --zone asia-south2-a --project vidyalayaone
+
+      - name: Rollout Deployment
+        run: |
+          kubectl rollout restart deployment/auth-service-deployment -n vidyalayaone-prod
+          kubectl rollout status deployment/auth-service-deployment -n vidyalayaone-prod

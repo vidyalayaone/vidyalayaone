@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore';
 import axios, { AxiosResponse } from 'axios';
 
 // Base API configuration
-const API_BASE_URL = 'https://vidyalayaone.com/api/v1';
+const API_BASE_URL = 'http://vidyalayaone.com/api/v1';
 // const API_BASE_URL = 'http://localhost:3000';
 
 const api = axios.create({

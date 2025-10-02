@@ -18,8 +18,24 @@ const app: Application = express();
 app.use(helmet());
 
 // CORS configuration
+// app.use(cors({
+//   origin: config.cors.origin,
+//   credentials: true,
+//   optionsSuccessStatus: 200,
+// }));
+
 app.use(cors({
-  origin: config.cors.origin,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow curl/server-side requests
+
+    const allowed = config.cors.origin.some(o => {
+      if (o instanceof RegExp) return o.test(origin);
+      return o === origin;
+    });
+
+    if (allowed) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 }));

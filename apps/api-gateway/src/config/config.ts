@@ -30,7 +30,7 @@ interface Config {
     accessSecret: string;
   };
   cors: {
-    origin: string | string[];
+    origin: (string | RegExp)[];
   };
   rateLimit: {
     windowMs: number;
@@ -41,6 +41,21 @@ interface Config {
     retries: number;
   };
 }
+
+const rawCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : ['http://localhost:3000'];
+
+const parsedCorsOrigins = rawCorsOrigins.map(origin => {
+  if (origin.includes('*')) {
+    // convert *.vidyalayaone.com → regex
+    const regex = new RegExp(
+      '^' + origin.replace(/\./g, '\\.').replace('*', '([a-z0-9-]+)') + '$'
+    );
+    return regex;
+  }
+  return origin; // exact match
+});
 
 const config: Config = {
   server: {
@@ -74,7 +89,7 @@ const config: Config = {
     accessSecret: process.env.JWT_ACCESS_SECRET || '',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+    origin: parsedCorsOrigins,
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes

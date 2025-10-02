@@ -12,7 +12,7 @@ interface Config {
     apiPrefix: string;
   };
   cors: {
-    origin: string | string[];
+    origin: (string | RegExp)[];
   };
   database: {
     url: string;
@@ -31,6 +31,21 @@ interface Config {
   };
 }
 
+const rawCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : ['http://localhost:3000'];
+
+const parsedCorsOrigins = rawCorsOrigins.map(origin => {
+  if (origin.includes('*')) {
+    // convert *.vidyalayaone.com → regex
+    const regex = new RegExp(
+      '^' + origin.replace(/\./g, '\\.').replace('*', '([a-z0-9-]+)') + '$'
+    );
+    return regex;
+  }
+  return origin; // exact match
+});
+
 const config: Config = {
   server: {
     port: parseInt(process.env.PORT || '3002', 10),
@@ -38,7 +53,7 @@ const config: Config = {
     apiPrefix: process.env.API_PREFIX || '/api/v1',
   },
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+    origin: parsedCorsOrigins,
   },
   database: {
     url: process.env.DATABASE_URL || '',

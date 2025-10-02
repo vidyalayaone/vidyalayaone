@@ -27,7 +27,7 @@ interface Config {
     lockoutTime: number;
   };
   cors: {
-    origin: string | string[];
+    origin: (string | RegExp)[];
   };
   sms: {
     fast2smsApiKey: string,
@@ -47,6 +47,21 @@ interface Config {
     smtpFrom: string;
   };
 }
+
+const rawCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : ['http://localhost:3000'];
+
+const parsedCorsOrigins = rawCorsOrigins.map(origin => {
+  if (origin.includes('*')) {
+    // convert *.vidyalayaone.com → regex
+    const regex = new RegExp(
+      '^' + origin.replace(/\./g, '\\.').replace('*', '([a-z0-9-]+)') + '$'
+    );
+    return regex;
+  }
+  return origin; // exact match
+});
 
 const config: Config = {
   server: {
@@ -70,7 +85,7 @@ const config: Config = {
     lockoutTime: parseInt(process.env.LOCKOUT_TIME || '15', 10),
   },
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+    origin: parsedCorsOrigins,
   },
   sms: {
     fast2smsApiKey: process.env.FAST2SMS_API_KEY || '',

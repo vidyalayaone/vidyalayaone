@@ -1,5 +1,6 @@
 // API Configuration
-const API_BASE_URL = 'https://vidyalayaone.com/api/v1';
+const API_BASE_URL = `${window.location.origin}/api/v1`;
+// const API_BASE_URL = 'https://vidyalayaone.com/api/v1';
 // const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 export const apiConfig = {

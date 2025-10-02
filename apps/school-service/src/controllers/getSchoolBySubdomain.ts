@@ -61,6 +61,7 @@ export async function getSchoolBySubdomain(req: Request, res: Response): Promise
           isActive: school.isActive,
           created_at: school.createdAt,
           updated_at: school.updatedAt,
+          testing: "testing"
         }
       },
       timestamp: new Date().toISOString()

@@ -90,7 +90,7 @@ const Contact = () => {
     {
       icon: Clock,
       title: "Business Hours",
-      details: "Monday - Friday: 9:00 AM - 6:00 PM IST"
+      details: "Monday - Friday: 11:00 AM - 6:00 PM IST"
     }
   ];
 

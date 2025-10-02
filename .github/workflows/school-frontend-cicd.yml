@@ -1,19 +1,18 @@
-name: Auth-Service CI/CD
+name: School-Frontend CI/CD
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'apps/auth-service/**'
+      - 'apps/school-frontend/**'
       - 'packages/**'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'
       - 'package.json'
       - 'tsconfig.base.json'
-      - 'k8s-manifests/configmaps/auth-service-config.yaml'
-      - 'k8s-manifests/deployments/auth-service-deployment.yaml'
-      - 'k8s-manifests/services/auth-service-service.yaml'
+      - 'k8s-manifests/deployments/school-frontend-deployment.yaml'
+      - 'k8s-manifests/services/school-frontend-service.yaml'
 
 jobs:
   deploy:
@@ -38,22 +37,21 @@ jobs:
         with:
           project_id: vidyalayaone
 
-
       # 4. Configure Docker for GCP Artifact Registry
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker asia-south2-docker.pkg.dev
 
       # 5. Build Docker image
       - name: Build Docker Image
-        run: docker build -f apps/auth-service/Dockerfile.prod -t auth-service:prod .
+        run: docker build -f apps/school-frontend/Dockerfile.prod -t school-frontend:prod .
 
       # 6. Tag the image for Artifact Registry
       - name: Tag Docker Image
-        run: docker tag auth-service:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
+        run: docker tag school-frontend:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/school-frontend:latest
 
       # 7. Push image to Artifact Registry
       - name: Push Docker Image
-        run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/auth-service:latest
+        run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/school-frontend:latest
 
       - name: Install kubectl
         run: |
@@ -65,5 +63,5 @@ jobs:
 
       - name: Rollout Deployment
         run: |
-          kubectl rollout restart deployment/auth-service-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/auth-service-deployment -n vidyalayaone-prod
+          kubectl rollout restart deployment/school-frontend-deployment -n vidyalayaone-prod
+          kubectl rollout status deployment/school-frontend-deployment -n vidyalayaone-prod

@@ -6,10 +6,14 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: "vidyalayaone-cluster-ip"
-    networking.gke.io/certmap: "vidyalayaone-map"
 spec:
+  tls:
+    - hosts:
+        - vidyalayaone.com
+        - www.vidyalayaone.com
+        - '*.vidyalayaone.com'
+      secretName: vidyalayaone-cert
   rules:
-    # Root domain (platform frontend + API)
     - host: vidyalayaone.com
       http:
         paths:
@@ -27,14 +31,6 @@ spec:
                 name: api-gateway
                 port:
                   number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 80
-
     - host: www.vidyalayaone.com
       http:
         paths:
@@ -52,17 +48,7 @@ spec:
                 name: api-gateway
                 port:
                   number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 80
-
-    # Wildcard school subdomains (school frontend + API gateway passthrough)
-    - host: "*.vidyalayaone.com"
-      http:
+    - http:   # catch-all for all other subdomains
         paths:
           - path: /
             pathType: Prefix
@@ -72,13 +58,6 @@ spec:
                 port:
                   number: 80
           - path: /api/
-            pathType: Prefix
-            backend:
-              service:
-                name: api-gateway
-                port:
-                  number: 80
-          - path: /api
             pathType: Prefix
             backend:
               service:

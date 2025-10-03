@@ -50,29 +50,6 @@ VidyalayaOne follows a **microservices architecture** with a monorepo managed vi
 - **Platform Frontend:** `vidyalayaone.com` — for school onboarding  
 - **School Frontend:** `*.vidyalayaone.com` — our actual product
 
-### Directory Structure
-```
-
-vidyalayaone/
-├── apps/
-│   ├── api-gateway/
-│   ├── attendance-service/
-│   ├── auth-service/
-│   ├── payment-service/
-│   ├── platform-frontend/
-│   ├── profile-service/
-│   ├── school-frontend/
-│   └── school-service/
-├── packages/
-├── setup/
-├── k8s-manifests/
-├── package.json
-├── pnpm-lock.yaml
-├── pnpm-workspace.yaml
-└── tsconfig.base.json
-
-```
-
 ### Architecture Diagram
 ```
     ┌─────────────────┐       ┌─────────────────┐
@@ -125,5 +102,6 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 

@@ -5,7 +5,7 @@ import readline from 'readline';
 
 // Configuration
 const config = {
-  baseURL: 'http://localhost:3000', // API Gateway URL
+  baseURL: 'https://vidyalayaone.com/api/v1', // API Gateway URL
   host: 'vidyalayaone.com',
   users: {
     platformAdmin: { username: 'abhijeetst22', password: 'avngr___stark' }
@@ -73,7 +73,7 @@ async function loginPlatformAdmin() {
     console.log('\n📱 Logging in abhijeetst22...');
     const adminResponse = await makeRequest(
       'POST',
-      '/api/v1/auth/login',
+      '/auth/login',
       config.users.platformAdmin
     );
     tokens.platformAdmin = adminResponse.data.accessToken;
@@ -113,7 +113,7 @@ async function seedRoles() {
   try {
     const response = await makeRequest(
       'POST',
-      '/api/v1/auth/seed-roles',
+      '/auth/seed-roles',
       rolesPayload,
       tokens.platformAdmin
     );
@@ -133,7 +133,7 @@ async function approveSchool() {
   try {
     const response = await makeRequest(
       'GET',
-      `/api/v1/school/approve/${schoolData.schoolId}`,
+      `/school/approve/${schoolData.schoolId}`,
       null,
       tokens.platformAdmin
     );

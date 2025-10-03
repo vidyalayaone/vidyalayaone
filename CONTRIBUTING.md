@@ -28,7 +28,7 @@ Before starting, please **fork the repository** and create a **feature branch**.
 
 If you are new to the project or open source in general, check issues labeled:
 
-- [`good first issue`](https://github.com/orgs/vidyalayaone/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)  
+- [`good first issue`](https://github.com/vidyalayaone/vidyalayaone/issues?q=state%3Aopen%20label%3A%22good%20first%20issue%22)  
 
 These are smaller tasks perfect for getting started.
 

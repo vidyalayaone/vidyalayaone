@@ -71,12 +71,8 @@ See [setup/SETUP.md](setup/SETUP.md) for detailed instructions on setting up Vid
 
 PRs will be reviewed by maintainers. Feedback may be requested before merging.
 
----
-
 ## Code of Conduct
 
 All contributors are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md) to maintain a welcoming and inclusive community.
-
---
 
 Thank you for helping make VidyalayaOne better! 🚀

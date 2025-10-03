@@ -4,8 +4,6 @@
 
 VidyalayaOne is an open-source, modern school management system designed for schools of all sizes. It provides a scalable, multitenant platform with role-based access control (RBAC) and a modular microservices architecture, making it easy for developers to contribute and extend its functionality.
 
----
-
 ## 🚀 Demo
 
 Try the demo school:
@@ -16,18 +14,15 @@ Try the demo school:
 
 Vidyalayaone Platform: [vidyalayaone.com](https://vidyalayaone.com)
 
----
-
 ## ✨ Current Features
 
-- Authentication system (sign up, login, password reset)  
-- User management (admins, teachers, students)  
-- Role-Based Access Control (RBAC)  
-- Subdomain provisioning for each school (multitenancy)  
-- Student and teacher data management  
-- Attendance management  
-
----
+- Authentication system  
+- User management 
+- RBAC
+- Multitenancy
+- Student and teacher data management
+- Admission management
+- Attendance management
 
 ## 🔮 Roadmap / Upcoming Features
 
@@ -36,8 +31,6 @@ Vidyalayaone Platform: [vidyalayaone.com](https://vidyalayaone.com)
 - Timetable management  
 - Grading and report cards  
 - Future expansions may include: notifications, messaging, analytics, integrations with third-party tools
-
----
 
 ## 🏗 Architecture Overview
 
@@ -51,17 +44,17 @@ VidyalayaOne follows a **microservices architecture** with a monorepo managed vi
   - `attendance-service`  
   - `school-service`  
   - `payment-service`  
-- Each service has its own **PostgreSQL database**  
-- Built with **Node.js, TypeScript, Express, Prisma, PostgreSQL**
+- Each microservice has its own **PostgreSQL database**  
+- Built with **Express**
 
 ### Frontend
-- **Platform Frontend:** `vidyalayaone.com` — for school registration and landing pages  
-- **School Frontend:** `*.vidyalayaone.com` — tenant-specific school application  
+- **Platform Frontend:** `vidyalayaone.com` — for school onboarding  
+- **School Frontend:** `*.vidyalayaone.com` — our actual product
 - Built with **React, Vite, TailwindCSS, Zustand**
 
 ### Deployment
-- Deployed on **Kubernetes** using **GCP**  
-- Fully containerized and scalable architecture
+- Deployed on **GCP** with **Kubernetes**  
+- CI/CD using  **Github Actions**
 
 ### Directory Structure
 ```
@@ -167,4 +160,5 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 

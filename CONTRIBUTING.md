@@ -1,6 +1,7 @@
 # Contributing to VidyalayaOne
 
-First off, thank you for considering contributing! 🎉  
+First off, thank you for considering contributing! 🎉 
+
 VidyalayaOne is an open-source school management system built with a **microservices architecture**. We welcome contributions of all sizes, whether it’s fixing a bug, improving documentation, or adding new features.
 
 ## Table of Contents

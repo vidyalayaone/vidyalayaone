@@ -1,8 +1,3 @@
-Got it. Let’s make a **friendly, approachable Code of Conduct** that sets expectations without feeling overly formal. This version is short, readable, and welcoming — perfect for open-source communities and new contributors.
-
----
-
-```markdown
 # VidyalayaOne Code of Conduct
 
 Welcome! 🎉  

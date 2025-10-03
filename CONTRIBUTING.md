@@ -80,20 +80,20 @@ git merge upstream/main
 ### 4. Create a New Feature Branch
 
 ```bash
-git checkout -b feature/your-feature-name
+git checkout -b your-branch-name
 ```
 
 ### 5. Make Changes & Commit
 
 ```bash
 git add .
-git commit -m "feat(auth): add password reset functionality"
+git commit -m "your-commit-message"
 ```
 
 ### 6. Push to Your Fork
 
 ```bash
-git push origin feature/your-feature-name
+git push origin your-branch-name
 ```
 
 ### 7. Open a Pull Request

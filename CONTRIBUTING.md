@@ -42,7 +42,7 @@ When reporting a bug, please include:
 4. **Screenshots / Logs:** Optional, but helpful for debugging.  
 5. **Environment:** OS, Node.js version, browser, etc.
 
-Report issues via the [GitHub Issues](https://github.com/orgs/vidyalayaone/issues) tab.
+Report issues via the [GitHub Issues](https://github.com/vidyalayaone/vidyalayaone/issues) tab.
 
 ## Code Style Guidelines
 

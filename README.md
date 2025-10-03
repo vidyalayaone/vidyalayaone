@@ -93,13 +93,14 @@ Join discussions, ask questions, and get support:
 
 ## 📱 Connect With Us
 
-- Twitter: [placeholder-link](https://twitter.com/placeholder)  
-- LinkedIn: [placeholder-link](https://linkedin.com/company/placeholder)  
-- Website: [vidyalayaone.com](https://vidyalayaone.com/contact)
+- [Twitter](https://x.com/vidyalayaone)  
+- [LinkedIn](https://linkedin.com/company/placeholder)  
+- [vidyalayaone.com](https://vidyalayaone.com/contact)
 
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 
 

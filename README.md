@@ -88,8 +88,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 
 Join discussions, ask questions, and get support:  
 
-- Discord: [placeholder-link](https://discord.gg/placeholder)  
-- GitHub Discussions: [Discussions](https://github.com/orgs/vidyalayaone/discussions)
+- [Discord](https://discord.gg/placeholder)
+- [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
 
 ## 📱 Connect With Us
 
@@ -100,6 +100,7 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 
 

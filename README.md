@@ -44,17 +44,11 @@ VidyalayaOne follows a **microservices architecture** with a monorepo managed vi
   - `attendance-service`  
   - `school-service`  
   - `payment-service`  
-- Each microservice has its own **PostgreSQL database**  
-- Built with **Express**
+- Each microservice has its own **PostgreSQL database**
 
 ### Frontend
 - **Platform Frontend:** `vidyalayaone.com` — for school onboarding  
 - **School Frontend:** `*.vidyalayaone.com` — our actual product
-- Built with **React, Vite, TailwindCSS, Zustand**
-
-### Deployment
-- Deployed on **GCP** with **Kubernetes**  
-- CI/CD using  **Github Actions**
 
 ### Directory Structure
 ```
@@ -99,64 +93,36 @@ School Service      Payment Service
 
 ```
 
----
-
 ## ⚡ Tech Stack
 
 | Layer       | Technology |
 |------------|------------|
 | Backend     | Node.js, TypeScript, Express, Prisma, PostgreSQL |
 | Frontend    | React, Vite, TailwindCSS, Zustand |
-| Deployment  | Kubernetes, GCP |
+| Deployment  | Kubernetes, GCP, Github Actions |
 | Monorepo    | pnpm workspaces |
-
----
 
 ## 📦 Getting Started
 
 Setup instructions can be found here: [setup/SETUP.md](setup/SETUP.md)
 
----
-
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to get started.  
-
-- Check out issues labeled **“good first issue”** if you’re new.  
-- Follow coding standards and commit guidelines as outlined in `CONTRIBUTING.md`.  
-
----
-
-## 🗺 Roadmap
-
-1. Fee management  
-2. Exams and grading  
-3. Timetable and scheduling  
-4. Analytics and reporting  
-5. Future integrations and advanced features  
-
----
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to get started.
 
 ## 🌐 Community & Support
 
 Join discussions, ask questions, and get support:  
 
 - Discord: [placeholder-link](https://discord.gg/placeholder)  
-- GitHub Discussions: [placeholder-link](https://github.com/placeholder)  
-
----
+- GitHub Discussions: [placeholder-link](https://github.com/placeholder)
 
 ## 📱 Connect With Us
 
 - Twitter: [placeholder-link](https://twitter.com/placeholder)  
 - LinkedIn: [placeholder-link](https://linkedin.com/company/placeholder)  
-- Website: [vidyalayaone.com](https://vidyalayaone.com)  
-
----
+- Website: [vidyalayaone.com](https://vidyalayaone.com/contact)
 
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-
-

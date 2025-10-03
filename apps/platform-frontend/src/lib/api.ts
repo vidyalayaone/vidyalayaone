@@ -2,7 +2,17 @@ import { useAuthStore } from '@/store/authStore';
 import axios, { AxiosResponse } from 'axios';
 
 // Base API configuration
-const API_BASE_URL = `${window.location.origin}/api/v1`;
+let API_BASE_URL;
+
+if (window.location.origin.includes("localhost")) {
+  API_BASE_URL = "http://localhost:3000/api/v1";
+} else {
+  API_BASE_URL = `${window.location.origin}/api/v1`;
+
+}
+
+// console.log(API_BASE_URL);
+
 // const API_BASE_URL = 'https://vidyalayaone.com/api/v1';
 // const API_BASE_URL = 'http://localhost:3000';
 

@@ -6,9 +6,10 @@ Ensure you have **docker** installed
 
 ## 1. Start PostgreSQL Container (Docker)
 
-Run the following command once to start the Postgres container:
+Run the following commands once to start the Postgres container:
 
 ```bash
+docker network create vidyalayaone-net
 docker run -d \
   --name vidyalayaone-postgres \
   --network vidyalayaone-net \

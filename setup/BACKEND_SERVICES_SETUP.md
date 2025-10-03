@@ -14,7 +14,7 @@ Make sure to **read the guidelines in `.env.example` carefully** to update varia
 
 ## 2. Generate Prisma Client
 
-Generate the Prisma client based on the service schema:
+Generate the Prisma client based on the service schema(only run this command if the service has a database):
 
 ```bash
 cd apps/<service-name>
@@ -25,7 +25,7 @@ pnpm db:generate
 
 ## 3. Run Database Migrations
 
-Apply the migrations to your database:
+Apply the migrations to your database(only run this command if the service has a database):
 
 ```bash
 cd apps/<service-name>

@@ -1,4 +1,5 @@
 # VidyalayaOne
+
 Easy-to-use school management system
 
 ## 🚀 Demo
@@ -99,6 +100,7 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 
 

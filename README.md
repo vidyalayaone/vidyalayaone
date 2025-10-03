@@ -81,8 +81,6 @@ vidyalayaone/
 
 ### Architecture Diagram
 ```
-
-```
       ┌─────────────┐
       │ Platform    │
       │ Frontend    │
@@ -91,10 +89,9 @@ vidyalayaone/
             ▼
       ┌─────────────┐
       │ API Gateway │
-      └─────┬──────┘
+      └─────┬──────-┘
 ┌───────────┼───────────┐
 ▼           ▼           ▼
-```
 
 Auth Service  User Service  Attendance Service
 ▼           ▼           ▼
@@ -160,5 +157,6 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 

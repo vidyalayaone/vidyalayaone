@@ -26,7 +26,4 @@ We want VidyalayaOne to be a friendly, inclusive, and respectful place for every
 
 If you feel uncomfortable or see someone being treated badly, reach out to us at **[team@vidyalayaone.com]**. We will handle the situation quickly and fairly.  
 
----
-
 Thanks for helping us keep VidyalayaOne welcoming and fun! 🚀
-```

@@ -1,8 +1,5 @@
 # VidyalayaOne
-
-**Easy-to-use school management system**  
-
-VidyalayaOne is an open-source, modern school management system designed for schools of all sizes. It provides a scalable, multitenant platform with role-based access control (RBAC) and a modular microservices architecture, making it easy for developers to contribute and extend its functionality.
+Easy-to-use school management system
 
 ## 🚀 Demo
 
@@ -102,6 +99,7 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 
 

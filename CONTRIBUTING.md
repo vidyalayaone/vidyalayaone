@@ -1,6 +1,6 @@
 # Contributing to VidyalayaOne
 
-First off, thank you for considering contributing! 🎉 
+First off, thank you for considering contributing! 🎉  
 
 VidyalayaOne is an open-source school management system built with a **microservices architecture**. We welcome contributions of all sizes, whether it’s fixing a bug, improving documentation, or adding new features.
 
@@ -10,7 +10,7 @@ VidyalayaOne is an open-source school management system built with a **microserv
 2. [Good First Issues](#good-first-issues)  
 3. [Reporting Bugs](#reporting-bugs)  
 4. [Setting up the Development Environment](#setting-up-the-development-environment)  
-5. [Pull Request Process](#pull-request-process)  
+5. [Git Workflow](#git-workflow)  
 6. [Code of Conduct](#code-of-conduct)  
 
 ## How to Contribute
@@ -21,7 +21,7 @@ There are several ways to contribute to VidyalayaOne:
 - **Code contributions:** Implement new features, fix bugs, or improve existing functionality.
 - **Documentation:** Improve clarity, update setup instructions, or write tutorials.
 
-Before starting, please **fork the repository** and create a **feature branch**.
+Before starting, please **fork the repository** and clone it locally.
 
 ## Good First Issues
 
@@ -47,15 +47,60 @@ Report issues via the [GitHub Issues](https://github.com/vidyalayaone/vidyalayao
 
 See [setup/SETUP.md](setup/SETUP.md) for detailed instructions on setting up VidyalayaOne locally, including:
 
-## Pull Request Process
+- Installing dependencies via `pnpm`  
+- Running backend services  
+- Running frontend applications  
+- Database setup for each microservice  
 
-1. Fork the repository and create a branch for your feature or fix.
-2. Make sure your code follows the style guidelines and passes all tests.
-3. Commit your changes with a clear message.
-4. Push your branch to your fork.
-5. Open a Pull Request (PR) to the `main` branch.
+## Git Workflow
 
-PRs will be reviewed by maintainers. Feedback may be requested before merging.
+Here are common Git commands to get you started quickly:
+
+### 1. Fork & Clone
+```bash
+# Fork the repository on GitHub first, then:
+git clone https://github.com/<your-username>/vidyalayaone.git
+cd vidyalayaone
+````
+
+### 2. Add Original Repo as Upstream
+
+```bash
+git remote add upstream https://github.com/vidyalayaone/vidyalayaone.git
+```
+
+### 3. Sync with Main
+
+```bash
+git fetch upstream
+git checkout main
+git merge upstream/main
+```
+
+### 4. Create a New Feature Branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+### 5. Make Changes & Commit
+
+```bash
+git add .
+git commit -m "feat(auth): add password reset functionality"
+```
+
+### 6. Push to Your Fork
+
+```bash
+git push origin feature/your-feature-name
+```
+
+### 7. Open a Pull Request
+
+* Go to your fork on GitHub
+* Click **Compare & Pull Request**
+* Target branch: `main` of the original repo
 
 ## Code of Conduct
 

@@ -14,8 +14,7 @@ Try the demo school:
 - **Username:** `third_user`  
 - **Password:** `password123`
 
-Platform Frontend (landing & school registration): [vidyalayaone.com](https://vidyalayaone.com)  
-School Frontend (tenant access): Subdomain e.g., `my-school.vidyalayaone.com`
+Vidyalayaone Platform: [vidyalayaone.com](https://vidyalayaone.com)
 
 ---
 
@@ -168,3 +167,4 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+

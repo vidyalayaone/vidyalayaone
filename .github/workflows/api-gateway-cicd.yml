@@ -11,9 +11,6 @@ on:
       - 'pnpm-lock.yaml'
       - 'package.json'
       - 'tsconfig.base.json'
-      - 'k8s-manifests/configmaps/api-gateway-config.yaml'
-      - 'k8s-manifests/deployments/api-gateway-deployment.yaml'
-      - 'k8s-manifests/services/api-gateway-service.yaml'
 
 jobs:
   deploy:

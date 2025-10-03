@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-service
+  namespace: vidyalayaone-prod
+spec:
+  selector:
+    app: profile-service
+  ports:
+    - protocol: TCP
+      port: 80          # internal ClusterIP port used by other services
+      targetPort: 3003  # container port
+  type: ClusterIP

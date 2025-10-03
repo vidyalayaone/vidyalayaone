@@ -1,0 +1,97 @@
+# Base image with Node.js and pnpm support
+FROM node:22-alpine AS base
+
+# Set pnpm environment variables
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=production
+
+# Enable pnpm via corepack
+RUN corepack enable
+
+# Install curl for health checks (no apk upgrade to avoid bloat)
+RUN apk add --no-cache curl
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup \
+  && adduser -S appuser -u 1001 -G appgroup
+
+# =============================================================================
+# Dependencies stage - install full deps for building
+# =============================================================================
+FROM base AS deps
+
+WORKDIR /app
+
+# Copy workspace configs and package manifests
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY packages/common-middleware/package.json ./packages/common-middleware/
+COPY packages/common-utils/package.json ./packages/common-utils/
+COPY packages/logger/package.json ./packages/logger/
+COPY apps/profile-service/package.json ./apps/profile-service/
+
+# Install all deps (including dev) to allow build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# =============================================================================
+# Build stage - compile packages and service
+# =============================================================================
+FROM deps AS build
+
+WORKDIR /app
+
+# Copy source and tsconfig
+COPY packages/ ./packages/
+COPY tsconfig.base.json ./
+
+# Build shared packages
+RUN pnpm run build:packages
+
+# Copy profile-service source
+COPY apps/profile-service ./apps/profile-service
+
+# Generate prisma client & build service
+WORKDIR /app/apps/profile-service
+RUN pnpm db:generate && pnpm run build
+
+# =============================================================================
+# Prune deps for production
+# =============================================================================
+FROM build AS prune
+WORKDIR /app
+
+# Run pnpm deploy to get only prod deps for profile-service
+RUN pnpm deploy --filter=@vidyalayaone/profile-service --prod --legacy /prod/profile-service
+
+# =============================================================================
+# Production stage - minimal runtime image
+# =============================================================================
+FROM base AS production
+
+WORKDIR /prod/profile-service
+
+# Copy pruned production deps
+COPY --from=prune /prod/profile-service ./
+
+# Copy built code (dist + prisma client)
+COPY --from=build /app/apps/profile-service/dist ./dist
+COPY --from=build /app/apps/profile-service/prisma ./prisma
+COPY --from=build /app/apps/profile-service/node_modules/prisma ./node_modules/prisma
+
+
+# Fix ownership
+RUN chown -R appuser:appgroup /prod/profile-service
+
+# Switch to non-root
+USER appuser
+
+# Expose app port
+EXPOSE 3003
+
+# Healthcheck for k8s
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:3003/health || exit 1
+
+# Start service
+CMD ["node", "dist/server.js"]

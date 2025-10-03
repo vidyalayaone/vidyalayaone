@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: profile-service-deployment
+  namespace: vidyalayaone-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: profile-service
+  template:
+    metadata:
+      labels:
+        app: profile-service
+    spec:
+      containers:
+      - name: profile-service
+        image: asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/profile-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3003
+        envFrom:
+        - configMapRef:
+            name: profile-service-config
+        - secretRef:
+            name: profile-service-secret
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          failureThreshold: 5
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

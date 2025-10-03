@@ -11,9 +11,6 @@ on:
       - 'pnpm-lock.yaml'
       - 'package.json'
       - 'tsconfig.base.json'
-      - 'k8s-manifests/configmaps/auth-service-config.yaml'
-      - 'k8s-manifests/deployments/auth-service-deployment.yaml'
-      - 'k8s-manifests/services/auth-service-service.yaml'
 
 jobs:
   deploy:

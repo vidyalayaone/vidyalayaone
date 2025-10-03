@@ -1,11 +1,11 @@
-name: Platform-Frontend CI/CD
+name: Attendance-Service CI/CD
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'apps/platform-frontend/**'
+      - 'apps/attendance-service/**'
       - 'packages/**'
       - 'pnpm-workspace.yaml'
       - 'pnpm-lock.yaml'
@@ -35,21 +35,22 @@ jobs:
         with:
           project_id: vidyalayaone
 
+
       # 4. Configure Docker for GCP Artifact Registry
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker asia-south2-docker.pkg.dev
 
       # 5. Build Docker image
       - name: Build Docker Image
-        run: docker build -f apps/platform-frontend/Dockerfile.prod -t platform-frontend:prod .
+        run: docker build -f apps/attendance-service/Dockerfile.prod -t attendance-service:prod .
 
       # 6. Tag the image for Artifact Registry
       - name: Tag Docker Image
-        run: docker tag platform-frontend:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/platform-frontend:latest
+        run: docker tag attendance-service:prod asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/attendance-service:latest
 
       # 7. Push image to Artifact Registry
       - name: Push Docker Image
-        run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/platform-frontend:latest
+        run: docker push asia-south2-docker.pkg.dev/vidyalayaone/vidyalayaone-repo/attendance-service:latest
 
       - name: Install kubectl
         run: |
@@ -61,5 +62,5 @@ jobs:
 
       - name: Rollout Deployment
         run: |
-          kubectl rollout restart deployment/platform-frontend-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/platform-frontend-deployment -n vidyalayaone-prod
+          kubectl rollout restart deployment/attendance-service-deployment -n vidyalayaone-prod
+          kubectl rollout status deployment/attendance-service-deployment -n vidyalayaone-prod

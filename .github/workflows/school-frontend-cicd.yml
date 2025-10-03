@@ -11,8 +11,6 @@ on:
       - 'pnpm-lock.yaml'
       - 'package.json'
       - 'tsconfig.base.json'
-      - 'k8s-manifests/deployments/school-frontend-deployment.yaml'
-      - 'k8s-manifests/services/school-frontend-service.yaml'
 
 jobs:
   deploy:

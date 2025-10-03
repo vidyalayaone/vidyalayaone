@@ -153,7 +153,7 @@ export async function getClassAttendanceRange(req: Request, res: Response): Prom
       success: false,
       error: { 
         message: 'Internal server error while fetching attendance range',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+        // details: process.env.NODE_ENV === 'development' ? error.message : undefined 
       },
       timestamp: new Date().toISOString()
     });

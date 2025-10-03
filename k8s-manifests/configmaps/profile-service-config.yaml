@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: profile-service-config
+  namespace: vidyalayaone-prod
+data:
+  NODE_ENV: "production"
+  PROFILE_SERVICE_PORT: "3003"
+  API_PREFIX: "/api/v1"
+  SCHOOL_SERVICE_URL: "http://school-service:80"
+  AUTH_SERVICE_URL: "http://auth-service:80"
+  CORS_ORIGIN: "https://vidyalayaone.com,https://www.vidyalayaone.com,https://*.vidyalayaone.com"

@@ -6,9 +6,9 @@ Easy-to-use school management system
 
 Try the demo school:
 
-- **URL:** [my-school.vidyalayaone.com](https://my-school.vidyalayaone.com)  
-- **Username:** `third_user`  
-- **Password:** `password123`
+- **URL:** [demo-school.vidyalayaone.com](https://demo-school.vidyalayaone.com) 
+- **Username:** `demo_user`  
+- **Password:** `demo_password`
 
 Vidyalayaone Platform: [vidyalayaone.com](https://vidyalayaone.com)
 
@@ -88,23 +88,14 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 
 Join discussions, ask questions, and get support:  
 
-- [Discord](https://discord.gg/placeholder)
 - [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
 
 ## 📱 Connect With Us
 
-- [Twitter](https://x.com/vidyalayaone)  
+- [Twitter](https://x.com/vidyalayaone)
 - [LinkedIn](https://linkedin.com/company/placeholder)  
 - [vidyalayaone.com](https://vidyalayaone.com/contact)
 
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-
-
-
-
-
-
-

@@ -9,10 +9,9 @@ VidyalayaOne is an open-source school management system built with a **microserv
 1. [How to Contribute](#how-to-contribute)  
 2. [Good First Issues](#good-first-issues)  
 3. [Reporting Bugs](#reporting-bugs)  
-4. [Code Style Guidelines](#code-style-guidelines)  
-5. [Setting up the Development Environment](#setting-up-the-development-environment)  
-6. [Pull Request Process](#pull-request-process)  
-7. [Code of Conduct](#code-of-conduct)  
+4. [Setting up the Development Environment](#setting-up-the-development-environment)  
+5. [Pull Request Process](#pull-request-process)  
+6. [Code of Conduct](#code-of-conduct)  
 
 ## How to Contribute
 
@@ -43,20 +42,6 @@ When reporting a bug, please include:
 5. **Environment:** OS, Node.js version, browser, etc.
 
 Report issues via the [GitHub Issues](https://github.com/vidyalayaone/vidyalayaone/issues) tab.
-
-## Code Style Guidelines
-
-- **Language & Frameworks:** TypeScript (backend), Node.js, Express, React (frontend)  
-- **Commit Messages:** Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:  
-```
-
-feat(auth): add password reset functionality
-fix(attendance): correct attendance calculation
-docs(readme): update setup instructions
-
-````
-- **Linting:** Run `pnpm lint` before submitting PRs.
-- **Formatting:** Use Prettier configuration provided in the repo.
 
 ## Setting up the Development Environment
 

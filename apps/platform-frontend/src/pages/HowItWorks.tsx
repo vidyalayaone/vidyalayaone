@@ -63,12 +63,14 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            How VidyalayaOne Works
+      <section className="py-32 px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <span className="text-foreground">How VidyalayaOne</span>
+            <br />
+            <span className="text-primary">Works</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
             Get your school management system up and running in just 4 simple steps. From registration to going live in under 48 hours.
           </p>
         </div>
@@ -127,7 +129,7 @@ const HowItWorks = () => {
           <p className="text-muted-foreground mb-8">
             Join hundreds of schools already using VidyalayaOne to streamline their operations.
           </p>
-          <Button asChild size="lg" className="w-full sm:w-auto">
+          <Button asChild size="lg" className="w-full sm:w-auto bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
             <Link to="/register">
               Start Your Free Trial Today
               <ArrowRight className="ml-2 h-4 w-4" />

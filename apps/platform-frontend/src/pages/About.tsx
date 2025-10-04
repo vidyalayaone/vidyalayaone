@@ -75,13 +75,15 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-            {/* Hero Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            About VidyalayaOne
+      {/* Hero Section */}
+      <section className="py-32 px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <span className="text-foreground">About</span>
+            <br />
+            <span className="text-primary">VidyalayaOne</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
             Born from the vision to revolutionize school management in India, VidyalayaOne combines cutting-edge technology 
             with deep understanding of educational needs.
           </p>

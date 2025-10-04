@@ -48,12 +48,14 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Start Your Free Trial
+      <section className="py-32 px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <span className="text-foreground">Start Your</span>
+            <br />
+            <span className="text-primary">Free Trial</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
             Experience the full power of VidyalayaOne with complete access to all features - completely free for 30 days.
           </p>
         </div>
@@ -94,7 +96,7 @@ const Pricing = () => {
                   ))}
                 </div>
                 
-                <Button asChild className="w-full" size="lg">
+                <Button asChild className="w-full bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300" size="lg">
                   <Link to="/register">Start Free Trial</Link>
                 </Button>
               </CardContent>

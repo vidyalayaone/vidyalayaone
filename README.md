@@ -93,7 +93,6 @@ Join discussions, ask questions, and get support:
 ## 📱 Connect With Us
 
 - [Twitter](https://x.com/vidyalayaone)
-- [LinkedIn](https://linkedin.com/company/placeholder)  
 - [vidyalayaone.com](https://vidyalayaone.com/contact)
 
 ## 📄 License

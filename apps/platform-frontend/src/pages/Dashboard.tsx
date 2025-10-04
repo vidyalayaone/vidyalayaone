@@ -274,7 +274,7 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <Button 
-                  className="w-full" 
+                  className="w-full bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300" 
                   variant="hero" 
                   onClick={() => navigate('/setup/school')}
                 >
@@ -582,7 +582,7 @@ const Dashboard = () => {
                   <Button 
                     size="lg" 
                     onClick={() => navigate(`${getNextAction()!.route}?schoolId=${school.id}`)}
-                    className="shrink-0"
+                    className="shrink-0 bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                   >
                     Continue Setup
                     <ArrowRight className="ml-2 h-4 w-4" />

@@ -30,24 +30,6 @@ const Footer = () => {
               </div>
               <span className="text-xl font-semibold text-foreground tracking-tight">VidyalayaOne</span>
             </Link>
-            <div className="flex space-x-4">
-              <a
-                href="https://linkedin.com/company/vidyalayaone"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-muted/50 hover:bg-primary/10 rounded-lg transition-colors duration-300"
-              >
-                <Linkedin className="h-4 w-4 text-muted-foreground hover:text-primary" />
-              </a>
-              <a
-                href="https://twitter.com/vidyalayaone"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-muted/50 hover:bg-primary/10 rounded-lg transition-colors duration-300"
-              >
-                <Twitter className="h-4 w-4 text-muted-foreground hover:text-primary" />
-              </a>
-            </div>
           </div>
 
           {/* Quick Links */}

@@ -79,11 +79,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 Join discussions, ask questions, and get support:  
 
 - [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
-
-## 📱 Connect With Us
-
-- [Twitter](https://x.com/vidyalayaone)
-- [vidyalayaone.com](https://vidyalayaone.com/contact)
+- Email: team@vidyalayaone.com
 
 ## 📄 License
 

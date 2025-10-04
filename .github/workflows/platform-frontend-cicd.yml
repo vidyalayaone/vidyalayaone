@@ -62,4 +62,3 @@ jobs:
       - name: Rollout Deployment
         run: |
           kubectl rollout restart deployment/platform-frontend-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/platform-frontend-deployment -n vidyalayaone-prod

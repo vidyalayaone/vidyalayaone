@@ -2,16 +2,6 @@
 
 Easy-to-use school management system
 
-## 🚀 Demo
-
-Try the demo school:
-
-- **URL:** [demo-school.vidyalayaone.com](https://demo-school.vidyalayaone.com) 
-- **Username:** `demo_user`  
-- **Password:** `demo_password`
-
-Vidyalayaone Platform: [vidyalayaone.com](https://vidyalayaone.com)
-
 ## ✨ Current Features
 
 - Authentication system  

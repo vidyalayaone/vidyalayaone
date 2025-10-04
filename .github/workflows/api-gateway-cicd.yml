@@ -62,4 +62,3 @@ jobs:
       - name: Rollout Deployment
         run: |
           kubectl rollout restart deployment/api-gateway-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/api-gateway-deployment -n vidyalayaone-prod

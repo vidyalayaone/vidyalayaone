@@ -63,4 +63,3 @@ jobs:
       - name: Rollout Deployment
         run: |
           kubectl rollout restart deployment/attendance-service-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/attendance-service-deployment -n vidyalayaone-prod

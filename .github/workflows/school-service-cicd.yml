@@ -62,4 +62,3 @@ jobs:
       - name: Rollout Deployment
         run: |
           kubectl rollout restart deployment/school-service-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/school-service-deployment -n vidyalayaone-prod

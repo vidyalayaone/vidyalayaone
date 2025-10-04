@@ -63,4 +63,3 @@ jobs:
       - name: Rollout Deployment
         run: |
           kubectl rollout restart deployment/auth-service-deployment -n vidyalayaone-prod
-          kubectl rollout status deployment/auth-service-deployment -n vidyalayaone-prod

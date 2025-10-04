@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { schoolAPI } from '@/lib/api';
 import { useSchoolStore } from '@/store/schoolStore';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, GraduationCap, ArrowLeft, Plus, X } from 'lucide-react';
+import { Loader2, GraduationCap, ArrowLeft, Plus, X, MapPin, Phone, User } from 'lucide-react';
 
 // Address schema for structured address validation
 const addressSchema = z.object({
@@ -213,56 +213,74 @@ const SchoolSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen overflow-hidden">
+      {/* Background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
+      
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      <div className="relative container mx-auto px-6 lg:px-8 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-12">
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="text-white hover:bg-white/10 mb-4"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted/50 mb-8"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Button>
             
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
-                <GraduationCap className="h-8 w-8 text-white" />
+            <div className="text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 backdrop-blur-sm rounded-2xl">
+                <GraduationCap className="h-10 w-10 text-primary" />
               </div>
-              <h1 className="text-3xl font-bold text-white mb-2">Create Your School Profile</h1>
-              <p className="text-white/80 max-w-2xl mx-auto">
-                Fill in the details below to set up your school on VidyalayaOne platform
-              </p>
+              
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
+                  Create Your School
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                  Fill in the details below to set up your school on VidyalayaOne platform. 
+                  All information can be updated later.
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Form */}
-          <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-large">
-            <CardHeader>
-              <CardTitle className="text-2xl">School Information</CardTitle>
-              <CardDescription>
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-large">
+            <CardHeader className="pb-8">
+              <CardTitle className="text-2xl font-bold">School Information</CardTitle>
+              <CardDescription className="text-lg">
                 Provide accurate information about your school. All fields marked with * are required.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
                   {/* Basic Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-foreground">Basic Information</h3>
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <GraduationCap className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Basic Information</h3>
+                    </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
                         control={form.control}
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>School Name *</FormLabel>
+                            <FormLabel className="text-base font-semibold">School Name *</FormLabel>
                             <FormControl>
                               <Input 
                                 placeholder="Enter your school name" 
+                                className="h-12 text-base"
                                 {...field}
                                 onChange={(e) => handleSchoolNameChange(e.target.value)}
                               />
@@ -277,14 +295,14 @@ const SchoolSetup = () => {
                         name="subdomain"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Subdomain *</FormLabel>
+                            <FormLabel className="text-base font-semibold">Subdomain *</FormLabel>
                             <FormControl>
-                              <div className="flex items-center">
-                                <Input placeholder="your-school" {...field} />
-                                <span className="ml-2 text-sm text-muted-foreground">.vidyalayaone.com</span>
+                              <div className="flex items-center gap-2">
+                                <Input placeholder="your-school" className="h-12 text-base" {...field} />
+                                <span className="text-base text-muted-foreground font-medium whitespace-nowrap">.vidyalayaone.com</span>
                               </div>
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm">
                               This will be your school's web address
                             </FormDescription>
                             <FormMessage />
@@ -297,10 +315,10 @@ const SchoolSetup = () => {
                         name="level"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>School Level *</FormLabel>
+                            <FormLabel className="text-base font-semibold">School Level *</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-12 text-base">
                                   <SelectValue placeholder="Select school level" />
                                 </SelectTrigger>
                               </FormControl>
@@ -321,9 +339,9 @@ const SchoolSetup = () => {
                         name="board"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Affiliated Board</FormLabel>
+                            <FormLabel className="text-base font-semibold">Affiliated Board</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., CBSE, ICSE, State Board" {...field} />
+                              <Input placeholder="e.g., CBSE, ICSE, State Board" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -335,11 +353,11 @@ const SchoolSetup = () => {
                         name="schoolCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>School Code</FormLabel>
+                            <FormLabel className="text-base font-semibold">School Code</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., SCH-001" {...field} />
+                              <Input placeholder="e.g., SCH-001" className="h-12 text-base" {...field} />
                             </FormControl>
-                            <FormDescription>
+                            <FormDescription className="text-sm">
                               Official school identification code
                             </FormDescription>
                             <FormMessage />
@@ -352,9 +370,9 @@ const SchoolSetup = () => {
                         name="language"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Primary Language</FormLabel>
+                            <FormLabel className="text-base font-semibold">Primary Language</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., English, Hindi" {...field} />
+                              <Input placeholder="e.g., English, Hindi" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -364,18 +382,23 @@ const SchoolSetup = () => {
                   </div>
 
                   {/* Address Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-foreground">Address Information</h3>
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <MapPin className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Address Information</h3>
+                    </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
                         control={form.control}
                         name="address.address1"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address Line 1 *</FormLabel>
+                            <FormLabel className="text-base font-semibold">Address Line 1 *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Street address, building number" {...field} />
+                              <Input placeholder="Street address, building number" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -387,9 +410,9 @@ const SchoolSetup = () => {
                         name="address.address2"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address Line 2</FormLabel>
+                            <FormLabel className="text-base font-semibold">Address Line 2</FormLabel>
                             <FormControl>
-                              <Input placeholder="Apartment, suite, floor (optional)" {...field} />
+                              <Input placeholder="Apartment, suite, floor (optional)" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -401,9 +424,9 @@ const SchoolSetup = () => {
                         name="address.locality"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Locality *</FormLabel>
+                            <FormLabel className="text-base font-semibold">Locality *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Area, neighborhood" {...field} />
+                              <Input placeholder="Area, neighborhood" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -415,9 +438,9 @@ const SchoolSetup = () => {
                         name="address.city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City *</FormLabel>
+                            <FormLabel className="text-base font-semibold">City *</FormLabel>
                             <FormControl>
-                              <Input placeholder="City name" {...field} />
+                              <Input placeholder="City name" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -429,9 +452,9 @@ const SchoolSetup = () => {
                         name="address.state"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>State *</FormLabel>
+                            <FormLabel className="text-base font-semibold">State *</FormLabel>
                             <FormControl>
-                              <Input placeholder="State name" {...field} />
+                              <Input placeholder="State name" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -443,9 +466,9 @@ const SchoolSetup = () => {
                         name="address.country"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country *</FormLabel>
+                            <FormLabel className="text-base font-semibold">Country *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Country name" {...field} />
+                              <Input placeholder="Country name" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -457,9 +480,9 @@ const SchoolSetup = () => {
                         name="address.pinCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Pin Code *</FormLabel>
+                            <FormLabel className="text-base font-semibold">Pin Code *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Pin/Zip code" {...field} />
+                              <Input placeholder="Pin/Zip code" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -471,9 +494,9 @@ const SchoolSetup = () => {
                         name="address.landmark"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Landmark</FormLabel>
+                            <FormLabel className="text-base font-semibold">Landmark</FormLabel>
                             <FormControl>
-                              <Input placeholder="Nearby landmark (optional)" {...field} />
+                              <Input placeholder="Nearby landmark (optional)" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -483,56 +506,65 @@ const SchoolSetup = () => {
                   </div>
 
                   {/* Contact Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-foreground">Contact Information</h3>
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Phone className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Contact Information</h3>
+                    </div>
                     
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
-                        <FormLabel>Phone Numbers *</FormLabel>
-                        <FormDescription className="mb-3">
+                        <FormLabel className="text-base font-semibold">Phone Numbers *</FormLabel>
+                        <FormDescription className="mb-6 text-base">
                           Add at least one phone number. You can add up to 5 phone numbers.
                         </FormDescription>
-                        {phoneNumbers.map((_, index) => (
-                          <div key={index} className="flex items-center gap-2 mb-2">
-                            <FormField
-                              control={form.control}
-                              name={`phoneNumbers.${index}`}
-                              render={({ field }) => (
-                                <FormItem className="flex-1">
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="+91 9876543210" 
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
+                        <div className="space-y-4">
+                          {phoneNumbers.map((_, index) => (
+                            <div key={index} className="flex items-center gap-4">
+                              <FormField
+                                control={form.control}
+                                name={`phoneNumbers.${index}`}
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="+91 9876543210" 
+                                        className="h-12 text-base"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              {phoneNumbers.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-12 w-12 shrink-0 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20"
+                                  onClick={() => removePhoneNumber(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               )}
-                            />
-                            {phoneNumbers.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removePhoneNumber(index)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        {phoneNumbers.length < 5 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addPhoneNumber}
-                            className="mt-2"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Phone Number
-                          </Button>
-                        )}
+                            </div>
+                          ))}
+                          {phoneNumbers.length < 5 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="lg"
+                              onClick={addPhoneNumber}
+                              className="h-12 px-6 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Phone Number
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       <FormField
@@ -540,11 +572,12 @@ const SchoolSetup = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email Address</FormLabel>
+                            <FormLabel className="text-base font-semibold">Email Address</FormLabel>
                             <FormControl>
                               <Input 
                                 type="email" 
                                 placeholder="school@example.com" 
+                                className="h-12 text-base"
                                 {...field} 
                               />
                             </FormControl>
@@ -556,18 +589,23 @@ const SchoolSetup = () => {
                   </div>
 
                   {/* Additional Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-foreground">Additional Information</h3>
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-foreground">Additional Information</h3>
+                    </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormField
                         control={form.control}
                         name="principalName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Principal Name</FormLabel>
+                            <FormLabel className="text-base font-semibold">Principal Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter principal's name" {...field} />
+                              <Input placeholder="Enter principal's name" className="h-12 text-base" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -579,11 +617,12 @@ const SchoolSetup = () => {
                         name="establishedYear"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Established Year</FormLabel>
+                            <FormLabel className="text-base font-semibold">Established Year</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 placeholder="e.g., 1995" 
+                                className="h-12 text-base"
                                 {...field}
                                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                               />
@@ -596,20 +635,23 @@ const SchoolSetup = () => {
                   </div>
 
                   {/* Submit Button */}
-                  <div className="flex justify-end pt-6">
+                  <div className="flex justify-center pt-8">
                     <Button
                       type="submit"
                       size="lg"
                       disabled={isLoading}
-                      className="min-w-[200px]"
+                      className="px-12 py-4 text-base bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 min-w-[250px]"
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                           Creating School...
                         </>
                       ) : (
-                        'Create School Profile'
+                        <>
+                          <GraduationCap className="mr-2 h-5 w-5" />
+                          Create School Profile
+                        </>
                       )}
                     </Button>
                   </div>

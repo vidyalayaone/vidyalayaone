@@ -39,11 +39,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Handle 401 unauthorized - token expired
     if (error.response?.status === 401) {
       // Token expired, logout user from both frontend and backend
       const { logout } = useAuthStore();
       await logout();
+      return Promise.reject(error);
     }
+    
+    // For other HTTP status codes, check if we have a valid backend response format
+    if (error.response?.data && typeof error.response.data === 'object' && 'success' in error.response.data) {
+      // This is a valid backend response, not a network error
+      // Return it as a successful response so our API functions can handle the success/failure logic
+      return Promise.resolve(error.response);
+    }
+    
+    // For actual network errors or malformed responses, reject as usual
     return Promise.reject(error);
   }
 );
@@ -232,9 +243,11 @@ export const authAPI = {
   getMySchool: async () => {
     const response: AxiosResponse<BackendResponse<{ school: School | null }>> = await api.get('/auth/my-school');
     if (!response.data.success) {
-      if (response.status !== 404) {
-        throw new Error(response.data.error?.message || 'Failed to fetch school data');
+      // For 404, it's expected that school might not exist
+      if (response.status === 404) {
+        return response.data; // Return the response as is for 404
       }
+      throw new Error(response.data.error?.message || 'Failed to fetch school data');
     }
     return response.data;
   },
@@ -242,9 +255,11 @@ export const authAPI = {
   getMySchoolDetailed: async () => {
     const response: AxiosResponse<BackendResponse<DetailedSchoolData>> = await api.get('/auth/my-school-detailed');
     if (!response.data.success) {
-      if (response.status !== 404) {
-        throw new Error(response.data.error?.message || 'Failed to fetch detailed school data');
+      // For 404, it's expected that school might not exist
+      if (response.status === 404) {
+        return response.data; // Return the response as is for 404
       }
+      throw new Error(response.data.error?.message || 'Failed to fetch detailed school data');
     }
     return response.data;
   },
@@ -269,74 +284,89 @@ export const authAPI = {
 // School API
 export const schoolAPI = {
   create: async (data: Omit<School, 'id' | 'isActive' | 'fullUrl' | 'createdAt' | 'updatedAt'>) => {
-    const response: AxiosResponse<{ success: boolean; data: { school: School }; message: string }> = await api.post('/school/create', data);
+    const response: AxiosResponse<BackendResponse<{ school: School }>> = await api.post('/school/create', data);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to create school');
+    }
     return response.data.data;
   },
 
   updatePlan: async (schoolId: string, planType: string) => {
-    const response: AxiosResponse<{ school: School }> = await api.patch(`/school/${schoolId}/plan`, { planType });
-    return response.data;
+    const response: AxiosResponse<BackendResponse<{ school: School }>> = await api.patch(`/school/${schoolId}/plan`, { planType });
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to update plan');
+    }
+    return response.data.data;
   },
 
   addClasses: async (data: { schoolId: string; classes: string[]; academicYear: string }) => {
-    const response: AxiosResponse<{ message: string }> = await api.post('/school/classes', data);
+    const response: AxiosResponse<BackendResponse> = await api.post('/school/classes', data);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to add classes');
+    }
     return response.data;
   },
 
   addSections: async (data: { schoolId: string; academicYear: string; sections: Array<{ className: string; sectionNames: string[] }> }) => {
-    const response: AxiosResponse<{ message: string }> = await api.post('/school/sections', data);
+    const response: AxiosResponse<BackendResponse> = await api.post('/school/sections', data);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to add sections');
+    }
     return response.data;
   },
 
   getClassesSections: async (schoolId: string, academicYear?: string) => {
     const params = academicYear ? `?academicYear=${academicYear}` : '';
-    const response: AxiosResponse<{ 
-      success: boolean; 
-      data: { 
-        school: { id: string; name: string };
-        academicYear: string;
-        classes: Array<{
+    const response: AxiosResponse<BackendResponse<{ 
+      school: { id: string; name: string };
+      academicYear: string;
+      classes: Array<{
+        id: string;
+        name: string;
+        sections: Array<{
           id: string;
           name: string;
-          sections: Array<{
-            id: string;
-            name: string;
-            createdAt: string;
-            updatedAt: string;
-          }>;
-          subjects: Array<{
-            id: string;
-            name: string;
-            code: string;
-          }>;
           createdAt: string;
           updatedAt: string;
         }>;
-        totalClasses: number;
-        totalSections: number;
-      }
-    }> = await api.get(`/school/classes-sections/${schoolId}${params}`);
-    return response.data;
-  },
-
-  getSubjects: async () => {
-    const response: AxiosResponse<{ subjects: Record<string, string[]> }> = await api.get('/school/subjects');
-    return response.data;
-  },
-
-  getGlobalSubjects: async () => {
-    const response: AxiosResponse<{ 
-      success: boolean; 
-      data: { 
         subjects: Array<{
           id: string;
           name: string;
           code: string;
-          description?: string;
         }>;
-        totalSubjects: number;
-      }
-    }> = await api.get('/school/subjects/global');
+        createdAt: string;
+        updatedAt: string;
+      }>;
+      totalClasses: number;
+      totalSections: number;
+    }>> = await api.get(`/school/classes-sections/${schoolId}${params}`);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to fetch classes and sections');
+    }
+    return response.data;
+  },
+
+  getSubjects: async () => {
+    const response: AxiosResponse<BackendResponse<{ subjects: Record<string, string[]> }>> = await api.get('/school/subjects');
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to fetch subjects');
+    }
+    return response.data;
+  },
+
+  getGlobalSubjects: async () => {
+    const response: AxiosResponse<BackendResponse<{ 
+      subjects: Array<{
+        id: string;
+        name: string;
+        code: string;
+        description?: string;
+      }>;
+      totalSubjects: number;
+    }>> = await api.get('/school/subjects/global');
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to fetch global subjects');
+    }
     return response.data;
   },
 
@@ -348,7 +378,10 @@ export const schoolAPI = {
       subjectNames: string[];
     }>;
   }) => {
-    const response: AxiosResponse<{ success: boolean; message: string }> = await api.post('/school/subjects', data);
+    const response: AxiosResponse<BackendResponse> = await api.post('/school/subjects', data);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to create class subjects');
+    }
     return response.data;
   },
 };
@@ -356,7 +389,10 @@ export const schoolAPI = {
 // Contact API
 export const contactAPI = {
   submit: async (data: { name: string; email: string; school: string; message: string }) => {
-    const response: AxiosResponse<{ message: string }> = await api.post('/contact', data);
+    const response: AxiosResponse<BackendResponse> = await api.post('/contact', data);
+    if (!response.data.success) {
+      throw new Error(response.data.error?.message || 'Failed to submit contact form');
+    }
     return response.data;
   },
 };

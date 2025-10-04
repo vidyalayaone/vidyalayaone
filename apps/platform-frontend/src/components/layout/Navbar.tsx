@@ -84,9 +84,6 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <span className="text-base text-muted-foreground font-medium">
-                  Welcome, {user?.username}
-                </span>
                 <Button asChild variant="outline" size="default" className="rounded-full border-border/50 hover:border-border text-base px-6 py-3">
                   <Link to="/dashboard">Your School</Link>
                 </Button>

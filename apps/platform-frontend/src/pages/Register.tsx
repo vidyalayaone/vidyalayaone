@@ -59,6 +59,7 @@ const Register = () => {
       // Navigate to OTP verification with username
       navigate('/verify-otp', { state: { username: data.username, type: 'registration' } });
     } catch (error: any) {
+      console.log(error);
       toast({
         title: 'Registration failed',
         description: error.message || 'An error occurred during registration',

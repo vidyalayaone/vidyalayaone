@@ -87,11 +87,10 @@ const ClassesSetup = () => {
     } catch (error: any) {
       console.error('Error creating classes:', error);
       
-      const errorMessage = error.response?.data?.error?.message || 'Failed to create classes. Please try again.';
       toast({
         variant: "destructive",
         title: "Error Creating Classes",
-        description: errorMessage,
+        description: error.message || 'Failed to create classes. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -136,145 +135,200 @@ const ClassesSetup = () => {
 
   if (!schoolId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">School ID is required to setup classes.</p>
-              <Button onClick={() => navigate('/dashboard')} variant="outline">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Go to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen overflow-hidden">
+        {/* Background with subtle gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+        
+        <div className="relative min-h-screen flex items-center justify-center p-6">
+          <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-border/50 shadow-large">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-destructive/10 backdrop-blur-sm rounded-2xl">
+                  <GraduationCap className="h-8 w-8 text-destructive" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">School ID Required</h2>
+                  <p className="text-muted-foreground mb-6">School ID is required to setup classes.</p>
+                </div>
+                <Button onClick={() => navigate('/dashboard')} variant="outline" className="h-12 px-6">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Go to Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <GraduationCap className="w-8 h-8 text-white" />
+    <div className="min-h-screen overflow-hidden">
+      {/* Background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
+      
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      <div className="relative container mx-auto px-6 lg:px-8 py-12">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-12">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted/50 mb-8"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+            
+            <div className="text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 backdrop-blur-sm rounded-2xl">
+                <GraduationCap className="h-10 w-10 text-primary" />
+              </div>
+              
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
+                  Setup Classes
+                </h1>
+              </div>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Setup Classes</h1>
-          <p className="text-gray-600">Select the classes that your school offers</p>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>School Classes Configuration</CardTitle>
-            <CardDescription>
-              Choose the classes that your school will offer for the academic year.
-              You can select multiple classes across different levels.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-
-                <FormField
-                  control={form.control}
-                  name="selectedClasses"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Select Classes</FormLabel>
-                      <div className="space-y-6">
-                        {Object.entries(classesByCategory).map(([category, classes]) => {
-                          const categoryClasses = classes.map(cls => cls.name);
-                          const selectedFromCategory = selectedClasses.filter(cls => categoryClasses.includes(cls));
-                          const allSelected = categoryClasses.length === selectedFromCategory.length;
-                          const someSelected = selectedFromCategory.length > 0;
-
-                          return (
-                            <div key={category} className="border rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <h3 className="font-semibold text-lg">{category}</h3>
-                                <Button
-                                  type="button"
-                                  variant={allSelected ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => handleSelectAll(category)}
-                                >
-                                  {allSelected ? (
-                                    <>
-                                      <CheckCircle className="w-4 h-4 mr-1" />
-                                      Deselect All
-                                    </>
-                                  ) : (
-                                    <>Select All {someSelected && `(${selectedFromCategory.length}/${categoryClasses.length})`}</>
-                                  )}
-                                </Button>
-                              </div>
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                {classes.map((cls) => (
-                                  <div key={cls.name} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      id={cls.name}
-                                      checked={selectedClasses.includes(cls.name)}
-                                      onCheckedChange={(checked) => handleClassToggle(cls.name, checked as boolean)}
-                                    />
-                                    <label
-                                      htmlFor={cls.name}
-                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                      {cls.name}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
+          {/* Form */}
+          <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-large">
+            <CardHeader className="pb-8">
+              <CardTitle className="text-2xl font-bold">School Classes Configuration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-12">
+                  {/* Classes Selection */}
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <GraduationCap className="h-5 w-5 text-primary" />
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {selectedClasses.length > 0 && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Selected Classes ({selectedClasses.length})</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedClasses.map((className) => (
-                        <span
-                          key={className}
-                          className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm"
-                        >
-                          {className}
-                        </span>
-                      ))}
+                      <h3 className="text-2xl font-bold text-foreground">Select Classes</h3>
                     </div>
-                  </div>
-                )}
 
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate('/dashboard')}
-                    disabled={isLoading}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Dashboard
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isLoading || selectedClasses.length === 0}
-                    className="flex-1"
-                  >
-                    {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Create Classes ({selectedClasses.length})
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                    <FormField
+                      control={form.control}
+                      name="selectedClasses"
+                      render={() => (
+                        <FormItem>
+                          <div className="space-y-8">
+                            {Object.entries(classesByCategory).map(([category, classes]) => {
+                              const categoryClasses = classes.map(cls => cls.name);
+                              const selectedFromCategory = selectedClasses.filter(cls => categoryClasses.includes(cls));
+                              const allSelected = categoryClasses.length === selectedFromCategory.length;
+                              const someSelected = selectedFromCategory.length > 0;
+
+                              return (
+                                <div key={category} className="border border-border/50 rounded-xl p-6 bg-card/30 backdrop-blur-sm">
+                                  <div className="flex items-center justify-between mb-6">
+                                    <h4 className="font-bold text-xl text-foreground">{category}</h4>
+                                    <Button
+                                      type="button"
+                                      variant={allSelected ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => handleSelectAll(category)}
+                                      className="h-10 px-4"
+                                    >
+                                      {allSelected ? (
+                                        <>
+                                          <CheckCircle className="w-4 h-4 mr-2" />
+                                          Deselect All
+                                        </>
+                                      ) : (
+                                        <>Select All {someSelected && `(${selectedFromCategory.length}/${categoryClasses.length})`}</>
+                                      )}
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {classes.map((cls) => (
+                                      <div key={cls.name} className="flex items-center space-x-3 p-3 rounded-lg border border-border/30 bg-background/50 hover:bg-background/80 transition-colors">
+                                        <Checkbox
+                                          id={cls.name}
+                                          checked={selectedClasses.includes(cls.name)}
+                                          onCheckedChange={(checked) => handleClassToggle(cls.name, checked as boolean)}
+                                          className="h-5 w-5"
+                                        />
+                                        <label
+                                          htmlFor={cls.name}
+                                          className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                                        >
+                                          {cls.name}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedClasses.length > 0 && (
+                      <div className="bg-primary/5 border border-primary/20 p-6 rounded-xl backdrop-blur-sm">
+                        <h4 className="font-bold text-lg text-foreground mb-4">Selected Classes ({selectedClasses.length})</h4>
+                        <div className="flex flex-wrap gap-3">
+                          {selectedClasses.map((className) => (
+                            <span
+                              key={className}
+                              className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium border border-primary/20"
+                            >
+                              {className}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-8">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => navigate('/dashboard')}
+                      disabled={isLoading}
+                      className="h-12 px-6"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Back to Dashboard
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={isLoading || selectedClasses.length === 0}
+                      className="flex-1 px-12 py-4 text-base bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 min-w-[250px]"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating Classes...
+                        </>
+                      ) : (
+                        <>
+                          <GraduationCap className="mr-2 h-5 w-5" />
+                          Create Classes ({selectedClasses.length})
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

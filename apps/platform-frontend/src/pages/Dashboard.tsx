@@ -249,40 +249,40 @@ const Dashboard = () => {
   // No school created yet
   if (!school) {
     return (
-      <div className="min-h-screen bg-gradient-hero">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl mb-6">
-              <GraduationCap className="h-10 w-10 text-white" />
+      <div className="min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background with subtle gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+        
+        <div className="relative container mx-auto px-6 lg:px-8 text-center">
+          <div className="max-w-3xl mx-auto space-y-8 fade-in">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 backdrop-blur-sm rounded-2xl mb-6">
+              <GraduationCap className="h-10 w-10 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Welcome to VidyalayaOne, {user?.username}!
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+              <span className="text-foreground">Welcome to</span>
+              <br />
+              <span className="text-primary">VidyalayaOne</span>
             </h1>
-            <p className="text-xl text-white/80 max-w-2xl mx-auto">
-              Let's get your school set up on our platform. 
+            
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
+              Hello {user?.username}! Let's get your school set up on our platform. 
               Create your school profile to begin the journey.
             </p>
-          </div>
-
-          <div className="max-w-md mx-auto">
-            <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-large">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Create Your School</CardTitle>
-                <CardDescription>
-                  Set up your school profile to get started with VidyalayaOne
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300" 
-                  variant="hero" 
-                  onClick={() => navigate('/setup/school')}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create School
-                </Button>
-              </CardContent>
-            </Card>
+            
+            <div className="pt-8">
+              <Button 
+                size="lg"
+                className="px-8 py-4 text-base bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                onClick={() => navigate('/setup/school')}
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Create Your School
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -290,15 +290,21 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen overflow-hidden">
+      {/* Background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20" />
+      
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      
+      <div className="relative container mx-auto px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-12">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-2">
               {school.name}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-xl text-muted-foreground">
               Welcome back, {user?.username}
             </p>
           </div>
@@ -306,97 +312,111 @@ const Dashboard = () => {
         </div>
 
         {/* School Information Card */}
-        <Card className="mb-8 bg-gradient-card border-0 shadow-medium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
+        <Card className="mb-12 bg-card/50 backdrop-blur-sm border-border/50 shadow-medium">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <GraduationCap className="h-6 w-6 text-primary" />
+              </div>
               School Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8">
             {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Building className="h-4 w-4 text-muted-foreground" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">School Level</p>
-                    <p className="font-medium capitalize">{school.level?.replace('_', ' ')}</p>
+                    <p className="text-sm text-muted-foreground mb-1">School Level</p>
+                    <p className="font-semibold text-lg capitalize">{school.level?.replace('_', ' ')}</p>
                   </div>
                 </div>
                 
                 {school.board && (
-                  <div className="flex items-center gap-3">
-                    <Award className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                      <Award className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Affiliated Board</p>
-                      <p className="font-medium">{school.board}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Affiliated Board</p>
+                      <p className="font-semibold text-lg">{school.board}</p>
                     </div>
                   </div>
                 )}
 
                 {school.principalName && (
-                  <div className="flex items-center gap-3">
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                      <Users className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Principal</p>
-                      <p className="font-medium">{school.principalName}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Principal</p>
+                      <p className="font-semibold text-lg">{school.principalName}</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {school.email && (
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                      <Mail className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium">{school.email}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Email</p>
+                      <p className="font-semibold text-lg">{school.email}</p>
                     </div>
                   </div>
                 )}
 
                 {school.phoneNumbers && school.phoneNumbers.length > 0 && (
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                      <Phone className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
-                      <p className="font-medium">{school.phoneNumbers[0]}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Phone</p>
+                      <p className="font-semibold text-lg">{school.phoneNumbers[0]}</p>
                     </div>
                   </div>
                 )}
 
                 {school.establishedYear && (
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                    </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Established</p>
-                      <p className="font-medium">{school.establishedYear}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Established</p>
+                      <p className="font-semibold text-lg">{school.establishedYear}</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">{classes.length}</div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="text-center p-6 bg-primary/5 rounded-xl border border-primary/10">
+                  <div className="text-3xl font-bold text-primary mb-2">{classes.length}</div>
                   <p className="text-sm text-muted-foreground">Classes</p>
                 </div>
                 
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">{totalSections}</div>
+                <div className="text-center p-6 bg-primary/5 rounded-xl border border-primary/10">
+                  <div className="text-3xl font-bold text-primary mb-2">{totalSections}</div>
                   <p className="text-sm text-muted-foreground">Sections</p>
                 </div>
                 
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">{totalSubjects}</div>
+                <div className="text-center p-6 bg-primary/5 rounded-xl border border-primary/10">
+                  <div className="text-3xl font-bold text-primary mb-2">{totalSubjects}</div>
                   <p className="text-sm text-muted-foreground">Subjects</p>
                 </div>
 
                 {school.metaData?.studentStrength && (
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary">{school.metaData.studentStrength}</div>
+                  <div className="text-center p-6 bg-primary/5 rounded-xl border border-primary/10">
+                    <div className="text-3xl font-bold text-primary mb-2">{school.metaData.studentStrength}</div>
                     <p className="text-sm text-muted-foreground">Students</p>
                   </div>
                 )}
@@ -405,11 +425,13 @@ const Dashboard = () => {
 
             {/* Address */}
             {school.address && (
-              <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+              <div className="flex items-start gap-4 pt-6 border-t border-border">
+                <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="font-medium">
+                  <p className="text-sm text-muted-foreground mb-1">Address</p>
+                  <p className="font-semibold text-lg">
                     {typeof school.address === 'object' 
                       ? `${school.address.city}, ${school.address.state}` 
                       : school.address}
@@ -420,13 +442,22 @@ const Dashboard = () => {
 
             {/* School Portal Link */}
             {school.subdomain && school.isActive && (
-              <div className="flex items-center gap-3 pt-4 border-t">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">School Portal</p>
-                  <p className="font-medium text-primary">{school.subdomain}.vidyalayaone.com</p>
+              <div className="flex items-center justify-between p-6 bg-primary/5 rounded-xl border border-primary/10">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Globe className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">School Portal</p>
+                    <p className="font-semibold text-lg text-primary">{school.subdomain}.vidyalayaone.com</p>
+                  </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => window.open(`https://${school.subdomain}.vidyalayaone.com`, '_blank')}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="hover:-translate-y-0.5 transition-all duration-300"
+                  onClick={() => window.open(`https://${school.subdomain}.vidyalayaone.com`, '_blank')}
+                >
                   Visit Portal
                 </Button>
               </div>
@@ -436,40 +467,47 @@ const Dashboard = () => {
 
         {/* Classes Overview */}
         {classes.length > 0 && (
-          <Card className="mb-8 bg-gradient-card border-0 shadow-medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
+          <Card className="mb-12 bg-card/50 backdrop-blur-sm border-border/50 shadow-medium">
+            <CardHeader className="pb-6">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
                 Classes Overview
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-lg">
                 Overview of all classes and their sections
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {classes.map((cls) => (
-                  <div key={cls.id} className="p-4 bg-background/50 rounded-lg border">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{cls.name}</h3>
-                      <Badge variant="outline">{cls.academicYear}</Badge>
+                  <div key={cls.id} className="p-6 bg-muted/30 rounded-xl border border-border/50 hover:bg-muted/50 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-xl">{cls.name}</h3>
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                        {cls.academicYear}
+                      </Badge>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
+                    <div className="space-y-3 text-base">
+                      <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Sections:</span>
-                        <span className="font-medium">{cls.sections.length}</span>
+                        <span className="font-semibold text-primary">{cls.sections.length}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Subjects:</span>
-                        <span className="font-medium">{cls.subjects.length}</span>
+                        <span className="font-semibold text-primary">{cls.subjects.length}</span>
                       </div>
                       {cls.sections.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {cls.sections.map((section) => (
-                            <Badge key={section.id} variant="secondary" className="text-xs">
-                              {section.name}
-                            </Badge>
-                          ))}
+                        <div className="pt-2">
+                          <p className="text-sm text-muted-foreground mb-2">Sections:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {cls.sections.map((section) => (
+                              <Badge key={section.id} variant="secondary" className="text-xs bg-secondary/50">
+                                {section.name}
+                              </Badge>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -481,29 +519,31 @@ const Dashboard = () => {
         )}
 
         {/* Setup Progress */}
-        <Card className="bg-gradient-card border-0 shadow-medium">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-primary" />
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-medium">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-primary" />
+              </div>
               Setup Progress
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-lg">
               Complete all steps to activate your school management system
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-lg font-semibold">Overall Progress</span>
-                  <span className="text-lg font-semibold text-primary">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xl font-bold">Overall Progress</span>
+                  <span className="text-2xl font-bold text-primary">
                     {Math.round(getSetupProgress())}%
                   </span>
                 </div>
-                <Progress value={getSetupProgress()} className="h-3 mb-4" />
+                <Progress value={getSetupProgress()} className="h-4 mb-6" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   { 
                     key: 'schoolCreated', 
@@ -536,27 +576,27 @@ const Dashboard = () => {
                   return (
                     <div 
                       key={step.key} 
-                      className={`p-4 rounded-lg border text-center transition-all ${
+                      className={`p-6 rounded-xl border text-center transition-all duration-300 ${
                         isCompleted 
-                          ? 'bg-success/10 border-success/20' 
-                          : 'bg-muted/50 border-border'
+                          ? 'bg-success/10 border-success/30 shadow-sm' 
+                          : 'bg-muted/30 border-border/50 hover:bg-muted/50'
                       }`}
                     >
-                      <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 ${
-                        isCompleted ? 'bg-success/20' : 'bg-muted'
+                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
+                        isCompleted ? 'bg-success/20' : 'bg-muted/50'
                       }`}>
                         {isCompleted ? (
-                          <CheckCircle className="h-6 w-6 text-success" />
+                          <CheckCircle className="h-8 w-8 text-success" />
                         ) : (
-                          <StepIcon className="h-6 w-6 text-muted-foreground" />
+                          <StepIcon className="h-8 w-8 text-muted-foreground" />
                         )}
                       </div>
-                      <h3 className={`font-semibold mb-1 ${
-                        isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                      <h3 className={`font-bold text-lg mb-2 ${
+                        isCompleted ? 'text-success' : 'text-muted-foreground'
                       }`}>
                         {step.label}
                       </h3>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         {step.description}
                       </p>
                     </div>
@@ -566,50 +606,50 @@ const Dashboard = () => {
 
               {/* Continue Button */}
               {getNextAction() && (
-                <div className="flex items-center justify-between p-6 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg">
+                <div className="flex items-center justify-between p-8 bg-primary/5 rounded-xl border border-primary/20 backdrop-blur-sm">
+                  <div className="flex items-center gap-6">
+                    <div className="p-4 bg-primary/10 rounded-xl">
                       {(() => {
                         const NextIcon = getNextAction()!.icon;
-                        return <NextIcon className="h-6 w-6 text-primary" />;
+                        return <NextIcon className="h-8 w-8 text-primary" />;
                       })()}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">{getNextAction()!.label}</h3>
-                      <p className="text-muted-foreground">{getNextAction()!.description}</p>
+                      <h3 className="font-bold text-2xl mb-2">{getNextAction()!.label}</h3>
+                      <p className="text-muted-foreground text-lg">{getNextAction()!.description}</p>
                     </div>
                   </div>
                   <Button 
                     size="lg" 
                     onClick={() => navigate(`${getNextAction()!.route}?schoolId=${school.id}`)}
-                    className="shrink-0 bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                    className="shrink-0 px-8 py-4 text-base bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                   >
                     Continue Setup
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               )}
 
               {/* All Setup Complete */}
               {!getNextAction() && (
-                <div className="text-center p-8 bg-success/5 rounded-lg border border-success/20">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-success/10 rounded-full mb-4">
+                <div className="text-center p-10 bg-success/5 rounded-xl border border-success/20 backdrop-blur-sm">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-success/10 rounded-full mb-6">
                     {(() => {
                       // If school is active, it means it's approved
                       if (school.isActive) {
-                        return <CheckCircle className="h-8 w-8 text-success" />;
+                        return <CheckCircle className="h-10 w-10 text-success" />;
                       }
                       
                       const approvalStatus = school.metaData?.approvalStatus || 'pending';
                       if (approvalStatus === 'approved') {
-                        return <CheckCircle className="h-8 w-8 text-success" />;
+                        return <CheckCircle className="h-10 w-10 text-success" />;
                       } else {
-                        return <Clock className="h-8 w-8 text-warning" />;
+                        return <Clock className="h-10 w-10 text-warning" />;
                       }
                     })()}
                   </div>
-                  <h3 className="text-xl font-semibold mb-2 text-success">Setup Complete!</h3>
-                  <p className="text-muted-foreground mb-4">
+                  <h3 className="text-3xl font-bold mb-4 text-success">Setup Complete!</h3>
+                  <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">
                     {(() => {
                       // If school is active, it means it's approved and ready to use
                       if (school.isActive) {
@@ -629,9 +669,10 @@ const Dashboard = () => {
                   {school.subdomain && school.isActive && (
                     <Button 
                       size="lg" 
+                      className="px-8 py-4 text-base bg-foreground hover:bg-foreground/90 text-background font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                       onClick={() => window.open(`https://${school.subdomain}.vidyalayaone.com`, '_blank')}
                     >
-                      <Shield className="mr-2 h-4 w-4" />
+                      <Shield className="mr-2 h-5 w-5" />
                       Access School Portal
                     </Button>
                   )}

@@ -29,11 +29,11 @@ const DashboardPage: React.FC = () => {
         
         let response;
         // Check permissions to determine dashboard type
-        if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_ADMIN)) {
+        if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
           response = await api.getAdminStats();
-        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_TEACHER)) {
+        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
           response = await api.getTeacherStats();
-        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_STUDENT)) {
+        } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
           response = await api.getStudentStats();
         }
 
@@ -71,11 +71,11 @@ const DashboardPage: React.FC = () => {
     }
 
     // Check permissions to determine dashboard component
-    if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_ADMIN)) {
+    if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
       return <AdminDashboard stats={stats as AdminStats} user={user} />;
-    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_TEACHER)) {
+    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
       return <TeacherDashboard stats={stats as TeacherStats} user={user} />;
-    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW_STUDENT)) {
+    } else if (canPerformAction(user, PERMISSIONS.DASHBOARD.VIEW)) {
       return <StudentDashboard stats={stats as StudentStats} user={user} />;
     }
 
@@ -88,7 +88,10 @@ const DashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout>
-      {renderDashboardContent()}
+      {/* {renderDashboardContent()} */}
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Coming Soon</p>
+      </div>
     </DashboardLayout>
   );
 };

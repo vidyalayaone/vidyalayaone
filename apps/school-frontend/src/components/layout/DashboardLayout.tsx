@@ -1,9 +1,8 @@
-// Main dashboard layout with sidebar and topbar
+// Main dashboard layout with sidebar - Clean Apple-inspired design
 
 import React from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './Sidebar';
-import Topbar from './Topbar';
 import { useUIStore } from '@/store/uiStore';
 
 interface DashboardLayoutProps {
@@ -15,18 +14,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider defaultOpen={!sidebarCollapsed}>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-neutral-50 dark:bg-neutral-950 transition-colors duration-300">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col min-w-0">
-          <Topbar />
-          
-          <main className="flex-1 overflow-auto">
-            <div className="container mx-auto p-4 lg:p-6 space-y-6">
+        {/* Main content area - full height, clean layout */}
+        <main className="flex-1 overflow-auto">
+          <div className="mx-auto max-w-7xl px-8 py-10 lg:px-12 lg:py-12">
+            <div className="space-y-8">
               {children}
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </SidebarProvider>
   );

@@ -194,6 +194,49 @@
   .shadow-primary {
     box-shadow: var(--shadow-primary);
   }
+
+  /* Apple-inspired Design Enhancements */
+  /* Refined button styles */
+  .btn-apple {
+    @apply rounded-xl backdrop-blur-sm transition-all duration-200 ease-out;
+    @apply hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply backdrop-blur-xl bg-white/80 dark:bg-neutral-900/80;
+    @apply border border-white/20 dark:border-neutral-700/50;
+  }
+
+  /* Smooth focus styles */
+  .focus-ring {
+    @apply focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Refined card styles */
+  .card-apple {
+    @apply rounded-2xl bg-white/60 dark:bg-neutral-900/60 backdrop-blur-xl;
+    @apply border border-neutral-200/60 dark:border-neutral-700/60;
+    @apply shadow-lg shadow-neutral-900/5 dark:shadow-black/20;
+  }
+
+  /* Refined scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-neutral-400/30 dark:bg-neutral-600/30 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-400/50 dark:bg-neutral-600/50;
+  }
 }
 
 @layer utilities {
@@ -211,5 +254,45 @@
   @keyframes slideDown {
     from { transform: translateY(-10px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Enhanced animation utilities */
+  .animate-gentle-bounce {
+    animation: gentleBounce 0.6s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  /* Smooth transform utilities */
+  .transform-gpu {
+    transform: translateZ(0);
+  }
+
+  @keyframes gentleBounce {
+    0%, 20%, 53%, 80%, 100% {
+      transform: translate3d(0, 0, 0);
+    }
+    40%, 43% {
+      transform: translate3d(0, -8px, 0);
+    }
+    70% {
+      transform: translate3d(0, -4px, 0);
+    }
+    90% {
+      transform: translate3d(0, -2px, 0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 }

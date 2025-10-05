@@ -64,13 +64,13 @@ export const allNavigationItems: NavigationGroup[] = [
   {
     label: 'Main',
     items: [
-      // {
-      //   path: '/dashboard', 
-      //   label: 'Dashboard', 
-      //   icon: LayoutDashboard,
-      //   description: 'Overview of school activities and statistics',
-      //   requiredPermissions: []
-      // },
+      {
+        path: '/dashboard', 
+        label: 'Dashboard', 
+        icon: LayoutDashboard,
+        description: 'Overview of school activities and statistics',
+        requiredPermissions: []
+      },
       {
         path: '/students', 
         label: 'Students', 
@@ -105,15 +105,8 @@ export const allNavigationItems: NavigationGroup[] = [
     label: 'Academic',
     items: [
       // { 
-      //   path: '/timetable', 
-      //   label: 'Timetable', 
-      //   icon: Calendar,
-      //   description: 'View and manage class schedules',
-      //   requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
-      // },
-      // { 
-      //   path: '/subjects', 
-      //   label: 'Subjects', 
+        //   path: '/subjects', 
+        //   label: 'Subjects', 
       //   icon: BookOpen,
       //   description: 'Manage curriculum subjects',
       //   requiredPermissions: [PERMISSIONS.SUBJECT.VIEW]
@@ -125,13 +118,13 @@ export const allNavigationItems: NavigationGroup[] = [
       //   description: 'Create and manage assignments',
       //   requiredPermissions: [PERMISSIONS.EXAM.CREATE] // Using exam permissions as proxy
       // },
-      // { 
-      //   path: '/grades', 
-      //   label: 'Grades', 
-      //   icon: Award,
-      //   description: 'View and manage student grades',
-      //   requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
-      // },
+      { 
+        path: '/attendance/mark', 
+        label: 'Mark Attendance', 
+        icon: CalendarCheck,
+        description: 'Take daily attendance for class sections',
+        requiredPermissions: [PERMISSIONS.ATTENDANCE.MARK]
+      },
       { 
         path: '/attendance', 
         label: 'Attendance', 
@@ -140,31 +133,38 @@ export const allNavigationItems: NavigationGroup[] = [
         requiredPermissions: [PERMISSIONS.ATTENDANCE.VIEW]
       },
       { 
-        path: '/attendance/mark', 
-        label: 'Mark Attendance', 
-        icon: CalendarCheck,
-        description: 'Take daily attendance for class sections',
-        requiredPermissions: [PERMISSIONS.ATTENDANCE.MARK]
+        path: '/timetable', 
+        label: 'Timetable', 
+        icon: Calendar,
+        description: 'View and manage class schedules',
+        requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
       },
-      // { 
-      //   path: '/exams', 
-      //   label: 'Exams', 
-      //   icon: PenTool,
-      //   description: 'Schedule and manage examinations',
-      //   requiredPermissions: [PERMISSIONS.EXAM.VIEW]
-      // }
+      { 
+        path: '/exam-schedule', 
+        label: 'Exam Schedule', 
+        icon: PenTool,
+        description: 'Schedule and manage examinations',
+        requiredPermissions: [PERMISSIONS.EXAM.SCHEDULE]
+      },
+      { 
+        path: '/grades', 
+        label: 'Grades', 
+        icon: Award,
+        description: 'View and manage student grades',
+        requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
+      },
     ]
   },
   {
     label: 'Administrative',
     items: [
-      // { 
-      //   path: '/fees', 
-      //   label: 'Fees', 
-      //   icon: IndianRupee,
-      //   description: 'Manage student fees and payments',
-      //   requiredPermissions: [PERMISSIONS.FEE.VIEW]
-      // },
+      { 
+        path: '/fees', 
+        label: 'Fees', 
+        icon: IndianRupee,
+        description: 'Manage student fees and payments',
+        requiredPermissions: [PERMISSIONS.FEE.VIEW]
+      },
       // { 
       //   path: '/library', 
       //   label: 'Library', 

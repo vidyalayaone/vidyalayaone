@@ -76,7 +76,7 @@ export const useUIStore = create<UIState>()(
       // Initial state
       sidebarOpen: true,
       sidebarCollapsed: false,
-      theme: 'light',
+      theme: 'dark',
       notifications: [],
       globalLoading: false,
       modals: {
@@ -104,21 +104,15 @@ export const useUIStore = create<UIState>()(
         set({ sidebarCollapsed: collapsed });
       },
 
-      // Theme actions
+      // Theme actions (locked to dark mode)
       setTheme: (theme: 'light' | 'dark') => {
-        set({ theme });
-        
-        // Apply theme to document
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        // Always keep dark theme
+        set({ theme: 'dark' });
+        document.documentElement.classList.add('dark');
       },
 
       toggleTheme: () => {
-        const { theme, setTheme } = get();
-        setTheme(theme === 'light' ? 'dark' : 'light');
+        // No-op - theme is locked to dark mode
       },
 
       // Notification actions
@@ -222,13 +216,8 @@ export const useUIStore = create<UIState>()(
   )
 );
 
-// Initialize theme on store creation
-const initialTheme = useUIStore.getState().theme;
-if (initialTheme === 'dark') {
-  document.documentElement.classList.add('dark');
-} else {
-  document.documentElement.classList.remove('dark');
-}
+// Initialize dark theme on store creation
+document.documentElement.classList.add('dark');
 
 // Utility functions for common UI operations
 export const uiUtils = {

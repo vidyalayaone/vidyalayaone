@@ -22,13 +22,11 @@ export const apiConfig = {
 // Token management
 export const tokenManager = {
   getAccessToken: () => localStorage.getItem('accessToken'),
-  getRefreshToken: () => localStorage.getItem('refreshToken'),
-  setTokens: (accessToken: string, refreshToken: string) => {
+  setAccessToken: (accessToken: string) => {
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
   },
   clearTokens: () => {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('refreshToken'); // Clear any existing refresh tokens for cleanup
   },
 };

@@ -11,7 +11,6 @@ import {
   ForgotPasswordRequest,
   VerifyOTPRequest,
   ResetPasswordRequest,
-  RefreshTokenRequest,
   Class,
   PaginatedResponse,
   PaginationParams,
@@ -60,7 +59,7 @@ const handleError = (error: any): APIResponse => {
   if (error.response?.data) {
     return {
       success: false,
-      message: error.response.data.message || 'An error occurred',
+      message: error.response.data.error?.message || error.response.data.message || 'An error occurred',
       errors: error.response.data.errors || [error.response.data.error || 'UNKNOWN_ERROR']
     };
   }
@@ -104,24 +103,6 @@ export const api = {
   resetPassword: async (request: ResetPasswordRequest): Promise<APIResponse> => {
     try {
       const response = await httpClient.post('/auth/reset-password', request);
-      return handleResponse(response);
-    } catch (error) {
-      return handleError(error);
-    }
-  },
-
-  // refreshToken: async (request: RefreshTokenRequest): Promise<APIResponse<{ accessToken: string, refreshToken: string }>> => {
-  //   try {
-  //     const response = await httpClient.post('/auth/refresh', request);
-  //     return handleResponse<{ accessToken: string, refreshToken: string }>(response);
-  //   } catch (error) {
-  //     return handleError(error);
-  //   }
-  // },
-
-  logout: async (refreshToken: string): Promise<APIResponse> => {
-    try {
-      const response = await httpClient.post('/auth/logout', { refreshToken });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -676,8 +657,8 @@ export const api = {
       } else {
         return {
           success: false,
-          error: { message: response.data?.error?.message || 'Failed to fetch attendance data' },
-          data: undefined
+          message: response.data?.error?.message || 'Failed to fetch attendance data',
+          errors: [response.data?.error?.message || 'FETCH_ERROR']
         };
       }
     } catch (error) {
@@ -692,8 +673,6 @@ export const {
   forgotPassword,
   verifyOTP,
   resetPassword,
-  // refreshToken,
-  logout,
   getMe,
   getSchoolBySubdomain,
   getAdminStats,

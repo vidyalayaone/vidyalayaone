@@ -59,8 +59,6 @@ export async function login(req: Request, res: Response) {
     const { username, password } = validation.data;
     const { context, schoolId } = getSchoolContext(req);
 
-    // console.log(subdomain, context);
-
     const user = await fetchUserByUsernameAndContext(res, prisma, username, context, schoolId);
     if (!user) return;
 
@@ -85,6 +83,7 @@ export async function login(req: Request, res: Response) {
         return;
       }
     }
+
     
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {

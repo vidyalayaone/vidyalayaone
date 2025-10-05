@@ -603,7 +603,6 @@ export interface APIResponse<T = any> {
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
   user: User;
   school: School;
   expiresIn: number;
@@ -627,10 +626,6 @@ export interface ResetPasswordRequest {
   resetToken: string;
   newPassword: string;
   confirmPassword: string;
-}
-
-export interface RefreshTokenRequest {
-  refreshToken: string;
 }
 
 // Student creation request interface

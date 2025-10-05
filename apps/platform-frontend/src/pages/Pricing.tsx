@@ -178,8 +178,8 @@ const Pricing = () => {
                     </li>
                   ))}
                 </ul>
-                <Button variant="outline" className="w-full">
-                  Contact Us
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/contact">Contact Us</Link>
                 </Button>
               </CardContent>
             </Card>

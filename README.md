@@ -8,17 +8,22 @@ Easy-to-use school management system
 - User management 
 - RBAC
 - Multitenancy
-- Student and teacher data management
-- Admission management
-- Attendance management
+- Student Data Management
+- Teacher Data Management
+- Admission Management
+- Attendance Management
+- Grading & Reports
+- Academic Calender
+- Time Table Management
+- Fee Management
 
-## 🔮 Roadmap / Upcoming Features
+## 🔮 Upcoming Features
 
-- Fee management  
-- Exams management  
-- Timetable management  
-- Grading and report cards  
-- Future expansions may include: notifications, messaging, analytics, integrations with third-party tools
+- Parent Portal 
+- Multi-branch Management  
+- Analytics Dashboard 
+- Mobile Apps
+- Third-party Integrations
 
 ## 🏗 Architecture Overview
 

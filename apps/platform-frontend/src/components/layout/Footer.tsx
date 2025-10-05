@@ -88,7 +88,7 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="text-muted-foreground text-sm">
                 <p className="font-medium text-foreground">VidyalayaOne Technologies</p>
-                <p>C-318, Hall 1, IIT Kanpur</p>
+                <p>Hall 1, IIT Kanpur</p>
                 <p>Kalyanpur, Kanpur, Uttar Pradesh</p>
                 <p>India – 208016</p>
               </div>

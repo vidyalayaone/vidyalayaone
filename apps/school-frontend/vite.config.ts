@@ -3,17 +3,25 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "0.0.0.0",
-    port: 8080,
-    watch: {
-      usePolling: true, // Enable polling for Docker volume mounts
-    },
-    hmr: {
-      port: 8080,
-      host: 'localhost', // HMR should use localhost for browser access
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000', // your API Gateway
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            // these values come from your .env.development
+            const context = process.env.VITE_CONTEXT || 'platform'; // 'school' or 'platform'
+            const subdomain = process.env.VITE_SUBDOMAIN || '';
+
+            proxyReq.setHeader('x-context', context);
+            if (context === 'school') {
+              proxyReq.setHeader('x-subdomain', subdomain);
+            }
+          });
+        },
+      },
     },
   },
   plugins: [

@@ -1,15 +1,11 @@
 // API Configuration
-let API_BASE_URL;
+let API_BASE_URL: string;
 
-if (window.location.origin.includes("localhost")) {
-  API_BASE_URL = "http://localhost:3000/api/v1";
+if (window.location.origin.includes('localhost')) {
+  API_BASE_URL = '/api/v1';
 } else {
   API_BASE_URL = `${window.location.origin}/api/v1`;
 }
-
-// console.log(API_BASE_URL);
-
-
 
 // const API_BASE_URL = `${window.location.origin}/api/v1`;
 // const API_BASE_URL = 'https://vidyalayaone.com/api/v1';

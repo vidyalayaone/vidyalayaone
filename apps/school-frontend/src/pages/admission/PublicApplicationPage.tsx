@@ -14,7 +14,8 @@ import {
   Phone,
   Heart,
   AlertTriangle,
-  School
+  School,
+  GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -230,41 +231,57 @@ const PublicApplicationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Dynamic animated background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-background/90" />
+      
+      {/* Animated mesh gradient */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-accent/10 animate-pulse" />
+        <div className="absolute top-1/3 right-0 w-2/3 h-2/3 bg-gradient-to-bl from-primary/5 via-transparent to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-gradient-to-tr from-accent/8 via-transparent to-transparent rounded-full blur-3xl" />
+      </div>
+      
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-primary/40 rounded-full animate-pulse delay-0" />
+        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-accent/60 rounded-full animate-pulse delay-1000" />
+        <div className="absolute bottom-1/3 left-1/4 w-1.5 h-1.5 bg-primary/30 rounded-full animate-pulse delay-2000" />
+      </div>
+      
+      <div className="relative container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Login
-            </Button>
-            <div className="flex items-center gap-3">
-              <School className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">School Admission Application</h1>
-                <p className="text-muted-foreground">Apply for admission to our school</p>
-              </div>
+        <div className="text-center space-y-4 mb-8">
+          {/* School Logo */}
+          <div className="flex justify-center">
+            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg">
+              <GraduationCap className="w-8 h-8 text-primary-foreground" />
             </div>
+          </div>
+          
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">School Admission Application</h1>
+            <p className="text-muted-foreground">Apply for admission to our school</p>
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-4xl mx-auto">
             {/* Basic Information Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Basic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <div className="relative">
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-muted/10 to-muted/10 rounded-3xl blur-xl transform rotate-1" />
+              
+              <Card className="relative bg-gradient-to-br from-card/40 via-card/60 to-card/40 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+                <div className="relative bg-gradient-to-r from-muted/5 to-muted/5 border-b border-white/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <User className="w-5 h-5" />
+                      Basic Information
+                    </CardTitle>
+                  </CardHeader>
+                </div>
+                <CardContent className="space-y-6 p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
@@ -396,6 +413,7 @@ const PublicApplicationPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+            </div>
 
             {/* Contact Information Section */}
             <Card>
@@ -679,30 +697,38 @@ const PublicApplicationPage: React.FC = () => {
 
             {/* Submit Button */}
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={handleBack}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleBack}
+                className="h-12 px-6 text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted/20 rounded-2xl transition-all duration-300"
+              >
+                <ArrowLeft className="mr-2 h-5 w-5" />
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                className="relative h-12 px-6 text-base font-semibold bg-foreground hover:bg-foreground/90 text-background rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
                 onClick={() => {
                   console.log('Submit button clicked');
                   console.log('Form errors:', form.formState.errors);
                   console.log('Form values:', form.getValues());
                 }}
               >
-                {isSubmitting ? (
-                  <>
-                    <Save className="w-4 h-4 mr-2 animate-pulse" />
-                    Submitting Application...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Submit Application
-                  </>
-                )}
+                <span className="relative flex items-center justify-center gap-3">
+                  {isSubmitting ? (
+                    <>
+                      <Save className="w-4 h-4 animate-pulse" />
+                      Submitting Application...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Submit Application
+                    </>
+                  )}
+                </span>
               </Button>
             </div>
           </form>
@@ -722,7 +748,7 @@ const PublicApplicationPage: React.FC = () => {
             <AlertDialogFooter className="justify-center">
               <AlertDialogAction 
                 onClick={handleSuccessDialogClose}
-                className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                className="relative h-12 px-6 text-base font-semibold bg-foreground hover:bg-foreground/90 text-background rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 OK
               </AlertDialogAction>

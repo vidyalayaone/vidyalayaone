@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Configuration
 const config = {
@@ -91,8 +94,8 @@ async function createSchool() {
   console.log('\n🏫 === STEP 2: CREATE SCHOOL ===');
   
   const schoolPayload = {
-    name: "Sunshine Public School",
-    subdomain: "localhost",
+    name: "Sunshine Public School 2",
+    subdomain: process.env.VITE_SUBDOMAIN || 'demo-school',
     address: {
       address1: "123 Education Street",
       address2: "Near City Center",
@@ -105,7 +108,7 @@ async function createSchool() {
     },
     level: "mixed",
     board: "CBSE",
-    schoolCode: "SPS001",
+    schoolCode: "SPS003",
     phoneNumbers: ["+919876543210", "+918765432109"],
     email: "principal@sunshinesch.edu",
     principalName: "Dr. Rajesh Kumar",
@@ -410,7 +413,7 @@ async function createTeachers() {
         '/api/v1/profile/teachers',
         teacherPayload,
         tokens.platformAdmin,
-        { 'Host': 'localhost.vidyalayaone.com', 'x-context': 'school', 'x-school-id': schoolData.schoolId }
+        { 'x-context': 'school', 'x-subdomain': process.env.VITE_SUBDOMAIN  }
       );
       createdTeachers.push(res.data.teacher || res.data);
       console.log(`✅ Created teacher ${firstName} ${lastName} (employeeId=${employeeId})`);
@@ -487,12 +490,15 @@ async function createStudents() {
     };
 
     try {
+              // console.log(schoolData.subdomain);
+
       const res = await makeRequest(
         'POST',
         '/api/v1/profile/students',
         studentPayload,
         tokens.platformAdmin,
-        { 'Host': 'localhost.vidyalayaone.com', 'x-context': 'school', 'x-school-id': schoolData.schoolId }
+        { 'x-context': 'school', 'x-subdomain': process.env.VITE_SUBDOMAIN }
+        // { 'Host': 'localhost.vidyalayaone.com', 'x-context': 'school', 'x-school-id': schoolData.schoolId }
       );
       createdStudents.push(res.data.student || res.data);
       console.log(`✅ Created student ${firstName} ${lastName} (admission=${admissionNumber})`);

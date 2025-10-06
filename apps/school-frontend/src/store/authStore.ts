@@ -312,7 +312,18 @@ export const useAuthStore = create<AuthState>()(
     // Fetch school data
     fetchSchool: async (): Promise<void> => {
       try {
-        const subdomain = window.location.hostname.split('.')[0] || 'localhost';        
+        let subdomain: string;
+        // console.log(import.meta.env.VITE_NODE_ENV);
+        
+        if(import.meta.env.VITE_NODE_ENV==='development'){
+          subdomain = import.meta.env.VITE_SUBDOMAIN || '';
+        }
+        else{
+          subdomain = window.location.hostname.split('.')[0] || '';
+        }
+        // const subdomain = window.location.hostname.split('.')[0] || import.meta.env.VITE_SUBDOMAIN || '';       
+        
+        // console.log('Resolving school for ', subdomain);
         
         const response = await api.getSchoolBySubdomain(subdomain);
         
@@ -332,6 +343,7 @@ export const useAuthStore = create<AuthState>()(
     // Initialize auth state from storage
     initialize: async (): Promise<void> => {
       await get().fetchSchool();
+      console.log('isInitializing auth state...');
 
       // Check if access token exists
       const accessToken = tokenManager.getAccessToken();

@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {
             // these values come from your .env.development
-            const context = env.VITE_CONTEXT || 'platform'; // 'school' or 'platform'
+            const context = 'school'; //
             const subdomain = env.VITE_SUBDOMAIN || '';
 
             proxyReq.setHeader('x-context', context);

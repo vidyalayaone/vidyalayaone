@@ -23,6 +23,10 @@ There are several ways to contribute to VidyalayaOne:
 
 Before starting, please **fork the repository** and clone it locally.
 
+If you have questions, need guidance, or want to discuss contribution ideas, feel free to join our contributor chat:
+
+👉 [Join the Telegram Group](https://t.me/+nVYA-DsHWwNkMGE9)
+
 ## Good First Issues
 
 If you are new to the project or open source in general, check issues labeled:

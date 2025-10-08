@@ -90,7 +90,31 @@ Join discussions, ask questions, and get support:
 - [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
 - Email: team@vidyalayaone.com
 
+### Contributors
+
+<div align="left">
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/SuyashPant04">
+          <img src="https://github.com/SuyashPant04.png" width="80px;"/>
+          <br />
+          <sub><b>@SuyashPant04</b></sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/adityarepos">
+          <img src="https://github.com/adityarepos.png" width="80px;"/>
+          <br />
+          <sub><b>@adityarepos</b></sub>
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
+
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 

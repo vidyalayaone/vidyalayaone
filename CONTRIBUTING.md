@@ -4,6 +4,20 @@ First off, thank you for considering contributing! 🎉
 
 VidyalayaOne is an open-source school management system built with a **microservices architecture**. We welcome contributions of all sizes, whether it’s fixing a bug, improving documentation, or adding new features.
 
+## Why Contribute
+
+VidyalayaOne aims to make school management simple, scalable, and accessible.  
+Your contribution — whether a bug fix, new feature, or doc update — helps us get closer to a system that **will be used by real schools**.
+
+All contributors **will be acknowledged** in the [README](./README.md) once their work is merged.
+
+This project is great if you:
+- Want to move beyond toy projects and work on something real.  
+- Like a **moderate challenge** — not too complex, not too basic.  
+- Want hands-on experience with **frontend, backend, DevOps, and microservices**.  
+
+Every contribution counts. Join in and help shape VidyalayaOne.
+
 ## Table of Contents
 
 1. [How to Contribute](#how-to-contribute)  

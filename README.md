@@ -88,7 +88,7 @@ If you have any questions, need setup help, or want to discuss contribution idea
 Join discussions, ask questions, and get support:  
 
 - [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
-- Email: team@vidyalayaone.com
+- [team@vidyalayaone.com](team@vidyalayaone.com)
 
 ### Contributors
 
@@ -116,5 +116,6 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 

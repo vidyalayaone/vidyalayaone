@@ -79,7 +79,7 @@ export async function createUserForTeacher(req: Request, res: Response) {
         roleId: role.id,
         isActive: true,
         isPhoneVerified: false,
-        isEmailVerified: false,
+        isEmailVerified: true,
       },
       select: {
         id: true,

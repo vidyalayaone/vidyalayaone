@@ -83,13 +83,6 @@ If you have any questions, need setup help, or want to discuss contribution idea
 
 👉 [Join the Telegram Group](https://t.me/+nVYA-DsHWwNkMGE9)
 
-## 🌐 Community & Support
-
-Join discussions, ask questions, and get support:  
-
-- [GitHub Discussions](https://github.com/orgs/vidyalayaone/discussions)
-- [team@vidyalayaone.com](team@vidyalayaone.com)
-
 ### Contributors
 
 <div align="left">
@@ -116,6 +109,7 @@ Join discussions, ask questions, and get support:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 
 
 

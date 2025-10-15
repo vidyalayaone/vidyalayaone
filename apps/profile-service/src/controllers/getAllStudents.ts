@@ -160,6 +160,7 @@ export async function getAllStudents(req: Request, res: Response) {
         firstName: true,
         lastName: true,
         dateOfBirth: true,
+        gender: true,
         profilePhoto: true,
         admissionDate: true,
         enrollments: {
@@ -282,6 +283,8 @@ export async function getAllStudents(req: Request, res: Response) {
         admissionNumber: student.admissionNumber,
         firstName: student.firstName,
         lastName: student.lastName,
+        gender: student.gender,
+        dateOfBirth: student.dateOfBirth,
         profilePhoto: student.profilePhoto,
         admissionDate: student.admissionDate,
         isactive: true,

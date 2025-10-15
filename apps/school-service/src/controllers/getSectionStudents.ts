@@ -72,7 +72,8 @@ export async function getSectionStudents(req: Request, res: Response): Promise<v
           params: {
             schoolId: schoolId,
             classId: classId,
-            sectionId: sectionId
+            sectionId: sectionId,
+            academicYear: section.class.academicYear
           },
           headers: {
             'Authorization': req.headers.authorization,

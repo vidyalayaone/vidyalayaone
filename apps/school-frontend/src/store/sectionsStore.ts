@@ -40,7 +40,7 @@ export interface Student {
   email?: string;
   dateOfBirth?: string;
   gender?: string;
-  profileImage?: string;
+  profilePhoto?: string;
   // Add more student fields as needed
 }
 

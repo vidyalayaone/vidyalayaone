@@ -188,6 +188,14 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
 
         createdUserId = userCreationResult.data.user.id;
         userId = createdUserId;
+          // Send credentials email to student after user creation
+          try {
+            const { sendStudentCredentialsEmail } = require('../services/studentCredentialsEmail');
+            await sendStudentCredentialsEmail(email, username, password);
+          } catch (emailError) {
+            console.error('Failed to send student credentials email:', emailError);
+            // Do not fail the request if email sending fails
+          }
       }
 
       // Step 2: Update student and create enrollment in a transaction

@@ -79,7 +79,9 @@ export async function createUserForStudent(req: Request, res: Response) {
         roleId: role.id,
         isActive: true,
         isPhoneVerified: false,
-        isEmailVerified: false,
+        // Credentials are sent to the student immediately after account creation.
+        // If email verification becomes mandatory in the future, change this to false and implement the OTP flow.
+        isEmailVerified: true, 
       },
       select: {
         id: true,

@@ -296,6 +296,17 @@ export const createStudent = async (req: Request, res: Response) => {
         },
       });
 
+        // Send credentials email to student
+        try {
+          const { sendStudentCredentialsEmail } = require('../services/studentCredentialsEmail');
+          if (email) {
+            await sendStudentCredentialsEmail(email, username, password);
+          }
+        } catch (emailError) {
+          console.error('Failed to send student credentials email:', emailError);
+          // Do not fail the request if email sending fails
+        }
+
       res.status(201).json({
         success: true,
         data: {

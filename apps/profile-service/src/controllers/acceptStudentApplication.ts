@@ -3,7 +3,7 @@ import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 import { acceptStudentApplicationSchema } from '../validations/validationSchemas';
-import { authService } from '../services/authService';
+import { authService, sendStudentCredentialsEmail } from '../services/authService';
 
 const { prisma } = DatabaseService;
 
@@ -188,6 +188,13 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
 
         createdUserId = userCreationResult.data.user.id;
         userId = createdUserId;
+          // Send credentials email to student after user creation
+          try {
+            await sendStudentCredentialsEmail(email, username, password);
+          } catch (emailError) {
+            console.error('Failed to send student credentials email:', emailError);
+            // Do not fail the request if email sending fails
+          }
       }
 
       // Step 2: Update student and create enrollment in a transaction

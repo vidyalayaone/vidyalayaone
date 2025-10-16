@@ -3,7 +3,7 @@ import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 import { acceptStudentApplicationSchema } from '../validations/validationSchemas';
-import { authService } from '../services/authService';
+import { authService, sendStudentCredentialsEmail } from '../services/authService';
 
 const { prisma } = DatabaseService;
 
@@ -190,7 +190,6 @@ export const acceptStudentApplication = async (req: Request, res: Response) => {
         userId = createdUserId;
           // Send credentials email to student after user creation
           try {
-            const { sendStudentCredentialsEmail } = require('../services/studentCredentialsEmail');
             await sendStudentCredentialsEmail(email, username, password);
           } catch (emailError) {
             console.error('Failed to send student credentials email:', emailError);

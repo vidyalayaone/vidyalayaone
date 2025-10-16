@@ -3,7 +3,8 @@ import DatabaseService from '../services/database';
 import { getSchoolContext, getUser } from '@vidyalayaone/common-utils';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 import { acceptStudentApplicationSchema } from '../validations/validationSchemas';
-import { authService, sendStudentCredentialsEmail } from '../services/authService';
+import { authService } from '../services/authService';
+import { sendStudentCredentialsEmail } from '../services/studentCredentialsEmail';
 
 const { prisma } = DatabaseService;
 

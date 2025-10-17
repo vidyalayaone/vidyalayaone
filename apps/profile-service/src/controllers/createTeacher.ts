@@ -4,6 +4,7 @@ import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-u
 import { createTeacherSchema } from '../validations/validationSchemas';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 import { authService } from '../services/authService';
+import { sendTeacherCredentialsEmail } from '../services/teacherCredentialsEmail';
 
 const { prisma } = DatabaseService;
 
@@ -164,6 +165,16 @@ export const createTeacher = async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Send credentials email to teacher
+    try {
+      if (email) {
+        await sendTeacherCredentialsEmail(email, username, temporaryPassword);
+      }
+    } catch (emailError) {
+      console.error('Failed to send teacher credentials email:', emailError);
+      // Do not fail the request if email sending fails
+    }
 
     // Prepare response data
     const responseData = {

@@ -102,6 +102,13 @@ If you have any questions, need setup help, or want to discuss contribution idea
           <sub><b>@adityarepos</b></sub>
         </a>
       </td>
+      <td align="center">
+        <a href="https://github.com/AndreaKrankotova">
+          <img src="https://github.com/AndreaKrankotova.png" width="80px;"/>
+          <br />
+          <sub><b>@adityarepos</b></sub>
+        </a>
+      </td>
     </tr>
   </table>
 </div>
@@ -109,7 +116,3 @@ If you have any questions, need setup help, or want to discuss contribution idea
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-
-
-

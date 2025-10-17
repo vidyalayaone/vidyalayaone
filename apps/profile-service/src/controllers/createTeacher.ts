@@ -56,6 +56,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       salary,
       address,
       subjectIds,
+      phoneNumber,
+      email,
       documents,
     } = validation.data;
 
@@ -116,8 +118,8 @@ export const createTeacher = async (req: Request, res: Response) => {
     // Create user in auth service
     const authResponse = await authService.createUserForTeacher({
       username,
-      email: `${username}@temp.local`, // Temporary email
-      phone: '0000000000', // Temporary phone
+      email, // Required field from validation
+      phone: phoneNumber, // Required field from validation
       password: temporaryPassword,
       firstName,
       lastName,
@@ -155,7 +157,11 @@ export const createTeacher = async (req: Request, res: Response) => {
         joiningDate: joiningDate ? new Date(joiningDate) : undefined,
         salary,
         address,
-        subjectIds: subjectIds || []
+        subjectIds: subjectIds || [],
+        metaData: {
+          phoneNumber,
+          email,
+        }
       }
     });
 
@@ -180,6 +186,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         salary: teacher.salary,
         address: teacher.address,
         subjectIds: teacher.subjectIds,
+        metaData: teacher.metaData,
         createdAt: teacher.createdAt,
         updatedAt: teacher.updatedAt
       },

@@ -4,6 +4,7 @@ import { getSchoolContext, validateInput, getUser } from '@vidyalayaone/common-u
 import { createTeacherSchema } from '../validations/validationSchemas';
 import { PERMISSIONS, hasPermission } from '@vidyalayaone/common-utils';
 import { authService } from '../services/authService';
+import { sendTeacherCredentialsEmail } from '../services/teacherCredentialsEmail';
 
 const { prisma } = DatabaseService;
 
@@ -56,6 +57,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       salary,
       address,
       subjectIds,
+      phoneNumber,
+      email,
       documents,
     } = validation.data;
 
@@ -116,8 +119,8 @@ export const createTeacher = async (req: Request, res: Response) => {
     // Create user in auth service
     const authResponse = await authService.createUserForTeacher({
       username,
-      email: `${username}@temp.local`, // Temporary email
-      phone: '0000000000', // Temporary phone
+      email, // Required field from validation
+      phone: phoneNumber, // Required field from validation
       password: temporaryPassword,
       firstName,
       lastName,
@@ -155,9 +158,23 @@ export const createTeacher = async (req: Request, res: Response) => {
         joiningDate: joiningDate ? new Date(joiningDate) : undefined,
         salary,
         address,
-        subjectIds: subjectIds || []
+        subjectIds: subjectIds || [],
+        metaData: {
+          phoneNumber,
+          email,
+        }
       }
     });
+
+    // Send credentials email to teacher
+    try {
+      if (email) {
+        await sendTeacherCredentialsEmail(email, username, temporaryPassword);
+      }
+    } catch (emailError) {
+      console.error('Failed to send teacher credentials email:', emailError);
+      // Do not fail the request if email sending fails
+    }
 
     // Prepare response data
     const responseData = {
@@ -180,14 +197,10 @@ export const createTeacher = async (req: Request, res: Response) => {
         salary: teacher.salary,
         address: teacher.address,
         subjectIds: teacher.subjectIds,
+        metaData: teacher.metaData,
         createdAt: teacher.createdAt,
         updatedAt: teacher.updatedAt
       },
-      credentials: {
-        username,
-        temporaryPassword,
-        loginUrl: process.env.FRONTEND_URL || 'http://localhost:3000/login'
-      }
     };
 
     res.status(201).json({

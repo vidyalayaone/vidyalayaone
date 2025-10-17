@@ -3,6 +3,7 @@ import { createUserForStudent, deleteUser } from '../controllers/createUserForSt
 import { createUserForTeacher } from '../controllers/createUserForTeacher';
 import rateLimit from 'express-rate-limit';
 import { sendStudentCredentialsEmailController } from '../controllers/sendStudentCredentialsEmail';
+import { sendTeacherCredentialsEmailController } from '../controllers/sendTeacherCredentialsEmail';
 
 const router: Router = Router();
 
@@ -21,5 +22,6 @@ router.post('/create-user-for-student', internalLimiter, createUserForStudent);
 router.post('/create-user-for-teacher', internalLimiter, createUserForTeacher);
 router.delete('/users/:userId', internalLimiter, deleteUser);
 router.post('/send-student-credentials-email', internalLimiter, sendStudentCredentialsEmailController);
+router.post('/send-teacher-credentials-email', internalLimiter, sendTeacherCredentialsEmailController);
 
 export default router;

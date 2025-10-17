@@ -404,6 +404,8 @@ async function createTeachers() {
         pincode: '400001',
         country: 'India'
       },
+      phoneNumber: `98765${String(43210 + i).slice(-5)}`, // Generate unique 10-digit phone numbers
+      email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@vidyalayaone.com`,
       subjectIds: assignedSubjects
     };
 

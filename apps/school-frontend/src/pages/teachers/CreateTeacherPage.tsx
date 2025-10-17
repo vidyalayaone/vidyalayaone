@@ -54,6 +54,8 @@ const createTeacherSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   employeeId: z.string().min(3, 'Employee ID must be at least 3 characters'),
+  phoneNumber: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
+  email: z.string().email('Please enter a valid email address'),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
   bloodGroup: z.string().optional(),
   maritalStatus: z.enum(['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED']).optional(),
@@ -88,6 +90,8 @@ const CreateTeacherPage: React.FC = () => {
       firstName: '',
       lastName: '',
       employeeId: '',
+      phoneNumber: '',
+      email: '',
       gender: undefined,
       bloodGroup: '',
       maritalStatus: undefined,
@@ -147,6 +151,8 @@ const CreateTeacherPage: React.FC = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         employeeId: data.employeeId,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
         gender: data.gender,
         bloodGroup: data.bloodGroup || undefined,
         maritalStatus: data.maritalStatus,
@@ -172,13 +178,7 @@ const CreateTeacherPage: React.FC = () => {
       const response = await createTeacher(teacherData);
       
       if (response.success && response.data) {
-        // Show success message with credentials
-        const { credentials } = response.data;
-        toast.success(
-          `Teacher created successfully!\nUsername: ${credentials.username}\nTemporary Password: ${credentials.temporaryPassword}\nPlease share these credentials with the teacher.`,
-          { duration: 8000 }
-        );
-        
+        toast.success('Teacher created successfully');
         navigate('/teachers');
       } else {
         toast.error(response.message || 'Failed to create teacher. Please try again.');
@@ -377,6 +377,60 @@ const CreateTeacherPage: React.FC = () => {
                         <FormControl>
                           <Input placeholder="Enter religion" {...field} />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="w-5 h-5" />
+                  Contact Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter phone number (10-15 digits)" 
+                            {...field} 
+                            type="tel"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter a valid phone number with 10-15 digits
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Enter email address" 
+                            {...field} 
+                            type="email"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Enter a valid email address for the teacher
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

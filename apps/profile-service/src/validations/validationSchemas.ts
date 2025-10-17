@@ -111,6 +111,10 @@ export const createTeacherSchema = z.object({
   address: addressSchema,
   subjectIds: z.array(z.string().uuid('Invalid subject ID format')).optional(),
   
+  // Contact information
+  phoneNumber: z.string().regex(/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits'),
+  email: z.string().email('Valid email is required'),
+  
   // Documents (optional)
   documents: z.array(documentSchema).optional(),
 });

@@ -183,11 +183,6 @@ export const createTeacher = async (req: Request, res: Response) => {
         createdAt: teacher.createdAt,
         updatedAt: teacher.updatedAt
       },
-      credentials: {
-        username,
-        temporaryPassword,
-        loginUrl: process.env.FRONTEND_URL || 'http://localhost:3000/login'
-      }
     };
 
     res.status(201).json({

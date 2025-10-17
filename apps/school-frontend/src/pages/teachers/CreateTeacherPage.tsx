@@ -172,13 +172,7 @@ const CreateTeacherPage: React.FC = () => {
       const response = await createTeacher(teacherData);
       
       if (response.success && response.data) {
-        // Show success message with credentials
-        const { credentials } = response.data;
-        toast.success(
-          `Teacher created successfully!\nUsername: ${credentials.username}\nTemporary Password: ${credentials.temporaryPassword}\nPlease share these credentials with the teacher.`,
-          { duration: 8000 }
-        );
-        
+        toast.success('Teacher created successfully');
         navigate('/teachers');
       } else {
         toast.error(response.message || 'Failed to create teacher. Please try again.');

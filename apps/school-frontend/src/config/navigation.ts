@@ -1,5 +1,3 @@
-// Navigation configuration for permission-based access
-
 import { 
   LayoutDashboard, 
   Users, 
@@ -90,7 +88,7 @@ export const allNavigationItems: NavigationGroup[] = [
         label: 'Classes', 
         icon: BookOpen,
         description: 'Manage class schedules and assignments',
-        requiredPermissions: [PERMISSIONS.CLASS.VIEW]
+        requiredPermissions: [PERMISSIONS.CLASS.CREATE]
       },
       { 
         path: '/admission', 

@@ -803,6 +803,8 @@ export interface CreateTeacherRequest {
   firstName: string;
   lastName: string;
   employeeId: string;
+  phoneNumber: string;
+  email: string;
   gender?: 'MALE' | 'FEMALE' | 'OTHER';
   bloodGroup?: string;
   maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';

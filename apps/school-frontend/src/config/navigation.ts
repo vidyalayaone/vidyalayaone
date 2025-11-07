@@ -130,6 +130,13 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'Track and manage student attendance',
         requiredPermissions: [PERMISSIONS.ATTENDANCE.VIEW]
       },
+      {
+        path: '/exams',
+        label: 'Exams',
+        icon: GraduationCap,
+        description: 'Manage exams and assessments',
+        requiredPermissions: [PERMISSIONS.EXAM.VIEW]
+      },
       { 
         path: '/timetable', 
         label: 'Timetable', 
@@ -137,20 +144,20 @@ export const allNavigationItems: NavigationGroup[] = [
         description: 'View and manage class schedules',
         requiredPermissions: [PERMISSIONS.CLASS.VIEW_TIMETABLE]
       },
-      { 
-        path: '/exam-schedule', 
-        label: 'Exam Schedule', 
-        icon: PenTool,
-        description: 'Schedule and manage examinations',
-        requiredPermissions: [PERMISSIONS.EXAM.SCHEDULE]
-      },
-      { 
-        path: '/grades', 
-        label: 'Grades', 
-        icon: Award,
-        description: 'View and manage student grades',
-        requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
-      },
+      // { 
+      //   path: '/exam-schedule', 
+      //   label: 'Exam Schedule', 
+      //   icon: PenTool,
+      //   description: 'Schedule and manage examinations',
+      //   requiredPermissions: [PERMISSIONS.EXAM.SCHEDULE]
+      // },
+      // { 
+      //   path: '/grades', 
+      //   label: 'Grades', 
+      //   icon: Award,
+      //   description: 'View and manage student grades',
+      //   requiredPermissions: [PERMISSIONS.EXAM.VIEW_RESULTS]
+      // },
     ]
   },
   {

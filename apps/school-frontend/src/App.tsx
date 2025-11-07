@@ -330,10 +330,10 @@ const App: React.FC = () => {
             />
 
             {/* Exams Routes - Admin only */}
-            {/* <Route
+             <Route
               path="/exams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.EXAM.VIEW]}>
                   <ExamsPage />
                 </ProtectedRoute>
               }
@@ -341,7 +341,7 @@ const App: React.FC = () => {
             <Route
               path="/exams/create"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.EXAM.CREATE]}>
                   <CreateExamPage />
                 </ProtectedRoute>
               }
@@ -349,7 +349,7 @@ const App: React.FC = () => {
             <Route
               path="/exams/:id/edit"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.EXAM.CREATE]}>
                   <EditExamPage />
                 </ProtectedRoute>
               }
@@ -357,11 +357,11 @@ const App: React.FC = () => {
             <Route
               path="/exams/:id"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.EXAM.VIEW]}>
                   <ExamDetailPage />
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
             {/* Timetable Routes - Admin only */}
             {/* <Route

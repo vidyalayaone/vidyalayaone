@@ -1,8 +1,6 @@
-// Individual exam detail page with tabs
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
+import {
   ArrowLeft, 
   Calendar, 
   Users, 
@@ -183,9 +181,6 @@ const ExamDetailPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight">{exam.name}</h1>
-              <p className="text-muted-foreground">
-                {exam.description}
-              </p>
             </div>
             <div className="flex items-center space-x-2">
               {getStatusBadge(exam)}
@@ -271,202 +266,33 @@ const ExamDetailPage: React.FC = () => {
         <Separator />
 
         {/* Tabs Section */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="seating">Seating Plan</TabsTrigger>
-            <TabsTrigger value="invigilation">Invigilation</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="space-y-4">
             <ExamScheduleTab examId={exam.id} exam={exam} />
           </TabsContent>
 
-          <TabsContent value="seating" className="space-y-4">
+          <TabsContent value="grades" className="space-y-4">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Seating Plan</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Manage seating arrangements for the exam
-                    </p>
-                  </div>
-                  {!showSeatingTable ? (
-                    <Button onClick={() => setShowSeatingTable(true)}>
-                      Create Seating Plan
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={addSeatingRow}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Row
-                      </Button>
-                      <Button onClick={saveSeatingPlan}>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save Plan
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {!showSeatingTable ? (
-                  <div className="text-center py-12">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Seating Plan</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Create a seating arrangement for exam rooms and assign students
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="rounded-md border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[200px]">Room/Class</TableHead>
-                            <TableHead className="w-[150px]">Class</TableHead>
-                            <TableHead className="w-[120px]">From Roll No.</TableHead>
-                            <TableHead className="w-[120px]">To Roll No.</TableHead>
-                            <TableHead className="w-[100px]">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {seatingPlan.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                No seating arrangements added yet. Click "Add Row" to start.
-                              </TableCell>
-                            </TableRow>
-                          ) : (
-                            seatingPlan.map((row) => (
-                              <TableRow key={row.id}>
-                                <TableCell>
-                                  <Select 
-                                    value={row.roomName} 
-                                    onValueChange={(value) => updateSeatingRow(row.id, 'roomName', value)}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select room" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {mockRooms.map((room) => (
-                                        <SelectItem key={room} value={room}>
-                                          {room}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
-                                <TableCell>
-                                  <Select 
-                                    value={row.className} 
-                                    onValueChange={(value) => updateSeatingRow(row.id, 'className', value)}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select class" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {mockClasses.map((className) => (
-                                        <SelectItem key={className} value={className}>
-                                          {className}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    placeholder="From"
-                                    value={row.fromRollNumber}
-                                    onChange={(e) => updateSeatingRow(row.id, 'fromRollNumber', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    placeholder="To"
-                                    value={row.toRollNumber}
-                                    onChange={(e) => updateSeatingRow(row.id, 'toRollNumber', e.target.value)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => removeSeatingRow(row.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    
-                    {seatingPlan.length > 0 && (
-                      <div className="flex justify-between items-center text-sm text-muted-foreground">
-                        <span>Total arrangements: {seatingPlan.length}</span>
-                        <span>
-                          Total students: {seatingPlan.reduce((total, row) => {
-                            const from = parseInt(row.fromRollNumber) || 0;
-                            const to = parseInt(row.toRollNumber) || 0;
-                            return total + Math.max(0, to - from + 1);
-                          }, 0)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="invigilation" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Invigilation</CardTitle>
+                <CardTitle>Grades</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Assign invigilators for exam sessions
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <UserCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Invigilation Assignment</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Invigilation management will be available here
-                  </p>
-                  <Button variant="outline">
-                    Assign Invigilators
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="results" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Results</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View and manage exam results
+                  View and manage exam grades
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12">
                   <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Exam Results</h3>
+                  <h3 className="text-lg font-semibold mb-2">Exam Grades</h3>
                   <p className="text-muted-foreground mb-4">
-                    Results management will be available here
+                    Grades management will be available here
                   </p>
                   <Button variant="outline">
-                    Manage Results
+                    Manage Grades
                   </Button>
                 </div>
               </CardContent>

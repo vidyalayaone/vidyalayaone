@@ -15,8 +15,6 @@ import StudentDashboard from '@/components/dashboard/StudentDashboard';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
-
-  console.log('Current user:', user);
   const [stats, setStats] = useState<AdminStats | TeacherStats | StudentStats | null>(null);
   const [loading, setLoading] = useState(true);
 

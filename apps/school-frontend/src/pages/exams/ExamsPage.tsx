@@ -1,5 +1,3 @@
-// Exams management page for admin users
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -109,9 +107,6 @@ const ExamsPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Exams</h1>
-            <p className="text-muted-foreground">
-              Manage examinations and assessments
-            </p>
           </div>
           <Button onClick={() => navigate('/exams/create')}>
             <Plus className="h-4 w-4 mr-2" />

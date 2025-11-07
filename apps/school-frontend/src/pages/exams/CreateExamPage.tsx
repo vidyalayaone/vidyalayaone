@@ -1,5 +1,3 @@
-// Create Exam page (replaces modal)
-
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, CalendarDays, ChevronDown, Plus, X } from 'lucide-react';
@@ -15,6 +13,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -309,7 +314,6 @@ const CreateExamPage: React.FC = () => {
         {/* Page Title */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Exam</h1>
-          <p className="text-muted-foreground">Create a new examination</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -342,17 +346,16 @@ const CreateExamPage: React.FC = () => {
 
             <div className="space-y-2">
               <Label htmlFor="academicYear">Academic Year *</Label>
-              <select
-                id="academicYear"
-                className="w-full rounded-md border p-2"
-                value={academicYear || ''}
-                onChange={(e) => setAcademicYear(e.target.value)}
-              >
-                <option value="" disabled>Select academic year</option>
-                {academicYears.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+              <Select value={academicYear || ''} onValueChange={setAcademicYear}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select academic year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {academicYears.map(y => (
+                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

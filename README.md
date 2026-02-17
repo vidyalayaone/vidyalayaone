@@ -1,3 +1,9 @@
+> ⚠️ This project is archived and no longer actively maintained.
+> 
+> VidyalayaOne previously served 500+ real users across 2 schools in production.
+> The codebase remains available for learning, reference, and architectural exploration.
+
+
 # VidyalayaOne
 
 Easy-to-use school management system
@@ -16,14 +22,6 @@ Easy-to-use school management system
 - Academic Calender
 - Time Table Management
 - Fee Management
-
-## 🔮 Upcoming Features
-
-- Parent Portal 
-- Multi-branch Management  
-- Analytics Dashboard 
-- Mobile Apps
-- Third-party Integrations
 
 ## 🏗 Architecture Overview
 
@@ -75,13 +73,14 @@ VidyalayaOne follows a **microservices architecture** with a monorepo managed vi
 
 Setup instructions can be found here: [setup/SETUP.md](setup/SETUP.md)
 
-## 🤝 Contributing
+## 🤝 Project Status & Usage
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on how to get started.
+This repository is archived and not accepting new feature development.
 
-If you have any questions, need setup help, or want to discuss contribution ideas, feel free to join our contributor community:
+The codebase is open-source under the MIT License — you are free to fork, adapt, and build upon it.
 
-👉 [Join the Telegram Group](https://t.me/+nVYA-DsHWwNkMGE9)
+For architectural discussions, reuse inquiries, or guidance, contact:
+📩 team@vidyalayaone.com
 
 ### Contributors
 
@@ -116,4 +115,5 @@ If you have any questions, need setup help, or want to discuss contribution idea
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
+
 

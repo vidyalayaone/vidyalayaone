@@ -1,6 +1,5 @@
 > ⚠️ This project is archived and no longer actively maintained.
-> 
-> VidyalayaOne previously served 500+ real users across 2 schools in production.
+>
 > The codebase remains available for learning, reference, and architectural exploration.
 
 
@@ -115,5 +114,3 @@ For architectural discussions, reuse inquiries, or guidance, contact:
 ## 📄 License
 
 VidyalayaOne is open-source and available under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-
